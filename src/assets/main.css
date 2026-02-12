@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+@theme {
+  --color-spa-primary: #db7f50;
+  --color-spa-olive: #7f8563;
+  --color-spa-peach: #f6c8ae;
+  --color-spa-teal: #017074;
+  --color-spa-white: #ffffff;
+}
