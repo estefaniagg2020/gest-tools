@@ -18,7 +18,10 @@
       <header
         class="md:hidden bg-white/80 backdrop-blur-md border-b border-gray-200 p-4 flex items-center justify-between z-20"
       >
-        <h1 class="text-xl font-bold text-gray-800">SpaGest</h1>
+        <AppBrand
+          size="sm"
+          :show-subtitle="false"
+        />
         <button
           @click="isMobileMenuOpen = !isMobileMenuOpen"
           class="p-2 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
@@ -42,14 +45,30 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted } from "vue";
+  import { ref, computed, onMounted, watch } from "vue";
   import { RouterView, useRoute, useRouter } from "vue-router";
+  import { storeToRefs } from "pinia";
+  import { useAuthStore } from "@/stores/auth";
+  import { useGestorConfigStore } from "@/stores/gestorConfig";
+  import AppBrand from "@/components/common/AppBrand.vue";
   import Sidebar from "./Sidebar.vue";
 
   const route = useRoute();
   const router = useRouter();
+  const authStore = useAuthStore();
+  const gestorConfigStore = useGestorConfigStore();
+  const { user } = storeToRefs(authStore);
+
   const isDashboard = computed(() => route.path === "/");
   const isMobileMenuOpen = ref(false);
+
+  watch(
+    user,
+    (u) => {
+      if (u) gestorConfigStore.initialize(u.id);
+    },
+    { immediate: true }
+  );
 
   onMounted(() => {
     router.afterEach(() => {

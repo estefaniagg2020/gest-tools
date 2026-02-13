@@ -1,3 +1,6 @@
+export type { User, StoredUser } from "./auth";
+export type { GestorConfig, ContactData } from "./gestorConfig";
+export { DEFAULT_COMPANY_NAME, DEFAULT_CONTACT_DATA } from "./gestorConfig";
 export type { Service, ServiceCategory } from "./service";
 export type { Spa } from "./spa";
 export type { Therapist, TherapistRole } from "./therapist";

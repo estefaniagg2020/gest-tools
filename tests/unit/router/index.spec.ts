@@ -19,6 +19,13 @@ describe("router", () => {
     expect(names).toContain("spas");
   });
 
+  it("should_have_login_forgot_setup_routes", () => {
+    const names = router.getRoutes().map((r) => r.name).filter(Boolean);
+    expect(names).toContain("login");
+    expect(names).toContain("forgot-password");
+    expect(names).toContain("setup");
+  });
+
   it("should_have_scheduler_route_with_expected_path", () => {
     const scheduler = router.getRoutes().find((r) => r.name === "scheduler");
     expect(scheduler).toBeDefined();

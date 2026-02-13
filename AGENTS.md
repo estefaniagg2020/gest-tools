@@ -49,11 +49,16 @@ Este documento define cómo trabajamos en este repositorio: estilo, arquitectura
 
 ## 3) Guía Vue (UI limpia y predecible)
 
+### Vistas (páginas)
+
+- Toda **vista** es solo **composición** de componentes reutilizables: no debe contener lógica ni markup pesado.
+- La vista importa composables y/o stores, y pasa datos y callbacks a los componentes. Toda la lógica (estado, validación, llamadas, derivaciones) vive en **composables** o **stores**, no en el `<script>` de la vista.
+- Estructura objetivo: vista = layout + componentes presentacionales + un (o pocos) composables que orquestan. Si la vista tiene muchos `ref`, `computed` o `watch`, extraer a un composable con nombre de dominio (ej. `useConfigWizard`, `useScheduler`).
+
 ### Componentes
 
-- Componentes “tontos” (presentational) vs “listos” (container):
-  - Presentational: solo props + emits.
-  - Container/page: orquesta use cases y estado.
+- Componentes **reutilizables y limpios**, **sin lógica**: solo props, emits y maquetado. Cualquier lógica (cálculos, validación, llamadas) va en composables o stores; el componente solo recibe y emite.
+- Presentational: solo props + emits. Container (si hace falta): orquesta llamando a un composable y pasando sus resultados como props a componentes presentacionales.
 - Props inmutables; no mutar props.
 - `emits` tipados; preferir eventos semánticos.
 
@@ -181,6 +186,7 @@ Recomendación de scripts estándar (referencia):
 ## 11) Qué NO hacemos
 
 - No metemos lógica de dominio en componentes Vue.
+- No escribimos vistas con lógica ni markup pesado: las vistas son composición de componentes reutilizables; la lógica va en composables o stores.
 - No acoplamos casos de uso a Axios/fetch directamente.
 - No ponemos lógica de persistencia (localStorage, parseo de storage) dentro del store: usar adapters en `infrastructure/`.
 - No mezclamos en una misma función IO y orquestación/estado; cada una tiene una responsabilidad única.

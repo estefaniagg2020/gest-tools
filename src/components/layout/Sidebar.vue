@@ -13,19 +13,16 @@
     <div
       class="h-full bg-white rounded-2xl shadow-xl shadow-gray-100/50 border border-gray-100/80 flex flex-col relative overflow-hidden backdrop-blur-xl"
     >
-      <div class="p-6 flex items-center gap-3 mb-2">
-        <div
-          class="w-10 h-10 min-w-[2.5rem] bg-gradient-to-tr from-spa-primary to-spa-primary/80 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-spa-primary/20"
-        >
-          🌿
-        </div>
-        <div
-          class="overflow-hidden transition-all duration-300"
-          :class="isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'"
-        >
-          <h1 class="text-xl font-bold text-gray-800 tracking-tight">SpaGest</h1>
-          <p class="text-[10px] text-gray-400 tracking-widest uppercase font-medium">By spagest</p>
-        </div>
+      <div
+        class="p-6 flex items-center gap-3 mb-2"
+        :class="{ 'justify-center': isCollapsed }"
+      >
+        <AppBrand
+          :show-name="!isCollapsed"
+          show-subtitle
+          subtitle="Tu gestor"
+          size="md"
+        />
       </div>
 
       <nav class="flex-1 px-3 space-y-8 overflow-y-auto custom-scrollbar">
@@ -74,11 +71,38 @@
             :collapsed="isCollapsed"
             active-class="bg-blue-50 text-blue-600"
           />
+          <NavItem
+            to="/config"
+            icon="⚙️"
+            label="Configuración"
+            :collapsed="isCollapsed"
+            active-class="bg-gray-100 text-gray-700"
+          />
         </div>
       </nav>
 
-      <div class="p-3 mt-auto">
+      <div class="p-3 mt-auto space-y-2">
         <UserRoleSwitcher :collapsed="isCollapsed" />
+        <div
+          class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl border border-transparent"
+          :class="isCollapsed ? 'justify-center' : ''"
+        >
+          <span
+            v-if="!isCollapsed"
+            class="text-xs text-gray-500 truncate"
+            :title="authStore.user?.username"
+          >
+            {{ authStore.user?.username }}
+          </span>
+          <button
+            type="button"
+            class="text-xs font-medium text-gray-500 hover:text-red-600 transition-colors cursor-pointer shrink-0"
+            :title="isCollapsed ? 'Cerrar sesión' : ''"
+            @click="handleLogout"
+          >
+            {{ isCollapsed ? "Salir" : "Cerrar sesión" }}
+          </button>
+        </div>
       </div>
     </div>
   </aside>
@@ -86,10 +110,20 @@
 
 <script setup lang="ts">
   import { ref } from "vue";
+  import { useRouter } from "vue-router";
+  import { useAuthStore } from "@/stores/auth";
+  import AppBrand from "@/components/common/AppBrand.vue";
   import NavItem from "./NavItem.vue";
   import UserRoleSwitcher from "./UserRoleSwitcher.vue";
 
   const isCollapsed = ref(false);
+  const authStore = useAuthStore();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    authStore.logout();
+    router.push({ name: "login" });
+  };
 </script>
 
 <style scoped>

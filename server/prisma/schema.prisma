@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TherapistRole {
+  manager
+  therapist
+}
+
+enum ServiceCategory {
+  manual
+  hydrotherapy
+  aesthetic
+  wellness
+}
+
+model Spa {
+  id         String      @id @default(uuid())
+  name       String
+  therapists Therapist[]
+  services   Service[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+model Therapist {
+  id                   String        @id @default(uuid())
+  name                 String
+  photoUrl             String
+  linkedInUrl          String?
+  phoneNumber          String
+  email                String
+  weeklyHours          Float
+  color                String
+  role                 TherapistRole @default(therapist)
+  spaId                String
+  spa                  Spa           @relation(fields: [spaId], references: [id])
+  defaultWorkStartHour Int?
+  defaultWorkEndHour   Int?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+}
+
+model Service {
+  id                String          @id @default(uuid())
+  name              String
+  category          ServiceCategory
+  duration          Int
+  price             Float
+  description       String?
+  requiresCabin     Boolean         @default(false)
+  requiresTherapist Boolean         @default(true)
+  spaId             String
+  spa               Spa             @relation(fields: [spaId], references: [id])
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}

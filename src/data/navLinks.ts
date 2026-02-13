@@ -4,10 +4,11 @@ export interface NavLinkItem {
   label: string;
 }
 
-/** Ruta raíz (dashboard/inicio) para comparaciones sin strings mágicos */
+/** Ruta raíz (configuración / inicio) */
 export const ROUTE_HOME = "/" as const;
 
 export const NAV_LINKS: readonly NavLinkItem[] = [
+  { to: "/", icon: "🏠", label: "Inicio" },
   { to: "/scheduler", icon: "📅", label: "Agenda" },
   { to: "/therapists", icon: "👥", label: "Equipo" },
   { to: "/spas", icon: "🏢", label: "Centros" },

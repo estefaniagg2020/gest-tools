@@ -15,7 +15,7 @@ describe("useDashboard", () => {
   it("should_return_currentUserName_as_manager_when_manager_user", () => {
     useAuthStore().setUser("manager", "5");
     const { currentUserName } = useDashboard();
-    expect(currentUserName.value).toBe("Antonio");
+    expect(currentUserName.value).toBe("Usuario");
   });
 
   it("should_return_chartData_and_recentActivity", () => {

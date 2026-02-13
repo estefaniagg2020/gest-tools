@@ -56,3 +56,11 @@ export interface BlockEditorModalProps {
   initialDate?: Date;
   initialHour?: number;
 }
+
+export interface ConfigHubCardProps {
+  to: string;
+  title: string;
+  description: string;
+  icon: string;
+  accent: "teal" | "violet" | "amber" | "sky" | "rose";
+}
