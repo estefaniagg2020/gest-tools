@@ -11,5 +11,5 @@ export const NAV_LINKS: readonly NavLinkItem[] = [
   { to: "/", icon: "🏠", label: "Inicio" },
   { to: "/scheduler", icon: "📅", label: "Agenda" },
   { to: "/therapists", icon: "👥", label: "Equipo" },
-  { to: "/spas", icon: "🏢", label: "Centros" },
+  { to: "/servicios", icon: "📋", label: "Servicios" },
 ] as const;

@@ -4,7 +4,7 @@
     @close="$emit('close')"
   >
     <template #title>
-      {{ isEditing ? THERAPIST_MANAGER.MODAL_TITLE_EDIT : THERAPIST_MANAGER.MODAL_TITLE_NEW }}
+      {{ isEditing ? `Editar ${terminology.staffSingular}` : `Nuevo ${terminology.staffSingular}` }}
     </template>
 
     <form
@@ -43,7 +43,7 @@
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">{{ THERAPIST_MANAGER.LABEL_SPA }}</label>
+        <label class="block text-sm font-medium text-gray-700 mb-1">{{ terminology.locationAssignLabel }}</label>
         <select
           v-model="form.spaId"
           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-spa-teal/20 focus:border-spa-teal"
@@ -65,7 +65,7 @@
           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-spa-teal/20 focus:border-spa-teal"
         >
           <option value="manager">{{ THERAPIST_MANAGER.ROLE_MANAGER }}</option>
-          <option value="therapist">{{ THERAPIST_MANAGER.ROLE_EMPLOYEE }}</option>
+          <option value="therapist">{{ terminology.roleEmployee }}</option>
         </select>
       </div>
 
@@ -152,7 +152,7 @@
           type="submit"
           class="w-full sm:w-auto"
         >
-          {{ isEditing ? THERAPIST_MANAGER.BTN_SAVE : THERAPIST_MANAGER.BTN_CREATE }}
+          {{ isEditing ? THERAPIST_MANAGER.BTN_SAVE : `Crear ${terminology.staffSingular}` }}
         </BaseButton>
       </div>
     </form>
@@ -168,6 +168,9 @@
   import { useAuthStore } from "@/stores/auth";
   import { AUTH_CONFIG } from "@/data/authConfig";
   import { THERAPIST_MANAGER, SCHEDULE_VIEW_SETTINGS } from "@/data/constants";
+  import { useBusinessTerminology } from "@/composables/useBusinessTerminology";
+
+  const terminology = useBusinessTerminology();
 
   defineProps<{
     isOpen: boolean;

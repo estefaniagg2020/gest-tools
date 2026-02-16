@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
+import { useGestorConfigStore } from "@/stores/gestorConfig";
+import { setFavicon } from "@/utils/favicon";
 import AppLayout from "../components/layout/AppLayout.vue";
 import SchedulerView from "../views/SchedulerView.vue";
 import TherapistManagerView from "../views/TherapistManagerView.vue";
@@ -29,7 +31,7 @@ const router = createRouter({
         {
           path: "",
           name: "dashboard",
-          component: () => import("../views/ConfigWizardView.vue"),
+          component: () => import("../views/DashboardView.vue"),
         },
         {
           path: "scheduler",
@@ -43,8 +45,22 @@ const router = createRouter({
         },
         {
           path: "spas",
-          name: "spas",
-          component: () => import("../views/SpaManagerView.vue"),
+          redirect: { name: "servicios" },
+        },
+        {
+          path: "servicios",
+          name: "servicios",
+          component: () => import("../views/ServiciosView.vue"),
+        },
+        {
+          path: "clientes",
+          name: "clientes",
+          component: () => import("../views/ClientsView.vue"),
+        },
+        {
+          path: "inventario",
+          name: "inventario",
+          component: () => import("../views/InventarioView.vue"),
         },
         {
           path: "config",
@@ -52,8 +68,8 @@ const router = createRouter({
           component: () => import("../views/ConfigHubView.vue"),
         },
         {
-          path: "config/wizard",
-          name: "config-wizard",
+          path: "config/datos",
+          name: "config-datos",
           component: () => import("../views/ConfigWizardView.vue"),
         },
         {
@@ -67,9 +83,19 @@ const router = createRouter({
           component: () => import("../views/ConfigGridView.vue"),
         },
         {
+          path: "config/agenda",
+          name: "config-agenda",
+          component: () => import("../views/ConfigAgendaView.vue"),
+        },
+        {
           path: "config/notificaciones",
           name: "config-notificaciones",
           component: () => import("../views/ConfigNotificacionesView.vue"),
+        },
+        {
+          path: "config/iconos",
+          name: "config-iconos",
+          component: () => import("../views/ConfigIconosView.vue"),
         },
         {
           path: "settings",
@@ -88,6 +114,9 @@ router.beforeEach(async (to) => {
   await authStore.initialize();
 
   const isPublic = to.name && PUBLIC_NAMES.includes(to.name as (typeof PUBLIC_NAMES)[number]);
+  if (isPublic) {
+    setFavicon(null);
+  }
   if (authStore.isAuthenticated && isPublic) {
     return { name: "dashboard" };
   }
@@ -100,6 +129,16 @@ router.beforeEach(async (to) => {
   }
   if (!authStore.isAuthenticated && to.name === "setup" && authStore.hasAnyUser()) {
     return { name: "login" };
+  }
+  if (authStore.isAuthenticated && to.name === "dashboard") {
+    const userId = authStore.user?.id;
+    if (userId) {
+      const gestorConfigStore = useGestorConfigStore();
+      gestorConfigStore.initialize(userId);
+      if (!gestorConfigStore.onboardingComplete) {
+        return { name: "config" };
+      }
+    }
   }
   return true;
 });

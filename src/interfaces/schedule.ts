@@ -9,6 +9,8 @@ export interface ScheduleBlock {
   title: string;
   description?: string;
   status?: "confirmed" | "pending";
+  /** Servicio asociado (opcional), p. ej. para bloques de tipo work. */
+  serviceId?: string;
 }
 
 export interface RejectedRequestSnapshot {
@@ -33,9 +35,24 @@ export interface ViewOption {
 
 export type SlotDurationMinutes = 30 | 60 | 90 | 120;
 
+export type DefaultViewType = "day" | "week" | "month";
+
 export interface SchedulerViewSettings {
   startHour: number;
   endHour: number;
   pixelsPerHour: number;
   slotDurationMinutes: SlotDurationMinutes;
+  workDaysPerWeek: number;
+  maxPeoplePerSlot: number;
+  defaultView?: DefaultViewType;
 }
+
+export type AgendaItem = ScheduleBlock | import("./appointment").Appointment;
+
+export const isScheduleBlock = (
+  item: AgendaItem,
+): item is ScheduleBlock => !("clientId" in item);
+
+export const isAppointment = (
+  item: AgendaItem,
+): item is import("./appointment").Appointment => "clientId" in item;

@@ -48,6 +48,7 @@ export interface ActivityTimelineProps {
 
 export interface ModalProps {
   isOpen: boolean;
+  variant?: "default" | "modern";
 }
 
 export interface BlockEditorModalProps {
@@ -63,4 +64,5 @@ export interface ConfigHubCardProps {
   description: string;
   icon: string;
   accent: "teal" | "violet" | "amber" | "sky" | "rose";
+  actionLabel?: string;
 }

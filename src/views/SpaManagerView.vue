@@ -105,7 +105,7 @@
 
             <div class="space-y-3">
               <div
-                v-for="category in categories"
+                v-for="category in categoriesWithStyle"
                 :key="category.value"
               >
                 <div v-if="getServicesForSpaByCategory(spa, category.value).length > 0">
@@ -204,7 +204,7 @@
     >
       <div class="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
         <div
-          v-for="category in categories"
+          v-for="category in categoriesWithStyle"
           :key="category.value"
           class="mb-6"
         >
@@ -259,15 +259,15 @@
 </template>
 
 <script setup lang="ts">
+  import { computed, onMounted } from "vue";
+  import { storeToRefs } from "pinia";
   import BaseButton from "@/components/common/BaseButton.vue";
   import Modal from "@/components/common/Modal.vue";
   import Avatar from "@/components/common/Avatar.vue";
   import { useSpaManager } from "@/composables/useSpaManager";
-  import {
-    THEME_COLORS,
-    SERVICE_CATEGORIES_FOR_SPA,
-    getThemeClasses,
-  } from "@/data/spaManagerConfig";
+  import { useServiceCategoryStore } from "@/stores/serviceCategory";
+  import { THEME_COLORS, getThemeClasses } from "@/data/spaManagerConfig";
+  import { getCategoryBorderClass } from "@/data/serviceCategoryDefaults";
 
   const {
     spaStore,
@@ -290,8 +290,21 @@
     saveServices,
   } = useSpaManager();
 
+  const categoryStore = useServiceCategoryStore();
+  const { categories } = storeToRefs(categoryStore);
+
+  const categoriesWithStyle = computed(() =>
+    categories.value.map((cat, i) => ({
+      value: cat.id,
+      label: cat.label,
+      icon: cat.icon,
+      borderClass: getCategoryBorderClass(i) || "border-gray-200",
+    }))
+  );
+
   const themeColors = THEME_COLORS;
-  const categories = SERVICE_CATEGORIES_FOR_SPA;
+
+  onMounted(() => categoryStore.initialize());
 </script>
 
 <style scoped>

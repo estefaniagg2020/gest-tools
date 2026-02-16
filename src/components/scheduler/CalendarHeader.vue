@@ -1,40 +1,40 @@
 <template>
   <div
-    class="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm"
+    class="flex flex-wrap items-center justify-between gap-4 bg-transparent p-0"
   >
     <div class="flex items-center gap-2">
       <button
         @click="$emit('today')"
-        class="px-3 py-1.5 text-sm font-medium text-spa-teal bg-spa-teal/10 rounded-lg hover:bg-spa-teal/20 transition-colors"
+        class="px-3 py-1.5 text-sm font-medium text-spa-primary bg-spa-primary/10 rounded-lg hover:bg-spa-primary/20 transition-colors"
       >
         Hoy
       </button>
-      <div class="flex items-center bg-gray-50 rounded-lg border border-gray-200">
+      <div class="flex items-center bg-app-bg rounded-lg border border-app-border">
         <button
           @click="$emit('prev')"
-          class="p-1.5 hover:bg-gray-200 rounded-l-lg text-gray-500"
+          class="p-1.5 hover:bg-app-border-subtle rounded-l-lg text-app-text"
         >
           &lt;
         </button>
         <button
           @click="$emit('next')"
-          class="p-1.5 hover:bg-gray-200 rounded-r-lg text-gray-500"
+          class="p-1.5 hover:bg-app-border-subtle rounded-r-lg text-app-text"
         >
           &gt;
         </button>
       </div>
-      <span class="text-gray-700 font-semibold capitalize ml-2 min-w-[150px]">
+      <span class="text-app-title font-semibold capitalize ml-2 min-w-[150px]">
         {{ formattedDate }}
       </span>
     </div>
 
-    <div class="flex items-center bg-gray-100 p-1 rounded-lg">
+    <div class="flex items-center bg-app-bg p-1 rounded-lg border border-app-border">
       <button
         v-for="option in viewOptions"
         :key="option.value"
         @click="$emit('changeView', option.value)"
         class="px-3 py-1 text-sm font-medium rounded-md transition-all"
-        :class="currentView === option.value ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+        :class="currentView === option.value ? 'bg-app-surface text-app-title shadow-sm' : 'text-app-text/80 hover:text-app-title'"
       >
         {{ option.label }}
       </button>

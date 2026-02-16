@@ -25,6 +25,21 @@ export const SCHEDULE_VIEW_SETTINGS = {
     { value: 90, label: "1h 30min" },
     { value: 120, label: "2 horas" },
   ] as const,
+  DEFAULT_WORK_DAYS_PER_WEEK: 5,
+  DEFAULT_MAX_PEOPLE_PER_SLOT: 1,
+  WORK_DAYS_OPTIONS: [1, 2, 3, 4, 5, 6, 7],
+  MAX_PEOPLE_PER_SLOT_MIN: 1,
+  MAX_PEOPLE_PER_SLOT_MAX: 20,
+} as const;
+
+export const SCHEDULER_UI = {
+  HIDE_PANEL: "Ocultar panel",
+  SHOW_PANEL: "Mostrar panel",
+  PANEL: "Panel",
+  AGENDA_OF: "Agenda de",
+  MY_SCHEDULE: "Mi horario",
+  SIN_BLOQUES_DIA: "Sin bloques este día",
+  PENDIENTE_CONFIRMACION: "Pendiente de confirmación",
 } as const;
 
 export const SCHEDULER_CONSTANTS = {
@@ -50,6 +65,14 @@ export const SCHEDULER_CONSTANTS = {
   REJECTION_NOTICE_MODAL_TITLE: "Petición cancelada",
   REJECTION_NOTICE_INTRO: "Tu petición de cambio en el horario ha sido cancelada por el manager. Detalles:",
   REJECTION_NOTICE_BTN: "Entendido",
+  EMPTY_AGENDA_TITLE: "Nada programado",
+  EMPTY_AGENDA_SUBTITLE: "Añade bloques o citas para verlos aquí.",
+  EMPTY_AGENDA_ACTION_CITA: "Nueva cita",
+  EMPTY_AGENDA_ACTION_BLOQUE: "Nuevo bloque",
+  EMPTY_AGENDA_ACTION_GENERATE: "Generar datos de prueba",
+  EMPTY_AGENDA_SUGGEST_1: "Haz clic en una franja del calendario para crear un bloque.",
+  EMPTY_AGENDA_SUGGEST_2: "Usa el botón + para añadir un turno rápido.",
+  EMPTY_AGENDA_SUGGEST_3: "Crea clientes y servicios en Configuración para poder agendar citas.",
 } as const;
 
 export const THERAPIST_MANAGER = {
@@ -81,4 +104,59 @@ export const THERAPIST_MANAGER = {
   BTN_CREATE: "Crear Terapeuta",
   DELETE_CONFIRM: "¿Estás seguro de que quieres eliminar este terapeuta?",
   NO_SPA: "Sin Spa",
+} as const;
+
+export const AGENDA_LIST = {
+  MIN_AGENDAS: 1,
+  MAX_AGENDAS: 20,
+  DEFAULT_AGENDAS: 1,
+  DEFAULT_NAME_PREFIX: "Agenda",
+  LABEL_HOW_MANY: "¿Cuántas agendas quieres?",
+  LABEL_AGENDA_NAMES: "Nombres de las agendas",
+  LABEL_AGENDA_NAME_CUSTOM: "Nombre personalizado de esta agenda",
+  PLACEHOLDER_NAME: "Nombre de la agenda",
+  PLACEHOLDER_NAME_EXAMPLES: "Ej. Recepción, Sala 1, María, Fisio Juan…",
+  LABEL_START_HOUR: "Hora inicio",
+  LABEL_END_HOUR: "Hora fin",
+  USE_GLOBAL_HOURS: "Usar horario general",
+} as const;
+
+export const CONFIG_AGENDA = {
+  BACK_TO_CONFIG: "Volver a configuración",
+  TITLE: "Configuración de agenda",
+  SUBTITLE: "Define cuántas agendas tienes, sus nombres, horario por agenda, días laborables y capacidad por franja.",
+  SECTION_AGENDAS: "Agendas",
+  SECTION_AGENDAS_DESC: "Indica cuántas agendas quieres, el nombre y la hora de inicio y fin de cada una (si no coinciden con el horario general).",
+  SECTION_PREVIEW: "Vista previa",
+  SECTION_PREVIEW_DESC: "Así se verá tu agenda según la configuración actual.",
+  LABEL_VISTA: "Vista por defecto",
+  LABEL_VISTA_DIA: "Día",
+  LABEL_VISTA_SEMANA: "Semana",
+  LABEL_VISTA_MES: "Mes",
+  SECTION_HORARIO: "Horario general",
+  SECTION_HORARIO_DESC: "Horario por defecto y duración de cada franja. Cada agenda puede tener su propia hora de inicio y fin arriba.",
+  SECTION_DIAS: "Días laborables",
+  SECTION_DIAS_DESC: "Cuántos días a la semana se trabaja (para cálculos y validación).",
+  SECTION_CAPACIDAD: "Capacidad por franja",
+  SECTION_CAPACIDAD_DESC: "Cuántas personas pueden reservar la misma franja (p. ej. cuando varios terapeutas comparten franja).",
+  LABEL_NUM_AGENDAS: "Número de agendas",
+  LABEL_SELECT_AGENDA: "Agenda",
+  LABEL_SELECT_AGENDA_PLACEHOLDER: "Seleccionar agenda",
+  LABEL_HORA_INICIO: "Hora inicio",
+  LABEL_HORA_FIN: "Hora fin",
+  LABEL_DURACION_FRANJA: "Duración de franja",
+  LABEL_MAX_PERSONAS_FRANJA: "Máximo de personas por franja",
+  DAY: "día",
+  DAYS: "días",
+} as const;
+
+export const AGENDA_COLORS = {
+  SECTION_TITLE: "Colores de las agendas",
+  SECTION_DESC: "Usa los mismos colores para todas o elige colores distintos por agenda. Por defecto se usan colores acordes al tema.",
+  SAME_FOR_ALL: "Mismas colores para todas las agendas",
+  LABEL_AGENDA_BG: "Fondo de la agenda",
+  LABEL_MARKED_DAYS: "Días marcados / gestión de la agenda",
+  LABEL_VACATION: "Vacaciones",
+  BTN_RESET_THEME: "Valores por defecto (según tema)",
+  SECTION_PER_AGENDA: "Colores por agenda",
 } as const;

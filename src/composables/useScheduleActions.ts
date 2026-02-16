@@ -36,6 +36,7 @@ export const useScheduleActions = () => {
       start: start.toISOString(),
       end: end.toISOString(),
       status,
+      serviceId: data.serviceId,
     });
   };
 
@@ -53,6 +54,7 @@ export const useScheduleActions = () => {
       start: start.toISOString(),
       end: end.toISOString(),
       status,
+      serviceId: data.serviceId,
     });
   };
 

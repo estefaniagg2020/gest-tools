@@ -7,10 +7,12 @@ import "./assets/main.css";
 import router from "./router";
 import { queryClient } from "./lib/queryClient";
 import { useAuthStore } from "@/stores/auth";
+import { useThemeStore } from "@/stores/theme";
 
 const app = createApp(App);
-
-app.use(createPinia());
+const pinia = createPinia();
+app.use(pinia);
+useThemeStore(pinia);
 app.use(router);
 app.use(VueQueryPlugin, { queryClient });
 

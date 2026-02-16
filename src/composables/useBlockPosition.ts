@@ -1,5 +1,9 @@
 import { computed, type MaybeRefOrGetter, toValue } from "vue";
-import type { ScheduleBlock } from "@/interfaces";
+
+interface WithStartEnd {
+  start: string;
+  end: string;
+}
 
 const getMinutesFromMidnight = (dateStr: string): number => {
   const d = new Date(dateStr);
@@ -9,7 +13,7 @@ const getMinutesFromMidnight = (dateStr: string): number => {
 const SMALL_HEIGHT_THRESHOLD = 40;
 
 export const useBlockPosition = (
-  block: MaybeRefOrGetter<ScheduleBlock>,
+  block: MaybeRefOrGetter<WithStartEnd>,
   startHour: MaybeRefOrGetter<number>,
   pixelsPerHour: MaybeRefOrGetter<number>,
   topOffset: MaybeRefOrGetter<number> = () => 0,

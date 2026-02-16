@@ -1,13 +1,17 @@
 <template>
   <aside
-    class="h-full py-4 pl-4 flex flex-col transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)]"
-    :class="isCollapsed ? 'w-20' : 'w-72'"
+    class="h-full py-4 flex flex-col transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)]"
+    :class="[
+      isCollapsed ? 'w-20' : 'w-72',
+      sidebarPosition === 'right' ? 'pr-4 pl-0' : 'pl-4',
+    ]"
   >
     <button
       @click="isCollapsed = !isCollapsed"
-      class="absolute -right-3 top-12 w-6 h-6 bg-white border border-gray-100 rounded-full shadow-sm flex items-center justify-center text-gray-400 hover:text-spa-primary hover:scale-110 transition-all z-40 cursor-pointer"
+      class="absolute w-6 h-6 bg-white border border-gray-100 rounded-full shadow-sm flex items-center justify-center text-gray-400 hover:text-spa-primary hover:scale-110 transition-all z-40 cursor-pointer top-12"
+      :class="sidebarPosition === 'right' ? '-left-3' : '-right-3'"
     >
-      <span class="text-[10px]">{{ isCollapsed ? "▶" : "◀" }}</span>
+      <span class="text-[10px]">{{ isCollapsed ? (sidebarPosition === 'right' ? '◀' : '▶') : (sidebarPosition === 'right' ? '▶' : '◀') }}</span>
     </button>
 
     <div
@@ -25,64 +29,19 @@
         />
       </div>
 
-      <nav class="flex-1 px-3 space-y-8 overflow-y-auto custom-scrollbar">
-        <div class="space-y-1">
-          <div
-            class="px-3 text-xs font-bold text-gray-300 uppercase tracking-wider mb-2 transition-opacity duration-200"
-            :class="isCollapsed ? 'opacity-0 h-0 overflow-hidden' : 'opacity-100'"
-          >
-            Principal
-          </div>
-
-          <NavItem
-            to="/"
-            icon="🏠"
-            label="Inicio"
-            :collapsed="isCollapsed"
-          />
-          <NavItem
-            to="/scheduler"
-            icon="📅"
-            label="Agenda"
-            :collapsed="isCollapsed"
-            active-class="bg-orange-50 text-orange-600"
-          />
-        </div>
-
-        <div class="space-y-1">
-          <div
-            class="px-3 text-xs font-bold text-gray-300 uppercase tracking-wider mb-2 transition-opacity duration-200"
-            :class="isCollapsed ? 'opacity-0 h-0 overflow-hidden' : 'opacity-100'"
-          >
-            Gestión
-          </div>
-
-          <NavItem
-            to="/therapists"
-            icon="👥"
-            label="Equipo"
-            :collapsed="isCollapsed"
-            active-class="bg-teal-50 text-teal-600"
-          />
-          <NavItem
-            to="/spas"
-            icon="🏢"
-            label="Centros Spa"
-            :collapsed="isCollapsed"
-            active-class="bg-blue-50 text-blue-600"
-          />
-          <NavItem
-            to="/config"
-            icon="⚙️"
-            label="Configuración"
-            :collapsed="isCollapsed"
-            active-class="bg-gray-100 text-gray-700"
-          />
-        </div>
+      <nav class="flex-1 min-h-0 px-3 space-y-1 overflow-y-auto custom-scrollbar">
+        <NavItem
+          v-for="mod in orderedModules"
+          :key="mod.id"
+          :to="mod.to"
+          :icon="mod.icon"
+          :label="mod.label"
+          :collapsed="isCollapsed"
+          :active-class="mod.activeClass"
+        />
       </nav>
 
       <div class="p-3 mt-auto space-y-2">
-        <UserRoleSwitcher :collapsed="isCollapsed" />
         <div
           class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl border border-transparent"
           :class="isCollapsed ? 'justify-center' : ''"
@@ -112,13 +71,18 @@
   import { ref } from "vue";
   import { useRouter } from "vue-router";
   import { useAuthStore } from "@/stores/auth";
+  import { useResolvedLayoutModules } from "@/composables/useResolvedModuleIcons";
   import AppBrand from "@/components/common/AppBrand.vue";
   import NavItem from "./NavItem.vue";
-  import UserRoleSwitcher from "./UserRoleSwitcher.vue";
+
+  defineProps<{
+    sidebarPosition: "left" | "right" | "none";
+  }>();
 
   const isCollapsed = ref(false);
   const authStore = useAuthStore();
   const router = useRouter();
+  const orderedModules = useResolvedLayoutModules();
 
   const handleLogout = () => {
     authStore.logout();

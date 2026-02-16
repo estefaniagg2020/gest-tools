@@ -21,7 +21,7 @@
           v-for="block in sortedBlocksByDay(day)"
           :key="block.id"
           class="relative flex gap-3 rounded-xl border-0 border-l-4 bg-white border-gray-200 shadow-sm overflow-hidden cursor-pointer transition-shadow hover:shadow-md active:scale-[0.99]"
-          :class="[typeStyle(block.type).border, block.status === 'pending' ? 'border-dashed ring-1 ring-gray-200' : '']"
+          :class="[mobileBlockTypeClass(block.type), block.status === 'pending' ? 'border-dashed ring-1 ring-gray-200' : '']"
           @click="$emit('block-click', block)"
         >
           <div class="flex-1 min-w-0 p-3">
@@ -30,7 +30,7 @@
               <span
                 v-if="block.status === 'pending'"
                 class="shrink-0 text-[10px] bg-white/70 px-1.5 py-0.5 rounded"
-                title="Pendiente de confirmación"
+                :title="SCHEDULER_UI.PENDIENTE_CONFIRMACION"
               >
                 ⏳
               </span>
@@ -65,7 +65,7 @@
           v-if="sortedBlocksByDay(day).length === 0"
           class="text-xs text-gray-400 py-2 pl-2"
         >
-          Sin bloques este día
+          {{ SCHEDULER_UI.SIN_BLOQUES_DIA }}
         </p>
       </div>
     </section>
@@ -76,6 +76,7 @@
   import { filterBlocksByDay } from "@/composables/useScheduleBlocks";
   import { useScheduleDates } from "@/composables/useScheduleDates";
   import { getBlockTypeCardStyle } from "@/data/scheduleBlockTypes";
+  import { SCHEDULER_UI } from "@/data/constants";
   import type { ScheduleBlock, Therapist } from "@/interfaces";
   import Avatar from "@/components/common/Avatar.vue";
 
@@ -93,6 +94,11 @@
   const { formatTime, formatDuration } = dates;
 
   const typeStyle = (type: ScheduleBlock["type"]) => getBlockTypeCardStyle(type);
+  const mobileBlockTypeClass = (type: ScheduleBlock["type"]) => {
+    if (type === "work") return "agenda-block-work";
+    if (type === "vacation") return "agenda-block-vacation";
+    return typeStyle(type).border;
+  };
 
   const sortedBlocksByDay = (day: Date): ScheduleBlock[] => {
     const dayBlocks = filterBlocksByDay(props.blocks, day);

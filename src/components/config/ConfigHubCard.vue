@@ -1,7 +1,7 @@
 <template>
   <RouterLink
     :to="to"
-    class="block rounded-2xl border bg-white p-6 shadow-sm transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2"
+    class="block rounded-2xl border bg-app-surface p-6 shadow-sm transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2"
     :class="[accentBorderClass, accentRingClass]"
   >
     <div
@@ -10,17 +10,17 @@
     >
       {{ icon }}
     </div>
-    <h3 class="font-semibold text-gray-900">
+    <h3 class="font-semibold text-app-title transition-colors duration-200">
       {{ title }}
     </h3>
-    <p class="mt-1 text-sm text-gray-500">
+    <p class="mt-1 text-sm text-app-text/70 transition-colors duration-200">
       {{ description }}
     </p>
     <span
       class="mt-4 inline-flex items-center gap-1 text-sm font-medium"
       :class="accentTextClass"
     >
-      Configurar
+      {{ actionLabel }}
       <span aria-hidden="true">→</span>
     </span>
   </RouterLink>
@@ -30,7 +30,7 @@
   import { computed } from "vue";
   import type { ConfigHubCardProps } from "@/interfaces/components";
 
-  const props = defineProps<ConfigHubCardProps>();
+  const props = withDefaults(defineProps<ConfigHubCardProps>(), { actionLabel: "Configurar" });
 
   const accentMap = computed(() => {
     const map = {

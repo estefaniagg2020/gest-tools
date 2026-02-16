@@ -53,6 +53,23 @@
         </div>
       </div>
 
+      <div v-if="editor.form.type === 'work'">
+        <label class="block text-sm font-bold text-gray-700 mb-1">Servicio (opcional)</label>
+        <select
+          v-model="editor.form.serviceId"
+          class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-spa-teal/50"
+        >
+          <option value="">Ninguno</option>
+          <option
+            v-for="s in editor.serviceStore.services"
+            :key="s.id"
+            :value="s.id"
+          >
+            {{ s.name }} ({{ s.duration }} min)
+          </option>
+        </select>
+      </div>
+
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-bold text-gray-700 mb-1">{{ editor.labels.LABEL_START }}</label>

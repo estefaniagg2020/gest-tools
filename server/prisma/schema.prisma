@@ -7,59 +7,115 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
-enum TherapistRole {
+enum EmployeeRole {
   manager
   therapist
+  admin
 }
 
-enum ServiceCategory {
-  manual
-  hydrotherapy
-  aesthetic
-  wellness
+
+
+enum SidebarPosition {
+  left
+  right
+  none
 }
 
-model Spa {
-  id         String      @id @default(uuid())
+enum CalendarAppearance {
+  default
+  compact
+  spacious
+}
+
+model Company {
+  id         String     @id @default(uuid())
   name       String
-  therapists Therapist[]
-  services   Service[]
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  businesses Business[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
 }
 
-model Therapist {
-  id                   String        @id @default(uuid())
+model Business {
+  id           String        @id @default(uuid())
+  name         String
+  themeColor   String?
+  companyId    String
+  company      Company       @relation(fields: [companyId], references: [id])
+  employees    Employee[]
+  services     Service[]
+  gestorConfig GestorConfig?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model GestorConfig {
+  id                 String   @id @default(uuid())
+  businessId         String   @unique
+  business           Business @relation(fields: [businessId], references: [id])
+  
+  // Basic Config
+  logoUrl            String?
+  numberOfPeople     Int      @default(0)
+  businessType       String?
+  email              String?
+  phone              String?
+  address            String?
+  onboardingComplete Boolean  @default(false)
+
+  // UI / Layout Config
+  sidebarPosition    SidebarPosition    @default(left)
+  showNavbar         Boolean            @default(false)
+  calendarAppearance CalendarAppearance @default(default)
+  sidebarModuleIds   String[]           @default(["inicio", "agenda", "equipo", "centros", "config"])
+
+  // Agenda Colors
+  sameColorsForAll   Boolean            @default(true)
+  agendaBg           String             @default("#ffffff")
+  markedDaysColor    String             @default("#3498db")
+  vacationColor      String             @default("#e74c3c")
+
+  // Scheduler Settings
+  startHour           Int                @default(9)
+  endHour             Int                @default(20)
+  slotDurationMinutes Int                @default(60)
+  workDaysPerWeek     Int                @default(5)
+  maxPeoplePerSlot    Int                @default(1)
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model Employee {
+  id                   String       @id @default(uuid())
   name                 String
-  photoUrl             String
+  photoUrl             String?
   linkedInUrl          String?
-  phoneNumber          String
-  email                String
-  weeklyHours          Float
-  color                String
-  role                 TherapistRole @default(therapist)
-  spaId                String
-  spa                  Spa           @relation(fields: [spaId], references: [id])
+  phoneNumber          String?
+  email                String?
+  weeklyHours          Float?
+  color                String?
+  role                 EmployeeRole @default(therapist)
+  businessId           String
+  business             Business     @relation(fields: [businessId], references: [id])
   defaultWorkStartHour Int?
   defaultWorkEndHour   Int?
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
 }
 
 model Service {
   id                String          @id @default(uuid())
   name              String
-  category          ServiceCategory
+  category          String
   duration          Int
   price             Float
   description       String?
   requiresCabin     Boolean         @default(false)
   requiresTherapist Boolean         @default(true)
-  spaId             String
-  spa               Spa             @relation(fields: [spaId], references: [id])
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  businessId        String
+  business          Business        @relation(fields: [businessId], references: [id])
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 }

@@ -2,6 +2,7 @@ import { reactive, ref, computed, watch } from "vue";
 import type { ScheduleBlock, ScheduleBlockType } from "@/interfaces";
 import type { BlockEditorModalProps } from "@/interfaces/components";
 import { BLOCK_EDITOR_LABELS, BLOCK_EDITOR_TYPE_OPTIONS } from "@/data/blockEditorConfig";
+import { useServiceStore } from "@/stores/service";
 
 export interface BlockEditorFormState {
   title: string;
@@ -9,6 +10,7 @@ export interface BlockEditorFormState {
   startTime: string;
   endTime: string;
   description: string;
+  serviceId: string;
 }
 
 const getInitialForm = (modalProps: BlockEditorModalProps): BlockEditorFormState => {
@@ -21,6 +23,7 @@ const getInitialForm = (modalProps: BlockEditorModalProps): BlockEditorFormState
       description: modalProps.editBlock.description || "",
       startTime: start.toTimeString().slice(0, 5),
       endTime: end.toTimeString().slice(0, 5),
+      serviceId: modalProps.editBlock.serviceId ?? "",
     };
   }
   const hour = modalProps.initialHour ?? 9;
@@ -35,6 +38,7 @@ const getInitialForm = (modalProps: BlockEditorModalProps): BlockEditorFormState
     description: "",
     startTime: formatDecimalHour(hour),
     endTime: formatDecimalHour(hour + 1),
+    serviceId: "",
   };
 };
 
@@ -42,6 +46,7 @@ export const useBlockEditorForm = (
   props: BlockEditorModalProps,
   emit: { (e: "save", data: Partial<ScheduleBlock>): void },
 ) => {
+  const serviceStore = useServiceStore();
   const form = reactive<BlockEditorFormState>(getInitialForm(props));
   const error = ref("");
 
@@ -73,6 +78,7 @@ export const useBlockEditorForm = (
       description: form.description,
       start: form.startTime,
       end: form.endTime,
+      serviceId: form.serviceId.trim() || undefined,
     });
   };
 
@@ -84,6 +90,7 @@ export const useBlockEditorForm = (
     submitLabel,
     types: BLOCK_EDITOR_TYPE_OPTIONS,
     labels: BLOCK_EDITOR_LABELS,
+    serviceStore,
     save,
   };
 };

@@ -30,7 +30,7 @@
             v-for="block in day.blocks.slice(0, 3)"
             :key="block.id"
             class="px-1.5 py-0.5 rounded text-[10px] truncate cursor-pointer hover:opacity-80 transition-opacity"
-            :class="getBlockTypeMonthCellClass(block.type)"
+            :class="monthCellClass(block.type)"
             @click.stop="$emit('block-click', block)"
           >
             {{ dates.formatTime(block.start) }} {{ block.title }}
@@ -51,9 +51,16 @@
   import { computed } from "vue";
   import type { ScheduleBlock } from "@/interfaces";
   import { DAY_NAMES_SHORT } from "@/data/calendarLocale";
+  import type { ScheduleBlockType } from "@/interfaces";
   import { getBlockTypeMonthCellClass } from "@/data/scheduleBlockTypes";
   import { useMonthGrid, type MonthGridDay } from "@/composables/useMonthGrid";
   import { useScheduleDates } from "@/composables/useScheduleDates";
+
+  const monthCellClass = (type: ScheduleBlockType) => {
+    if (type === "work") return "agenda-month-work";
+    if (type === "vacation") return "agenda-month-vacation";
+    return getBlockTypeMonthCellClass(type);
+  };
 
   const props = defineProps<{
     currentDate: Date;

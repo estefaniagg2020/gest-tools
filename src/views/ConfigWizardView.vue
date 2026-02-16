@@ -260,8 +260,9 @@
         <div class="px-6 sm:px-8 py-4 bg-gray-50/80 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
           <BaseButton
             v-if="currentStep > 1"
+            type="button"
             variant="outline"
-            @click="currentStep--"
+            @click="goToPrevStep"
           >
             Atrás
           </BaseButton>
@@ -276,7 +277,8 @@
           </RouterLink>
           <BaseButton
             v-if="currentStep < 4"
-            @click="currentStep++"
+            type="button"
+            @click="goToNextStep"
           >
             Siguiente
           </BaseButton>
@@ -302,6 +304,7 @@
 
 <script setup lang="ts">
   import { ref, reactive, onMounted, watch } from "vue";
+  import { useRouter } from "vue-router";
   import { storeToRefs } from "pinia";
   import { useAuthStore } from "@/stores/auth";
   import { useGestorConfigStore } from "@/stores/gestorConfig";
@@ -309,6 +312,7 @@
   import { DEFAULT_COMPANY_NAME, DEFAULT_CONTACT_DATA } from "@/interfaces";
   import BaseButton from "@/components/common/BaseButton.vue";
 
+  const router = useRouter();
   const authStore = useAuthStore();
   const gestorConfigStore = useGestorConfigStore();
   const { user } = storeToRefs(authStore);
@@ -362,6 +366,14 @@
     if (step >= 1 && step <= 4) currentStep.value = step;
   };
 
+  const goToNextStep = () => {
+    if (currentStep.value < 4) currentStep.value += 1;
+  };
+
+  const goToPrevStep = () => {
+    if (currentStep.value > 1) currentStep.value -= 1;
+  };
+
   const handleFinish = async () => {
     if (!user.value) return;
     saveError.value = "";
@@ -379,6 +391,7 @@
         },
         onboardingComplete: true,
       });
+      router.push({ name: "config" });
     } catch {
       saveError.value = "No se pudo guardar. Inténtalo de nuevo.";
     } finally {

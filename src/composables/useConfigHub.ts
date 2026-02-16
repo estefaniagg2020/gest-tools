@@ -10,8 +10,8 @@ export interface ConfigHubCardItem {
 const CONFIG_CARDS: readonly ConfigHubCardItem[] = [
   {
     id: "datos",
-    to: "/config/wizard",
-    title: "Datos del gestor",
+    to: "/config/datos",
+    title: "Datos de tu empresa",
     description: "Empresa, equipo, actividad y contacto.",
     icon: "📋",
     accent: "teal",
@@ -33,11 +33,11 @@ const CONFIG_CARDS: readonly ConfigHubCardItem[] = [
     accent: "amber",
   },
   {
-    id: "marca",
-    to: "/settings",
-    title: "Marca y logo",
-    description: "Nombre de la empresa e imagen.",
-    icon: "🖼",
+    id: "agenda",
+    to: "/config/agenda",
+    title: "Configuración de agenda",
+    description: "Horario, días laborables y capacidad por franja.",
+    icon: "📅",
     accent: "sky",
   },
   {
@@ -47,6 +47,14 @@ const CONFIG_CARDS: readonly ConfigHubCardItem[] = [
     description: "Recordatorios y avisos.",
     icon: "🔔",
     accent: "rose",
+  },
+  {
+    id: "iconos",
+    to: "/config/iconos",
+    title: "Iconos del menú",
+    description: "Calendarios, personas, servicios e inventario.",
+    icon: "🎯",
+    accent: "amber",
   },
 ];
 

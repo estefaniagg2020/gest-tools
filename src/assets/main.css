@@ -1,9 +1,211 @@
 @import "tailwindcss";
 
 @theme {
+  --color-spa-primary: #7c3aed;
+  --color-spa-olive: #6d28d9;
+  --color-spa-peach: #ede9fe;
+  --color-spa-teal: #6d28d9;
+  --color-spa-white: #ffffff;
+  --color-app-bg: #f5f5f5;
+  --color-app-surface: #ffffff;
+  --color-app-title: #1a1a1a;
+  --color-app-text: #374151;
+  --color-app-border: #e5e7eb;
+  --color-app-border-subtle: #f3f4f6;
+  --agenda-bg: #ffffff;
+  --agenda-marked-days: #6d28d9;
+  --agenda-vacation: #7c3aed;
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+  --shadow-card-hover: 0 4px 6px -1px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+}
+
+.app-card {
+  background: var(--color-app-surface);
+  border: 1px solid var(--color-app-border-subtle);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-card);
+}
+
+[data-theme="minimal-premium"] {
+  --color-spa-primary: #7c3aed;
+  --color-spa-teal: #6d28d9;
+  --color-spa-white: #ffffff;
+  --color-app-bg: #f5f5f5;
+  --color-app-surface: #ffffff;
+  --color-app-title: #1a1a1a;
+  --color-app-text: #374151;
+  --color-app-border: #e5e7eb;
+  --color-app-border-subtle: #f3f4f6;
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+  --shadow-card-hover: 0 4px 6px -1px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+}
+
+[data-theme="calido"] {
+  --color-spa-primary: #b45309;
+  --color-spa-teal: #a16207;
+  --color-spa-white: #fffbeb;
+  --color-app-bg: #fef3c7;
+  --color-app-surface: #fffbeb;
+  --color-app-title: #78350f;
+  --color-app-text: #92400e;
+  --color-app-border: #fde68a;
+  --color-app-border-subtle: #fef9c3;
+  --shadow-card: 0 1px 3px 0 rgb(120 53 15 / 0.06), 0 1px 2px -1px rgb(120 53 15 / 0.04);
+  --shadow-card-hover: 0 4px 6px -1px rgb(120 53 15 / 0.07), 0 2px 4px -2px rgb(120 53 15 / 0.04);
+}
+
+[data-theme="teal"] {
   --color-spa-primary: #db7f50;
-  --color-spa-olive: #7f8563;
-  --color-spa-peach: #f6c8ae;
   --color-spa-teal: #017074;
   --color-spa-white: #ffffff;
+  --color-app-bg: #f0fdfa;
+  --color-app-surface: #ffffff;
+  --color-app-title: #111827;
+  --color-app-text: #111827;
+}
+
+[data-theme="claro"] {
+  --color-spa-primary: #4f46e5;
+  --color-spa-teal: #0d9488;
+  --color-spa-white: #fafafa;
+  --color-app-bg: #f4f4f5;
+  --color-app-surface: #ffffff;
+  --color-app-title: #18181b;
+  --color-app-text: #18181b;
+}
+
+[data-theme="oscuro"] {
+  --color-spa-primary: #f59e0b;
+  --color-spa-teal: #2dd4bf;
+  --color-spa-white: #1f2937;
+  --color-app-bg: #111827;
+  --color-app-surface: #1f2937;
+  --color-app-title: #f9fafb;
+  --color-app-text: #f9fafb;
+}
+
+[data-theme="oceano"] {
+  --color-spa-primary: #0ea5e9;
+  --color-spa-teal: #0369a1;
+  --color-spa-white: #f0f9ff;
+  --color-app-bg: #e0f2fe;
+  --color-app-surface: #f0f9ff;
+  --color-app-title: #0c4a6e;
+  --color-app-text: #0c4a6e;
+}
+
+[data-theme="bosque"] {
+  --color-spa-primary: #65a30d;
+  --color-spa-teal: #15803d;
+  --color-spa-white: #f7fee7;
+  --color-app-bg: #ecfccb;
+  --color-app-surface: #f7fee7;
+  --color-app-title: #166534;
+  --color-app-text: #166534;
+}
+
+[data-theme="atardecer"] {
+  --color-spa-primary: #ea580c;
+  --color-spa-teal: #c2410c;
+  --color-spa-white: #fff7ed;
+  --color-app-bg: #ffedd5;
+  --color-app-surface: #fff7ed;
+  --color-app-title: #9a3412;
+  --color-app-text: #9a3412;
+}
+
+[data-theme="lavanda"] {
+  --color-spa-primary: #7c3aed;
+  --color-spa-teal: #6d28d9;
+  --color-spa-white: #f5f3ff;
+  --color-app-bg: #ede9fe;
+  --color-app-surface: #f5f3ff;
+  --color-app-title: #5b21b6;
+  --color-app-text: #5b21b6;
+}
+
+[data-theme="coral"] {
+  --color-spa-primary: #e11d48;
+  --color-spa-teal: #be123c;
+  --color-spa-white: #fff1f2;
+  --color-app-bg: #ffe4e6;
+  --color-app-surface: #fff1f2;
+  --color-app-title: #9f1239;
+  --color-app-text: #9f1239;
+}
+
+[data-theme="indigo"] {
+  --color-spa-primary: #4f46e5;
+  --color-spa-teal: #3730a3;
+  --color-spa-white: #eef2ff;
+  --color-app-bg: #e0e7ff;
+  --color-app-surface: #eef2ff;
+  --color-app-title: #312e81;
+  --color-app-text: #312e81;
+}
+
+[data-theme="rosa"] {
+  --color-spa-primary: #db2777;
+  --color-spa-teal: #be185d;
+  --color-spa-white: #fdf2f8;
+  --color-app-bg: #fce7f3;
+  --color-app-surface: #fdf2f8;
+  --color-app-title: #831843;
+  --color-app-text: #831843;
+}
+
+[data-theme="minimal"] {
+  --color-spa-primary: #525252;
+  --color-spa-teal: #404040;
+  --color-spa-white: #ffffff;
+  --color-app-bg: #fafafa;
+  --color-app-surface: #ffffff;
+  --color-app-title: #171717;
+  --color-app-text: #171717;
+}
+
+[data-theme="arena"] {
+  --color-spa-primary: #b45309;
+  --color-spa-teal: #a16207;
+  --color-spa-white: #fefce8;
+  --color-app-bg: #fef9c3;
+  --color-app-surface: #fefce8;
+  --color-app-title: #713f12;
+  --color-app-text: #713f12;
+}
+
+[data-theme="esmeralda"] {
+  --color-spa-primary: #059669;
+  --color-spa-teal: #047857;
+  --color-spa-white: #ecfdf5;
+  --color-app-bg: #d1fae5;
+  --color-app-surface: #ecfdf5;
+  --color-app-title: #065f46;
+  --color-app-text: #065f46;
+}
+
+.agenda-block-work {
+  background: color-mix(in srgb, var(--agenda-marked-days) 12%, transparent);
+  border-left-color: var(--agenda-marked-days);
+  color: var(--agenda-marked-days);
+}
+
+.agenda-block-vacation {
+  background: color-mix(in srgb, var(--agenda-vacation) 12%, transparent);
+  border-left-color: var(--agenda-vacation);
+  color: var(--agenda-vacation);
+}
+
+.agenda-month-work {
+  background: var(--agenda-marked-days);
+  color: white;
+}
+
+.agenda-month-vacation {
+  background: var(--agenda-vacation);
+  color: white;
+}
+
+.agenda-grid-bg {
+  background-color: var(--agenda-bg);
 }

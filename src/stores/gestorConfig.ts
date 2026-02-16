@@ -56,6 +56,11 @@ export const useGestorConfigStore = defineStore("gestorConfig", () => {
     onboardingComplete: onboardingComplete.value,
   });
 
+  const markOnboardingComplete = (userId: string) => {
+    onboardingComplete.value = true;
+    gestorConfigStorage.saveGestorConfig(userId, getConfig());
+  };
+
   return {
     companyName,
     logoUrl,
@@ -68,5 +73,6 @@ export const useGestorConfigStore = defineStore("gestorConfig", () => {
     initialize,
     setConfig,
     getConfig,
+    markOnboardingComplete,
   };
 });

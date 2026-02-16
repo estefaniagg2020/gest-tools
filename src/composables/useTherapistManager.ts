@@ -3,6 +3,7 @@ import { useTherapistStore } from "@/stores/therapist";
 import { useSpaStore } from "@/stores/spa";
 import type { Therapist } from "@/interfaces";
 import { THERAPIST_MANAGER } from "@/data/constants";
+import { useBusinessTerminology } from "@/composables/useBusinessTerminology";
 import { getRandomAnimalAvatarUrl } from "@/utils/avatar";
 
 const DEFAULT_IDS_ORDER = ["1", "2", "3", "4", "5", "6", "7", "8"];
@@ -36,6 +37,7 @@ const getInitialForm = (): TherapistFormState => ({
 export const useTherapistManager = () => {
   const store = useTherapistStore();
   const spaStore = useSpaStore();
+  const terminology = useBusinessTerminology();
 
   const isModalOpen = ref(false);
   const isEditing = ref(false);
@@ -105,14 +107,14 @@ export const useTherapistManager = () => {
   };
 
   const deleteTherapist = (id: string) => {
-    if (confirm(THERAPIST_MANAGER.DELETE_CONFIRM)) {
+    if (confirm(terminology.value.deleteConfirm)) {
       store.deleteTherapist(id);
     }
   };
 
   const getSpaName = (id: string) => {
     const spa = spaStore.getSpaById(id);
-    return spa ? spa.name : THERAPIST_MANAGER.NO_SPA;
+    return spa ? spa.name : terminology.value.noLocation;
   };
 
   onMounted(() => {

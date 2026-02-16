@@ -1,12 +1,17 @@
-export type ServiceCategory = "manual" | "hydrotherapy" | "aesthetic" | "wellness";
+export interface ServiceCategoryDefinition {
+  id: string;
+  label: string;
+  icon: string;
+}
 
 export interface Service {
   id: string;
   name: string;
-  category: ServiceCategory;
+  category: string;
   duration: number;
   price: number;
   description?: string;
   requiresCabin?: boolean;
   requiresTherapist?: boolean;
+  employeesCount?: number;
 }

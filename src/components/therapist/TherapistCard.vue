@@ -101,6 +101,7 @@
   import type { Therapist } from "@/interfaces";
   import Avatar from "@/components/common/Avatar.vue";
   import { THERAPIST_MANAGER } from "@/data/constants";
+  import { useBusinessTerminology } from "@/composables/useBusinessTerminology";
 
   const props = defineProps<{
     therapist: Therapist;
@@ -109,11 +110,12 @@
 
   defineEmits<{ edit: []; delete: [] }>();
 
+  const terminology = useBusinessTerminology();
   const CROWN = "\u{1F451}";
   const isManager = computed(() => props.therapist.role === "manager");
 
   const roleLabel = computed(() =>
-    isManager.value ? THERAPIST_MANAGER.ROLE_MANAGER : THERAPIST_MANAGER.ROLE_THERAPIST,
+    isManager.value ? THERAPIST_MANAGER.ROLE_MANAGER : terminology.value.roleEmployee,
   );
 
   const avatarSize = 72;
