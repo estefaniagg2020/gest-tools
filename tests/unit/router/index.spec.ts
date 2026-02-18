@@ -8,15 +8,22 @@ describe("router", () => {
     expect(match?.name).toBe("dashboard");
   });
 
-  it("should_have_scheduler_therapists_spas_routes", () => {
+  it("should_have_scheduler_team_servicios_routes", () => {
     const names = router
       .getRoutes()
       .map((r) => r.name)
       .filter(Boolean);
     expect(names).toContain("dashboard");
     expect(names).toContain("scheduler");
-    expect(names).toContain("therapists");
-    expect(names).toContain("spas");
+    expect(names).toContain("team");
+    expect(names).toContain("services");
+  });
+
+  it("should_have_reservar_and_usuarios_cliente_routes", () => {
+    const names = router.getRoutes().map((r) => r.name).filter(Boolean);
+    expect(names).toContain("reservar");
+    expect(names).toContain("reservar-cambiar-clave");
+    expect(names).toContain("usuarios-cliente");
   });
 
   it("should_have_login_forgot_setup_routes", () => {

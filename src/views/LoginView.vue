@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-[#f8f9fa] flex flex-col items-center justify-center p-4">
+  <div class="min-h-screen bg-app-bg flex flex-col items-center justify-center p-4">
     <div class="w-full max-w-md">
       <div class="flex items-center justify-center mb-8">
         <AppBrand
@@ -8,8 +8,8 @@
         />
       </div>
 
-      <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 md:p-8">
-        <h2 class="text-lg font-bold text-gray-800 mb-6">Iniciar sesión</h2>
+      <div class="bg-app-surface rounded-2xl shadow-card border border-app-border-subtle p-6 md:p-8">
+        <h2 class="text-lg font-bold text-app-title mb-6">{{ $t('auth.login') }}</h2>
 
         <form
           class="space-y-4"
@@ -18,35 +18,46 @@
           <div>
             <label
               for="login-username"
-              class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2"
+              class="block text-xs font-bold text-app-text uppercase tracking-wider mb-2"
             >
-              Usuario
+              {{ $t('auth.username') }}
             </label>
             <input
               id="login-username"
               v-model="form.username"
               type="text"
               autocomplete="username"
-              placeholder="Tu usuario"
-              class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-spa-teal/20 placeholder:text-gray-400"
+              :placeholder="$t('auth.placeholderUsername')"
+              class="w-full p-2.5 bg-app-bg border border-app-border rounded-lg text-sm font-medium text-app-text focus:outline-none focus:ring-2 focus:ring-brand-accent/20 placeholder:text-app-text/60"
             />
           </div>
 
           <div>
             <label
               for="login-password"
-              class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2"
+              class="block text-xs font-bold text-app-text uppercase tracking-wider mb-2"
             >
-              Contraseña
+              {{ $t('auth.password') }}
             </label>
-            <input
-              id="login-password"
-              v-model="form.password"
-              type="password"
-              autocomplete="current-password"
-              placeholder="Tu contraseña"
-              class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-spa-teal/20 placeholder:text-gray-400"
-            />
+            <div class="relative">
+              <input
+                id="login-password"
+                v-model="form.password"
+                :type="showPassword ? 'text' : 'password'"
+                autocomplete="current-password"
+                :placeholder="$t('auth.placeholderPassword')"
+                class="w-full p-2.5 pr-10 bg-app-bg border border-app-border rounded-lg text-sm font-medium text-app-text focus:outline-none focus:ring-2 focus:ring-brand-accent/20 placeholder:text-app-text/60"
+              />
+              <button
+                type="button"
+                class="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-app-text/60 hover:text-app-text rounded focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
+                :title="showPassword ? $t('auth.hidePassword') : $t('auth.showPassword')"
+                :aria-label="showPassword ? $t('auth.hidePassword') : $t('auth.showPassword')"
+                @click="showPassword = !showPassword"
+              >
+                <span aria-hidden="true">{{ showPassword ? "🐵" : "🙈" }}</span>
+              </button>
+            </div>
             <p
               v-if="error"
               class="mt-1 text-xs text-red-600"
@@ -59,9 +70,9 @@
             <input
               v-model="form.rememberMe"
               type="checkbox"
-              class="rounded border-gray-300 text-spa-teal focus:ring-spa-teal"
+              class="rounded border-app-border text-brand-accent focus:ring-brand-accent"
             />
-            <span class="text-sm text-gray-700">Recordarme</span>
+            <span class="text-sm text-app-text">{{ $t('auth.rememberMe') }}</span>
           </label>
 
           <BaseButton
@@ -69,25 +80,28 @@
             class="w-full"
             :disabled="loading"
           >
-            {{ loading ? "Entrando…" : "Entrar" }}
+            {{ loading ? $t('auth.entering') : $t('auth.enter') }}
           </BaseButton>
         </form>
 
-        <div class="mt-6 pt-4 border-t border-gray-100 space-y-2">
+        <div class="mt-6 pt-4 border-t border-app-border-subtle space-y-2">
           <RouterLink
             to="/forgot-password"
-            class="block text-sm text-spa-teal hover:underline"
+            class="block text-sm text-brand-accent hover:underline"
           >
-            He olvidado la contraseña
+            {{ $t('auth.forgotPassword') }}
           </RouterLink>
           <RouterLink
             v-if="!authStore.hasAnyUser()"
             to="/setup"
-            class="block text-sm text-gray-500 hover:underline"
+            class="block text-sm text-app-text/80 hover:underline"
           >
-            Crear primera cuenta
+            {{ $t('auth.createFirstAccount') }}
           </RouterLink>
         </div>
+      </div>
+      <div class="mt-8 flex justify-center">
+        <BokioBrand size="sm" />
       </div>
     </div>
   </div>
@@ -95,16 +109,20 @@
 
 <script setup lang="ts">
   import { ref, reactive } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRouter } from "vue-router";
   import { useAuthStore } from "@/stores/auth";
   import AppBrand from "@/components/common/AppBrand.vue";
   import BaseButton from "@/components/common/BaseButton.vue";
+  import BokioBrand from "@/components/common/BokioBrand.vue";
 
+  const { t } = useI18n();
   const router = useRouter();
   const authStore = useAuthStore();
 
   const loading = ref(false);
   const error = ref("");
+  const showPassword = ref(false);
 
   const form = reactive({
     username: "",
@@ -115,18 +133,22 @@
   const handleSubmit = async () => {
     error.value = "";
     if (!form.username.trim()) {
-      error.value = "Introduce tu usuario";
+      error.value = t("auth.errorUsername");
       return;
     }
     if (!form.password) {
-      error.value = "Introduce tu contraseña";
+      error.value = t("auth.errorPassword");
       return;
     }
     loading.value = true;
     const result = await authStore.login(form.username, form.password, form.rememberMe);
     loading.value = false;
     if (result.ok) {
-      router.push({ name: "dashboard" });
+      if (authStore.isClient) {
+        router.push({ name: "reservar" });
+      } else {
+        router.push({ name: "dashboard" });
+      }
     } else {
       error.value = result.error;
     }

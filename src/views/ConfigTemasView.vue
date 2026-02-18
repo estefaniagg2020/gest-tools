@@ -1,127 +1,146 @@
 <template>
-  <div class="min-h-full py-6 px-4 sm:px-6 lg:px-8">
+  <div class="config-temas-page min-h-full py-6 px-4 sm:px-6 lg:px-8">
     <div class="mx-auto max-w-4xl">
-      <RouterLink
-        to="/config"
-        class="mb-6 inline-flex items-center gap-1 text-sm font-medium text-app-text/70 hover:text-spa-teal transition-colors duration-200"
-      >
-        ← Volver a configuración
-      </RouterLink>
-      <h1 class="text-2xl font-bold tracking-tight text-app-title transition-colors duration-200">
-        Temas
-      </h1>
-      <p class="mt-1 text-sm text-app-text/70 transition-colors duration-200">
-        Elige cómo quieres ver tu gestor. El tema se guarda automáticamente y verás el cambio al instante.
-      </p>
+      <ConfigPageHeader
+        :title="$t('configTemas.title')"
+        :description="$t('configTemas.description')"
+        :back-to="{ name: 'config' }"
+        :back-label="$t('common.backToConfig')"
+      />
 
-      <div class="mt-6">
-        <button
-          type="button"
-          class="rounded-lg border border-spa-teal/40 bg-spa-teal/10 px-4 py-2 text-sm font-medium text-spa-teal transition-colors duration-200 hover:bg-spa-teal/20"
-          @click="picker.applySystemColors()"
-        >
-          Usar colores del sistema
-        </button>
+      <ColorModePicker
+        :model-value="colorMode"
+        :options="colorModeOptions"
+        @update:model-value="themeStore.setColorMode"
+      />
+
+      <ThemePreviewSection
+        :primary-color="markedDaysColor"
+        :secondary-color="vacationColor"
+        :bg-color="agendaBg"
+        :preview-key="previewKey"
+      />
+
+      <div class="mt-8">
+        <ThemeDefaultsButton @click="handleValoresPorDefecto" />
       </div>
 
-      <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <ThemeCard
-          v-for="option in picker.options"
-          :key="option.id"
-          :theme-id="option.id"
-          :title="option.label"
-          :description="option.description"
-          :is-selected="picker.isSelected(option.id)"
-          :preview-color="option.id === 'personalizado' ? primaryColor : undefined"
-          @select="onSelectTheme(option.id)"
-        />
-      </div>
+      <ThemeGrid
+        :options="(picker.options as readonly ThemeGridOption[])"
+        :selected-id="themeId"
+        :primary-color-for-custom="primaryColor"
+        @select="onSelectTheme"
+      />
 
-      <section
-        v-if="picker.isCustomTheme()"
-        ref="colorPickerRef"
-        class="mt-10 rounded-2xl border border-spa-teal/20 bg-app-surface p-6 transition-colors duration-200"
-      >
-        <label class="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <span class="text-sm font-medium text-app-text transition-colors duration-200">Color principal</span>
-          <input
-            type="color"
-            :value="primaryColor"
-            class="h-12 w-12 cursor-pointer rounded-xl border-2 border-spa-teal/30 bg-transparent"
-            @input="onMainColorInput(($event.target as HTMLInputElement).value)"
-          />
-        </label>
-      </section>
-
-      <section class="mt-10 rounded-2xl border border-spa-teal/20 bg-app-surface p-6 transition-colors duration-200">
-        <h3 class="text-base font-semibold text-app-title transition-colors duration-200">
-          Tonos para títulos y textos
-        </h3>
-        <p class="mt-0.5 text-sm text-app-text/70 transition-colors duration-200">
-          Color de los encabezados y del texto normal. Aplica a cualquier tema.
-        </p>
-        <div class="mt-4 flex flex-wrap gap-6">
-          <label
-            v-for="item in textColorFields"
-            :key="item.key"
-            class="flex flex-col items-center gap-2"
-          >
-            <span class="text-sm font-medium text-app-text transition-colors duration-200">{{ item.label }}</span>
-            <input
-              type="color"
-              :value="item.key === 'title' ? picker.displayTitleColor : picker.displayTextColor"
-              class="h-12 w-12 cursor-pointer rounded-xl border-2 border-spa-teal/30 bg-transparent"
-              @input="onTitleTextInput(item.key, ($event.target as HTMLInputElement).value)"
-            />
-          </label>
-        </div>
-      </section>
+      <AgendaTonesPicker
+        ref="tonesPickerRef"
+        :primary-color="markedDaysColor"
+        :secondary-color="vacationColor"
+        :primary-swatches="primarySwatches"
+        :secondary-swatches="secondarySwatches"
+        @update:primary="onPrimaryTone"
+        @update:secondary="onSecondaryTone"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
   import { computed, ref, watch, nextTick } from "vue";
+  import { storeToRefs } from "pinia";
   import { useThemePicker } from "@/composables/useThemePicker";
-  import ThemeCard from "@/components/config/ThemeCard.vue";
   import { CUSTOM_THEME_ID } from "@/data/themes";
   import { useThemeStore } from "@/stores/theme";
+  import { useAgendaColorsStore } from "@/stores/agendaColors";
+  import ConfigPageHeader from "@/components/config/ConfigPageHeader.vue";
+  import ColorModePicker from "@/components/config/ColorModePicker.vue";
+  import ThemePreviewSection from "@/components/config/ThemePreviewSection.vue";
+  import ThemeDefaultsButton from "@/components/config/ThemeDefaultsButton.vue";
+  import ThemeGrid from "@/components/config/ThemeGrid.vue";
+  import type { ThemeGridOption } from "@/components/config/ThemeGrid.vue";
+  import AgendaTonesPicker from "@/components/config/AgendaTonesPicker.vue";
 
   const picker = useThemePicker();
   const themeStore = useThemeStore();
-  const colorPickerRef = ref<HTMLElement | null>(null);
+  const agendaColorsStore = useAgendaColorsStore();
+  const { themeId, colorMode } = storeToRefs(themeStore);
+  const { markedDaysColor, vacationColor, agendaBg } = storeToRefs(agendaColorsStore);
+  const tonesPickerRef = ref<InstanceType<typeof AgendaTonesPicker> | null>(null);
 
-  const textColorFields: { key: "title" | "text"; label: string }[] = [
-    { key: "title", label: "Títulos" },
-    { key: "text", label: "Texto" },
+  const colorModeOptions = [
+    { value: "light" as const, label: "Claro", icon: "☀️" },
+    { value: "dark" as const, label: "Oscuro", icon: "🌙" },
+    { value: "mixed" as const, label: "Mitad", icon: "◐" },
+    { value: "system" as const, label: "Seguir sistema", icon: "💻" },
   ];
 
-  const primaryColor = computed(
-    () => (picker.customColors as { value: { primary: string } }).value?.primary ?? "#017074"
-  );
+  const primarySwatches = [
+    "#017074",
+    "#7c3aed",
+    "#4f46e5",
+    "#059669",
+    "#0ea5e9",
+    "#db2777",
+  ];
+
+  const secondarySwatches = [
+    "#db7f50",
+    "#ea580c",
+    "#e11d48",
+    "#7c3aed",
+    "#059669",
+    "#b45309",
+  ];
+
+  const primaryColor = computed(() => markedDaysColor.value);
+  const previewKey = ref(0);
+
+  const handleValoresPorDefecto = () => {
+    themeStore.resetToAppDefaults();
+    agendaColorsStore.resetToThemeDefaults();
+    previewKey.value += 1;
+  };
 
   const onSelectTheme = (id: string) => {
     picker.setTheme(id);
+    nextTick(() => {
+      agendaColorsStore.resetToThemeDefaults();
+    });
   };
 
-  watch(
-    () => themeStore.themeId,
-    (id) => {
-      if (id === CUSTOM_THEME_ID) {
-        nextTick(() => {
-          colorPickerRef.value?.scrollIntoView({ behavior: "smooth", block: "start" });
-        });
-      }
+  watch(themeId, (id) => {
+    if (id === CUSTOM_THEME_ID) {
+      nextTick(() => {
+        tonesPickerRef.value?.sectionRef?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
     }
-  );
+  });
 
-  const onMainColorInput = (value: string) => {
-    if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+  const onPrimaryTone = (value: string) => {
+    agendaColorsStore.updateColors({ markedDaysColor: value });
+    if (themeId.value === CUSTOM_THEME_ID) {
       picker.setCustomColors({ primary: value, accent: value });
     }
   };
 
-  const onTitleTextInput = (key: "title" | "text", value: string) => {
-    if (/^#[0-9A-Fa-f]{6}$/.test(value)) picker.setTitleTextOverride(key, value);
+  const onSecondaryTone = (value: string) => {
+    agendaColorsStore.updateColors({ vacationColor: value });
+    if (themeId.value === CUSTOM_THEME_ID) {
+      picker.setCustomColors({ accent: value });
+    }
   };
 </script>
+
+<style scoped>
+  .config-temas-page {
+    --color-app-bg: #f4f4f5;
+    --color-app-surface: #ffffff;
+    --color-app-title: #18181b;
+    --color-app-text: #71717a;
+    --color-app-border: #e4e4e7;
+    --color-app-border-subtle: #f4f4f5;
+    --color-brand-accent: #0d9488;
+    --color-brand-primary: #0d9488;
+    background: var(--color-app-bg);
+  }
+</style>

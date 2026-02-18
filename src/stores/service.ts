@@ -1,14 +1,14 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import type { Service } from "@/interfaces";
-import { DEFAULT_SERVICES } from "@/data/services";
 import { loadStoredServices, saveServiceList } from "@/infrastructure/serviceStorage";
 
 export const useServiceStore = defineStore("service", () => {
   const services = ref<Service[]>([]);
 
   const initialize = () => {
-    services.value = loadStoredServices() ?? [...DEFAULT_SERVICES];
+    const stored = loadStoredServices();
+    services.value = stored ?? [];
   };
 
   const getServiceById = (id: string) => {

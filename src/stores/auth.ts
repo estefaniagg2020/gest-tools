@@ -3,7 +3,7 @@ import { ref, computed } from "vue";
 import type { User } from "@/interfaces";
 import { AUTH_CONFIG } from "@/data/authConfig";
 import * as authStorage from "@/infrastructure/authStorage";
-import { hashPassword, verifyPassword, generateSalt, generateSessionToken } from "@/utils/password";
+import { authApi } from "@/infrastructure/authApi";
 
 export type UserRole = "manager" | "employee";
 
@@ -15,8 +15,14 @@ export const useAuthStore = defineStore("auth", () => {
   const user = ref<User | null>(null);
   const currentRole = ref<UserRole>(AUTH_CONFIG.DEFAULT_ROLE as UserRole);
   const currentUserId = ref<string | null>(AUTH_CONFIG.DEFAULT_USER_ID);
+  const hasUsersRef = ref<boolean>(false);
 
   const isAuthenticated = computed(() => user.value !== null);
+
+  const isGestor = computed(
+    () => user.value?.role === "gestor" || !user.value?.role,
+  );
+  const isClient = computed(() => user.value?.role === "client");
 
   const setRole = (role: UserRole) => {
     currentRole.value = role;
@@ -43,111 +49,127 @@ export const useAuthStore = defineStore("auth", () => {
     currentUserId.value = AUTH_CONFIG.DEFAULT_USER_ID;
   };
 
-  const initialize = async () => {
-    const remembered = authStorage.loadRememberedSession();
-    if (!remembered) {
-      user.value = null;
-      return;
-    }
-    const users = authStorage.loadStoredUsers();
-    if (!users) {
-      user.value = null;
-      authStorage.clearRememberedSession();
-      return;
-    }
-    const found = users.find((u) => u.sessionToken === remembered.sessionToken);
-    if (!found) {
-      user.value = null;
-      authStorage.clearRememberedSession();
-      return;
-    }
-    user.value = { id: found.id, username: found.username };
+  const setUserFromBackend = (u: {
+    id: string;
+    username: string;
+    role?: string;
+    name?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    businessId?: string | null;
+  }) => {
+    user.value = {
+      id: u.id,
+      username: u.username,
+      role: u.role as User["role"],
+      name: u.name,
+      email: u.email,
+      phone: u.phone,
+      businessId: u.businessId,
+    };
     applyDefaultGestorState();
+  };
+
+  const initialize = async () => {
+    const session = authStorage.loadBackendSession();
+    if (session) {
+      setUserFromBackend(session.user);
+      return;
+    }
+    try {
+      const status = await authApi.getSetupStatus();
+      hasUsersRef.value = status.hasUsers;
+    } catch {
+      hasUsersRef.value = true;
+    }
+    user.value = null;
+    authStorage.clearBackendSession();
   };
 
   const login = async (
     username: string,
     password: string,
-    rememberMe: boolean,
+    _rememberMe: boolean,
   ): Promise<LoginResult> => {
-    const users = authStorage.loadStoredUsers();
-    if (!users) return { ok: false, error: "Usuario o contraseña incorrectos" };
-    const stored = users.find((u) => u.username.toLowerCase() === username.trim().toLowerCase());
-    if (!stored) return { ok: false, error: "Usuario o contraseña incorrectos" };
-    const valid = await verifyPassword(password, stored.salt, stored.passwordHash);
-    if (!valid) return { ok: false, error: "Usuario o contraseña incorrectos" };
-    user.value = { id: stored.id, username: stored.username };
-    applyDefaultGestorState();
-    if (rememberMe) {
-      const sessionToken = generateSessionToken();
-      const updated = users.map((u) =>
-        u.id === stored.id ? { ...u, sessionToken } : { ...u, sessionToken: undefined },
-      );
-      authStorage.saveUsers(updated);
-      authStorage.saveRememberedSession(sessionToken);
+    try {
+      const { user: u, token } = await authApi.login(username, password);
+      authStorage.saveBackendSession(token, {
+        id: u.id,
+        username: u.username,
+        role: u.role,
+        name: u.name,
+        email: u.email,
+        phone: u.phone,
+        businessId: u.businessId,
+      });
+      setUserFromBackend(u);
+      return { ok: true };
+    } catch (err) {
+      return {
+        ok: false,
+        error: err instanceof Error ? err.message : "Usuario o contraseña incorrectos",
+      };
     }
-    return { ok: true };
   };
 
-  const logout = () => {
-    const users = authStorage.loadStoredUsers();
-    if (users && user.value) {
-      const updated = users.map((u) =>
-        u.id === user.value!.id ? { ...u, sessionToken: undefined } : u,
-      );
-      authStorage.saveUsers(updated);
+  const logout = async () => {
+    try {
+      await authApi.logout();
+    } catch {
+      // ignore
     }
-    authStorage.clearRememberedSession();
+    authStorage.clearBackendSession();
     user.value = null;
     applyDefaultGestorState();
   };
 
-  const register = async (username: string, password: string): Promise<RegisterResult> => {
-    const trimmed = username.trim();
-    if (!trimmed) return { ok: false, error: "El usuario no puede estar vacío" };
-    if (!password || password.length < 4) return { ok: false, error: "La contraseña debe tener al menos 4 caracteres" };
-    const users = authStorage.loadStoredUsers() ?? [];
-    const exists = users.some((u) => u.username.toLowerCase() === trimmed.toLowerCase());
-    if (exists) return { ok: false, error: "Ese usuario ya existe" };
-    const salt = generateSalt();
-    const passwordHash = await hashPassword(password, salt);
-    const id = crypto.randomUUID();
-    const newUser = { id, username: trimmed, passwordHash, salt };
-    authStorage.saveUsers([...users, newUser]);
-    user.value = { id, username: trimmed };
-    applyDefaultGestorState();
-    return { ok: true };
+  const register = async (
+    username: string,
+    password: string,
+  ): Promise<RegisterResult> => {
+    try {
+      const { user: u, token } = await authApi.register(username, password);
+      authStorage.saveBackendSession(token, {
+        id: u.id,
+        username: u.username,
+        role: u.role,
+        name: u.name,
+        email: u.email,
+        phone: u.phone,
+        businessId: u.businessId,
+      });
+      setUserFromBackend(u);
+      return { ok: true };
+    } catch (err) {
+      return {
+        ok: false,
+        error: err instanceof Error ? err.message : "Error al registrar",
+      };
+    }
   };
 
   const forgotPassword = async (
     username: string,
     newPassword: string,
   ): Promise<ForgotPasswordResult> => {
-    const trimmed = username.trim();
-    if (!trimmed) return { ok: false, error: "Introduce tu usuario" };
-    if (!newPassword || newPassword.length < 4) return { ok: false, error: "La contraseña debe tener al menos 4 caracteres" };
-    const users = authStorage.loadStoredUsers();
-    if (!users) return { ok: false, error: "No existe ninguna cuenta con ese usuario" };
-    const stored = users.find((u) => u.username.toLowerCase() === trimmed.toLowerCase());
-    if (!stored) return { ok: false, error: "No existe ninguna cuenta con ese usuario" };
-    const salt = generateSalt();
-    const passwordHash = await hashPassword(newPassword, salt);
-    const updated = users.map((u) =>
-      u.id === stored.id ? { ...u, passwordHash, salt, sessionToken: undefined } : u,
-    );
-    authStorage.saveUsers(updated);
-    authStorage.clearRememberedSession();
-    return { ok: true };
+    try {
+      await authApi.forgotPassword(username, newPassword);
+      return { ok: true };
+    } catch (err) {
+      return {
+        ok: false,
+        error: err instanceof Error ? err.message : "Error al cambiar contraseña",
+      };
+    }
   };
 
-  const hasAnyUser = (): boolean => {
-    const users = authStorage.loadStoredUsers();
-    return users !== null && users.length > 0;
-  };
+  const hasAnyUser = (): boolean => hasUsersRef.value;
 
   return {
     user,
     isAuthenticated,
+    isGestor,
+    isClient,
     currentRole,
     currentUserId,
     setRole,

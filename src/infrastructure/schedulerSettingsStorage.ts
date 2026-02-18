@@ -1,4 +1,4 @@
-import type { SchedulerViewSettings } from "@/interfaces";
+import type { SchedulerViewSettings, WeekStartOption } from "@/interfaces";
 
 const KEY = "spa-scheduler-view-settings";
 
@@ -7,6 +7,7 @@ const VALID_SLOT_DURATIONS = [30, 60, 90, 120] as const;
 const DEFAULT_WORK_DAYS = 5;
 const DEFAULT_MAX_PEOPLE = 1;
 const VALID_VIEWS = ["day", "week", "month"] as const;
+const VALID_WEEK_START = ["locale", "monday", "sunday"] as const;
 
 function normalizeStored(parsed: Record<string, unknown>): SchedulerViewSettings | null {
   const startHour = typeof parsed.startHour === "number" ? parsed.startHour : null;
@@ -29,6 +30,10 @@ function normalizeStored(parsed: Record<string, unknown>): SchedulerViewSettings
     typeof parsed.defaultView === "string" && VALID_VIEWS.includes(parsed.defaultView as "day" | "week" | "month")
       ? (parsed.defaultView as "day" | "week" | "month")
       : "week";
+  const weekStart =
+    typeof parsed.weekStart === "string" && VALID_WEEK_START.includes(parsed.weekStart as WeekStartOption)
+      ? (parsed.weekStart as WeekStartOption)
+      : "locale";
   if (startHour === null || endHour === null || pixelsPerHour === null) return null;
   return {
     startHour,
@@ -38,6 +43,7 @@ function normalizeStored(parsed: Record<string, unknown>): SchedulerViewSettings
     workDaysPerWeek,
     maxPeoplePerSlot,
     defaultView,
+    weekStart,
   };
 }
 

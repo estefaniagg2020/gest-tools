@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, watch } from "vue";
-import { themeStorage } from "@/infrastructure/themeStorage";
+import { themeStorage, type ColorMode } from "@/infrastructure/themeStorage";
 import {
   DEFAULT_THEME_ID,
   DEFAULT_CUSTOM_THEME_COLORS,
@@ -10,8 +10,8 @@ import {
 } from "@/data/themes";
 
 const CUSTOM_VAR_MAP: Record<keyof ThemeColors, string> = {
-  primary: "--color-spa-primary",
-  accent: "--color-spa-teal",
+  primary: "--color-brand-primary",
+  accent: "--color-brand-accent",
   bg: "--color-app-bg",
   surface: "--color-app-surface",
   title: "--color-app-title",
@@ -24,14 +24,15 @@ const applyCustomColorsToDocument = (colors: ThemeColors) => {
   (Object.keys(CUSTOM_VAR_MAP) as (keyof ThemeColors)[]).forEach((key) => {
     root.style.setProperty(CUSTOM_VAR_MAP[key], colors[key]);
   });
-  root.style.setProperty("--color-spa-white", colors.surface);
+  root.style.setProperty("--color-brand-white", colors.surface);
 };
 
 const applyPresetThemeToDocument = (themeId: string) => {
-  (Object.values(CUSTOM_VAR_MAP) as string[]).forEach((varName) => {
-    document.documentElement.style.removeProperty(varName);
+  const root = document.documentElement;
+  (Object.keys(CUSTOM_VAR_MAP) as (keyof ThemeColors)[]).forEach((key) => {
+    root.style.removeProperty(CUSTOM_VAR_MAP[key]);
   });
-  document.documentElement.setAttribute("data-theme", themeId);
+  root.setAttribute("data-theme", themeId);
 };
 
 const applyTitleTextOverrides = (overrides: { title: string; text: string } | null) => {
@@ -53,8 +54,24 @@ const applyThemeToDocument = (themeId: string, customColors: ThemeColors) => {
   }
 };
 
+const DEFAULT_COLOR_MODE: ColorMode = "system";
+
+const resolveDark = (mode: ColorMode): boolean => {
+  if (mode === "dark") return true;
+  if (mode === "light" || mode === "mixed") return false;
+  return typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches;
+};
+
+const applyColorModeToDocument = (mode: ColorMode) => {
+  const root = document.documentElement;
+  const dark = resolveDark(mode);
+  root.classList.toggle("dark", dark);
+  root.classList.toggle("color-mode-mixed", mode === "mixed");
+};
+
 export const useThemeStore = defineStore("theme", () => {
   const themeId = ref(themeStorage.get() ?? DEFAULT_THEME_ID);
+  const colorMode = ref<ColorMode>(themeStorage.getColorMode() ?? DEFAULT_COLOR_MODE);
   const customColors = ref<ThemeColors>(
     themeStorage.getCustomColors() ?? DEFAULT_CUSTOM_THEME_COLORS
   );
@@ -113,8 +130,45 @@ export const useThemeStore = defineStore("theme", () => {
     applyTitleTextOverrides(overrides);
   };
 
+  const resetToThemeDefaults = () => {
+    titleTextOverrides.value = null;
+    themeStorage.clearTitleTextOverrides();
+    if (themeId.value === CUSTOM_THEME_ID) {
+      customColors.value = { ...DEFAULT_CUSTOM_THEME_COLORS };
+      themeStorage.setCustomColors(customColors.value);
+    }
+    const id = themeId.value;
+    const colors = customColors.value;
+    applyThemeToDocument(id, colors);
+    applyTitleTextOverrides(null);
+  };
+
+  const resetToAppDefaults = () => {
+    themeId.value = DEFAULT_THEME_ID;
+    themeStorage.set(DEFAULT_THEME_ID);
+    titleTextOverrides.value = null;
+    themeStorage.clearTitleTextOverrides();
+    customColors.value = { ...DEFAULT_CUSTOM_THEME_COLORS };
+    themeStorage.setCustomColors(customColors.value);
+    applyThemeToDocument(DEFAULT_THEME_ID, customColors.value);
+    applyTitleTextOverrides(null);
+  };
+
   applyThemeToDocument(themeId.value, customColors.value);
   applyTitleTextOverrides(titleTextOverrides.value);
+  applyColorModeToDocument(colorMode.value);
+
+  const setColorMode = (mode: ColorMode) => {
+    colorMode.value = mode;
+    themeStorage.setColorMode(mode);
+    applyColorModeToDocument(mode);
+  };
+
+  if (typeof window !== "undefined") {
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+      if (colorMode.value === "system") applyColorModeToDocument("system");
+    });
+  }
 
   watch(themeId, (id) => {
     applyThemeToDocument(id, customColors.value);
@@ -127,14 +181,22 @@ export const useThemeStore = defineStore("theme", () => {
     }
   }, { deep: true });
 
+  watch(colorMode, (mode) => {
+    applyColorModeToDocument(mode);
+  });
+
   return {
     themeId,
+    colorMode,
     customColors,
     titleTextOverrides,
     setTheme,
+    setColorMode,
     setCustomColor,
     setCustomColors,
     setTitleTextOverride,
     applySystemColors,
+    resetToThemeDefaults,
+    resetToAppDefaults,
   };
 });

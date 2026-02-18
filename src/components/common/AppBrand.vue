@@ -1,7 +1,8 @@
 <template>
   <div class="flex items-center gap-3">
     <div
-      class="flex shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-spa-teal to-spa-teal/80 text-white shadow-lg shadow-spa-teal/20"
+      data-app-brand-logo-box
+      class="flex shrink-0 items-center justify-center rounded-xl bg-[var(--color-brand-accent)] bg-gradient-to-tr from-brand-accent to-brand-accent/90 text-white shadow-lg shadow-brand-accent/20"
       :class="logoBoxClass"
     >
       <img
@@ -28,14 +29,14 @@
       class="min-w-0"
     >
       <h1
-        class="font-bold text-gray-800 tracking-tight truncate"
+        class="font-bold text-app-title tracking-tight truncate"
         :class="nameClass"
       >
         {{ displayCompanyName }}
       </h1>
       <p
         v-if="showSubtitle"
-        class="text-[10px] text-gray-400 tracking-widest uppercase font-medium"
+        class="text-[10px] text-app-text/70 tracking-widest uppercase font-medium"
       >
         {{ subtitle }}
       </p>

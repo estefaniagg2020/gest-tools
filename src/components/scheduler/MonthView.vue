@@ -15,12 +15,12 @@
         v-for="day in monthDays"
         :key="day.date.toISOString()"
         class="bg-white p-2 min-h-[100px] flex flex-col relative cursor-pointer hover:bg-gray-50 transition-colors"
-        :class="{ 'bg-gray-50 text-gray-400': !day.isCurrentMonth, 'bg-spa-teal/5': day.isToday }"
+        :class="{ 'bg-gray-50 text-gray-400': !day.isCurrentMonth, 'bg-brand-accent/5': day.isToday }"
         @click="handleDayClick(day.date)"
       >
         <div
           class="text-right text-sm font-medium mb-1"
-          :class="day.isToday ? 'text-spa-teal font-bold' : 'text-gray-700'"
+          :class="day.isToday ? 'text-brand-accent font-bold' : 'text-gray-700'"
         >
           {{ day.date.getDate() }}
         </div>
@@ -39,7 +39,7 @@
             v-if="day.blocks.length > 3"
             class="text-[10px] text-gray-500 pl-1"
           >
-            + {{ day.blocks.length - 3 }} más
+            {{ $t("scheduler.more", { count: day.blocks.length - 3 }) }}
           </div>
         </div>
       </div>
@@ -50,11 +50,11 @@
 <script setup lang="ts">
   import { computed } from "vue";
   import type { ScheduleBlock } from "@/interfaces";
-  import { DAY_NAMES_SHORT } from "@/data/calendarLocale";
   import type { ScheduleBlockType } from "@/interfaces";
   import { getBlockTypeMonthCellClass } from "@/data/scheduleBlockTypes";
   import { useMonthGrid, type MonthGridDay } from "@/composables/useMonthGrid";
   import { useScheduleDates } from "@/composables/useScheduleDates";
+  import { getIntlLocale } from "@/utils/intlLocale";
 
   const monthCellClass = (type: ScheduleBlockType) => {
     if (type === "work") return "agenda-month-work";
@@ -65,6 +65,7 @@
   const props = defineProps<{
     currentDate: Date;
     blocks: ScheduleBlock[];
+    weekStartsOn?: 0 | 1;
   }>();
 
   const emit = defineEmits<{
@@ -72,11 +73,20 @@
     (e: "grid-click", data: { date: Date; hour: number }): void;
   }>();
 
-  const dayNames = DAY_NAMES_SHORT;
+  const dayNames = computed(() => {
+    const base = new Date(Date.UTC(2024, 0, 7)); // Sunday
+    const locale = getIntlLocale();
+    const formatter = new Intl.DateTimeFormat(locale, { weekday: "short" });
+    const names = Array.from({ length: 7 }, (_, i) => formatter.format(new Date(base.getTime() + i * 86_400_000)));
+    const startsOn = props.weekStartsOn ?? 1;
+    const rotated = startsOn === 0 ? names : [...names.slice(1), names[0]];
+    return rotated.map((s) => s.replace(".", "").slice(0, 3));
+  });
 
   const monthGrid = useMonthGrid(
     () => props.currentDate,
     () => props.blocks,
+    () => props.weekStartsOn ?? 1,
   );
 
   const monthDays = computed((): MonthGridDay[] => monthGrid.days.value);

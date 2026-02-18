@@ -7,18 +7,19 @@ export const filterBlocksByDay = (blocks: ScheduleBlock[], date: Date): Schedule
     return isSameDay(blockDate, date);
   });
 
-export const filterBlocksByDayAndTherapist = (
+export const filterBlocksByDayAndMember = (
   blocks: ScheduleBlock[],
   date: Date,
-  therapistId: string,
+  memberId: string,
 ): ScheduleBlock[] =>
   blocks.filter((block) => {
     const blockDate = new Date(block.start);
-    return isSameDay(blockDate, date) && block.therapistId === therapistId;
+    return isSameDay(blockDate, date) && block.memberId === memberId;
   });
 
 const getItemStart = (item: AgendaItem) => item.start;
-const getItemTherapistId = (item: AgendaItem) => item.therapistId;
+const getItemMemberId = (item: AgendaItem): string =>
+  "memberId" in item ? (item.memberId ?? "") : (item as ScheduleBlock).memberId;
 
 export const filterAgendaItemsByDay = (items: AgendaItem[], date: Date): AgendaItem[] =>
   items.filter((item) => {
@@ -26,19 +27,19 @@ export const filterAgendaItemsByDay = (items: AgendaItem[], date: Date): AgendaI
     return isSameDay(itemDate, date);
   });
 
-export const filterAgendaItemsByDayAndTherapist = (
+export const filterAgendaItemsByDayAndMember = (
   items: AgendaItem[],
   date: Date,
-  therapistId: string,
+  memberId: string,
 ): AgendaItem[] =>
   items.filter((item) => {
     const itemDate = new Date(getItemStart(item));
-    return isSameDay(itemDate, date) && getItemTherapistId(item) === therapistId;
+    return isSameDay(itemDate, date) && getItemMemberId(item) === memberId;
   });
 
 export const useScheduleBlocks = () => ({
   filterBlocksByDay,
-  filterBlocksByDayAndTherapist,
+  filterBlocksByDayAndMember,
   filterAgendaItemsByDay,
-  filterAgendaItemsByDayAndTherapist,
+  filterAgendaItemsByDayAndMember,
 });

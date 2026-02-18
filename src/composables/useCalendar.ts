@@ -1,24 +1,28 @@
-import { ref, computed } from "vue";
+import { ref, computed, type MaybeRefOrGetter, toValue } from "vue";
+import { getI18nLocaleCode, getIntlLocale, resolveWeekStartsOn } from "@/utils/intlLocale";
+import type { WeekStartOption } from "@/interfaces";
 
 export const VIEW_DAY = "day";
 export const VIEW_WEEK = "week";
 export const VIEW_MONTH = "month";
 const DAYS_PER_WEEK = 7;
-const DATE_FORMAT_LOCALE = "es-ES";
 
 export type ViewType = typeof VIEW_DAY | typeof VIEW_WEEK | typeof VIEW_MONTH;
 
-const getDaysBackToMonday = (dayOfWeek: number) => (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
+const getDaysBackToWeekStart = (dayOfWeek: number, weekStartsOn: 0 | 1) =>
+  (dayOfWeek - weekStartsOn + 7) % 7;
 
 const getDaysInMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
 
-export const useCalendar = () => {
+export const useCalendar = (opts?: { weekStart?: MaybeRefOrGetter<WeekStartOption> }) => {
   const currentDate = ref(new Date());
   const view = ref<ViewType>(VIEW_WEEK);
+  const weekStart = computed<WeekStartOption>(() => toValue(opts?.weekStart) ?? "locale");
+  const weekStartsOn = computed<0 | 1>(() => resolveWeekStartsOn(weekStart.value, getI18nLocaleCode()));
 
   const startOfWeek = computed(() => {
     const d = new Date(currentDate.value.getTime());
-    const daysBack = getDaysBackToMonday(d.getDay());
+    const daysBack = getDaysBackToWeekStart(d.getDay(), weekStartsOn.value);
     d.setDate(d.getDate() - daysBack);
     d.setHours(0, 0, 0, 0);
     return d;
@@ -57,7 +61,7 @@ export const useCalendar = () => {
   };
 
   const formatDate = (date: Date, options: Intl.DateTimeFormatOptions = { dateStyle: "medium" }) =>
-    new Intl.DateTimeFormat(DATE_FORMAT_LOCALE, options).format(date);
+    new Intl.DateTimeFormat(getIntlLocale(), options).format(date);
 
   return {
     currentDate,
@@ -65,6 +69,7 @@ export const useCalendar = () => {
     startOfWeek,
     weekDays,
     monthDays,
+    weekStartsOn,
     next,
     prev,
     setToday,

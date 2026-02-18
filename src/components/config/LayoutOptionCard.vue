@@ -1,11 +1,11 @@
 <template>
   <button
     type="button"
-    class="flex w-full flex-col rounded-2xl border-2 bg-app-surface p-4 text-left transition-all duration-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-spa-teal"
+    class="flex w-full flex-col rounded-2xl border-2 bg-app-surface p-4 text-left transition-all duration-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent"
     :class="[
       isSelected
-        ? 'border-spa-teal bg-spa-teal/10 ring-2 ring-spa-teal/30'
-        : 'border-spa-teal/20 hover:border-spa-teal/40',
+        ? 'border-brand-accent bg-brand-accent/10 ring-2 ring-brand-accent/30'
+        : 'border-brand-accent/20 hover:border-brand-accent/40',
     ]"
     @click="$emit('select')"
   >

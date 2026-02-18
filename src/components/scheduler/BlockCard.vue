@@ -5,6 +5,7 @@
       itemClass,
       position.isSmall ? 'flex items-center justify-center p-0' : '',
       !isAppointmentItem && block && block.status === 'pending' ? 'opacity-70 border-dashed border-l-4! ring-2 ring-app-border ring-offset-1' : '',
+      isAppointmentItem && isAppointmentCancelled ? 'opacity-60 border-gray-400 bg-gray-100!' : '',
     ]"
     :style="cardStyleValue"
     @click.stop="$emit('click')"
@@ -15,16 +16,19 @@
         class="flex flex-col h-full gap-0.5"
       >
         <div class="flex items-center justify-between w-full gap-1">
-          <span class="font-semibold truncate">{{ clientName }}</span>
+          <span class="font-semibold truncate" :class="{ 'line-through': isAppointmentCancelled }">{{ clientName }}</span>
           <span class="text-[10px] opacity-80 shrink-0">{{ appointmentItem ? formatTime(appointmentItem.start) : '' }}</span>
         </div>
-        <div class="truncate text-[10px] opacity-90">{{ serviceName }}</div>
+        <div class="truncate text-[10px] opacity-90" :class="{ 'line-through': isAppointmentCancelled }">{{ serviceName }}</div>
+        <div v-if="isAppointmentCancelled && cancellationReason" class="truncate text-[9px] opacity-80 italic">
+          {{ cancellationReason }}
+        </div>
         <div class="flex items-center justify-between w-full mt-0.5 flex-wrap gap-x-1.5">
-          <span class="text-[10px] font-medium opacity-90">{{ servicePriceFormatted }}</span>
-          <span class="text-[9px] px-1 rounded bg-white/60 font-medium">{{ appointmentStatusLabel }}</span>
+          <span class="text-[10px] font-medium opacity-90" :class="{ 'line-through': isAppointmentCancelled }">{{ servicePriceFormatted }}</span>
+          <span class="text-[9px] px-1 rounded font-medium" :class="isAppointmentCancelled ? 'bg-red-100 text-red-600' : 'bg-white/60'">{{ appointmentStatusLabel }}</span>
         </div>
       </div>
-      <span v-else class="truncate text-[10px]">{{ clientName }}</span>
+      <span v-else class="truncate text-[10px]" :class="{ 'line-through': isAppointmentCancelled }">{{ clientName }}</span>
     </template>
     <template v-else-if="block">
       <div
@@ -36,7 +40,7 @@
           <span
             v-if="block.status === 'pending'"
             class="text-[10px] bg-white/50 px-1 rounded"
-            :title="SCHEDULER_UI.PENDIENTE_CONFIRMACION"
+            :title="$t('scheduler.pendingConfirmation')"
           >⏳</span>
           <span
             v-else
@@ -61,7 +65,6 @@
   import { isAppointment } from "@/interfaces";
   import { useClientStore } from "@/stores/client";
   import { useServiceStore } from "@/stores/service";
-  import { SCHEDULER_UI } from "@/data/constants";
   import { getBlockTypeCardStyles } from "@/composables/useBlockTypeStyles";
   import { useBlockPosition } from "@/composables/useBlockPosition";
   import { formatTime } from "@/composables/useScheduleDates";
@@ -87,15 +90,17 @@
   const clientName = computed(() => {
     const apt = appointmentItem.value;
     if (!apt) return "";
+    if (!apt.clientId) return "—";
     const c = clientStore.getClientById(apt.clientId);
-    return c?.name ?? "Cliente";
+    return c?.name ?? "—";
   });
 
   const serviceName = computed(() => {
     const apt = appointmentItem.value;
     if (!apt) return "";
+    if (!apt.serviceId) return "—";
     const s = serviceStore.getServiceById(apt.serviceId);
-    return s?.name ?? "Servicio";
+    return s?.name ?? "—";
   });
 
   const blockServiceName = computed(() => {
@@ -108,7 +113,7 @@
 
   const servicePrice = computed(() => {
     const apt = appointmentItem.value;
-    if (!apt) return 0;
+    if (!apt || !apt.serviceId) return 0;
     const s = serviceStore.getServiceById(apt.serviceId);
     return s?.price ?? 0;
   });
@@ -117,15 +122,19 @@
     servicePrice.value > 0 ? `${servicePrice.value} €` : "",
   );
 
-  const appointmentStatusLabel = computed(() => "Confirmada");
+  const isAppointmentCancelled = computed(() => (appointmentItem.value?.status ?? "") === "cancelled");
+
+  const cancellationReason = computed(() => appointmentItem.value?.cancellationReason ?? "");
+
+  const appointmentStatusLabel = computed(() =>
+    isAppointmentCancelled.value ? "Cancelada" : "Confirmada",
+  );
 
   const itemClass = computed(() => {
     if (isAppointment(props.item)) {
-      return "border-spa-primary bg-spa-primary/10 text-app-title";
+      return "bg-emerald-100 border-emerald-500 text-emerald-900 dark:bg-emerald-500/20 dark:border-emerald-400 dark:text-emerald-100";
     }
     const b = props.item as ScheduleBlock;
-    if (b.type === "work") return "agenda-block-work";
-    if (b.type === "vacation") return "agenda-block-vacation";
     const colorClass = getBlockTypeCardStyles(b.type);
     return [colorClass.bg, colorClass.border, colorClass.text];
   });

@@ -1,8 +1,8 @@
 export interface ConfigHubCardItem {
   id: string;
   to: string;
-  title: string;
-  description: string;
+  titleKey: string;
+  descriptionKey: string;
   icon: string;
   accent: "teal" | "violet" | "amber" | "sky" | "rose";
 }
@@ -10,51 +10,67 @@ export interface ConfigHubCardItem {
 const CONFIG_CARDS: readonly ConfigHubCardItem[] = [
   {
     id: "datos",
-    to: "/config/datos",
-    title: "Datos de tu empresa",
-    description: "Empresa, equipo, actividad y contacto.",
+    to: "/config/data",
+    titleKey: "config.data.title",
+    descriptionKey: "config.data.description",
     icon: "📋",
     accent: "teal",
   },
   {
     id: "temas",
-    to: "/config/temas",
-    title: "Temas",
-    description: "Apariencia, claro u oscuro.",
+    to: "/config/themes",
+    titleKey: "config.themes.title",
+    descriptionKey: "config.themes.description",
     icon: "🎨",
     accent: "violet",
   },
   {
     id: "grid",
     to: "/config/grid",
-    title: "Diseño de la cuadrícula",
-    description: "Columnas, vistas y disposición a tu gusto.",
+    titleKey: "config.grid.title",
+    descriptionKey: "config.grid.description",
     icon: "▦",
     accent: "amber",
   },
   {
+    id: "dashboard",
+    to: "/config/dashboard",
+    titleKey: "config.dashboard.title",
+    descriptionKey: "config.dashboard.description",
+    icon: "📊",
+    accent: "sky",
+  },
+  {
     id: "agenda",
     to: "/config/agenda",
-    title: "Configuración de agenda",
-    description: "Horario, días laborables y capacidad por franja.",
+    titleKey: "config.agenda.title",
+    descriptionKey: "config.agenda.description",
     icon: "📅",
     accent: "sky",
   },
   {
     id: "notificaciones",
-    to: "/config/notificaciones",
-    title: "Notificaciones",
-    description: "Recordatorios y avisos.",
+    to: "/config/notifications",
+    titleKey: "config.notifications.title",
+    descriptionKey: "config.notifications.description",
     icon: "🔔",
     accent: "rose",
   },
   {
     id: "iconos",
-    to: "/config/iconos",
-    title: "Iconos del menú",
-    description: "Calendarios, personas, servicios e inventario.",
+    to: "/config/icons",
+    titleKey: "config.icons.title",
+    descriptionKey: "config.icons.description",
     icon: "🎯",
     accent: "amber",
+  },
+  {
+    id: "idioma",
+    to: "/config/language",
+    titleKey: "config.language.title",
+    descriptionKey: "config.language.description",
+    icon: "🌐",
+    accent: "teal",
   },
 ];
 

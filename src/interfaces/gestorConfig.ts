@@ -4,6 +4,12 @@ export interface ContactData {
   address?: string;
 }
 
+export interface WizardTeamMember {
+  id: string;
+  name: string;
+  specialty: string;
+}
+
 export interface GestorConfig {
   companyName: string;
   logoUrl: string | null;
@@ -11,6 +17,7 @@ export interface GestorConfig {
   businessType: string;
   contactData: ContactData;
   onboardingComplete: boolean;
+  teamMembers?: WizardTeamMember[];
 }
 
 export const DEFAULT_COMPANY_NAME = "Mi Gestor";

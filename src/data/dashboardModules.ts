@@ -19,9 +19,9 @@ const DASHBOARD_CARD_ICON_CATEGORY: Partial<Record<string, ModuleIconCategory>> 
 export const DASHBOARD_CARDS: readonly DashboardCard[] = [
   {
     id: "personal",
-    to: "/therapists",
+    to: "/team",
     title: "Gestión de personal",
-    description: "Equipo, terapeutas y roles.",
+    description: "Equipo y roles.",
     icon: "👥",
     accent: "teal",
   },
@@ -35,7 +35,7 @@ export const DASHBOARD_CARDS: readonly DashboardCard[] = [
   },
   {
     id: "servicios",
-    to: "/servicios",
+    to: "/services",
     title: "Gestión de servicios",
     description: "Catálogo de servicios y precios.",
     icon: "📋",
@@ -43,7 +43,7 @@ export const DASHBOARD_CARDS: readonly DashboardCard[] = [
   },
   {
     id: "inventario",
-    to: "/inventario",
+    to: "/inventory",
     title: "Inventario",
     description: "Stock y productos.",
     icon: "📦",

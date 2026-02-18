@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
-import type { GestorConfig, ContactData } from "@/interfaces";
+import type { GestorConfig, ContactData, WizardTeamMember } from "@/interfaces";
 import { DEFAULT_COMPANY_NAME, DEFAULT_CONTACT_DATA } from "@/interfaces";
 import * as gestorConfigStorage from "@/infrastructure/gestorConfigStorage";
 
@@ -11,6 +11,7 @@ export const useGestorConfigStore = defineStore("gestorConfig", () => {
   const businessType = ref("");
   const contactData = ref<ContactData>({ ...DEFAULT_CONTACT_DATA });
   const onboardingComplete = ref(false);
+  const teamMembers = ref<WizardTeamMember[]>([]);
 
   const displayCompanyName = computed(() =>
     companyName.value.trim() || DEFAULT_COMPANY_NAME,
@@ -27,6 +28,7 @@ export const useGestorConfigStore = defineStore("gestorConfig", () => {
       businessType.value = stored.businessType;
       contactData.value = { ...DEFAULT_CONTACT_DATA, ...stored.contactData };
       onboardingComplete.value = stored.onboardingComplete;
+      teamMembers.value = stored.teamMembers ?? [];
     } else {
       companyName.value = "";
       logoUrl.value = null;
@@ -34,6 +36,7 @@ export const useGestorConfigStore = defineStore("gestorConfig", () => {
       businessType.value = "";
       contactData.value = { ...DEFAULT_CONTACT_DATA };
       onboardingComplete.value = false;
+      teamMembers.value = [];
     }
   };
 
@@ -44,6 +47,7 @@ export const useGestorConfigStore = defineStore("gestorConfig", () => {
     businessType.value = config.businessType;
     contactData.value = { ...DEFAULT_CONTACT_DATA, ...config.contactData };
     onboardingComplete.value = config.onboardingComplete;
+    teamMembers.value = config.teamMembers ?? [];
     gestorConfigStorage.saveGestorConfig(userId, config);
   };
 
@@ -54,6 +58,7 @@ export const useGestorConfigStore = defineStore("gestorConfig", () => {
     businessType: businessType.value,
     contactData: { ...contactData.value },
     onboardingComplete: onboardingComplete.value,
+    teamMembers: teamMembers.value.map((m) => ({ ...m })),
   });
 
   const markOnboardingComplete = (userId: string) => {
@@ -68,6 +73,7 @@ export const useGestorConfigStore = defineStore("gestorConfig", () => {
     businessType,
     contactData,
     onboardingComplete,
+    teamMembers,
     displayCompanyName,
     displayLogoUrl,
     initialize,

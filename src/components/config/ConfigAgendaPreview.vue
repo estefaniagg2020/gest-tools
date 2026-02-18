@@ -1,6 +1,6 @@
 <template>
   <div
-    class="rounded-2xl border-2 border-spa-teal/20 overflow-hidden transition-colors duration-200"
+    class="rounded-2xl border-2 border-brand-accent/20 overflow-hidden transition-colors duration-200"
     :style="{ backgroundColor: colors.agendaBg }"
   >
     <div class="px-3 py-2 border-b border-gray-200/80 flex items-center justify-between gap-2">

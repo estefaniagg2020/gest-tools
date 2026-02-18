@@ -5,7 +5,7 @@
       :key="module.id"
       class="flex items-center gap-3 rounded-xl border-2 bg-app-surface p-3 transition-all duration-200"
       :class="[
-        dragOverId === module.id ? 'border-spa-teal bg-spa-teal/10' : 'border-transparent hover:border-spa-teal/30',
+        dragOverId === module.id ? 'border-brand-accent bg-brand-accent/10' : 'border-transparent hover:border-brand-accent/30',
         isDraggingId === module.id ? 'opacity-50 scale-[0.98]' : '',
       ]"
       draggable="true"
@@ -20,7 +20,7 @@
         aria-hidden="true"
       >⋮⋮</span>
       <span class="text-2xl">{{ module.icon }}</span>
-      <span class="font-medium text-app-text">{{ module.label }}</span>
+      <span class="font-medium text-app-text">{{ $t(module.labelKey) }}</span>
     </li>
   </ul>
 </template>

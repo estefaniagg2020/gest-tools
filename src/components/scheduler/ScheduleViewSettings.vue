@@ -9,7 +9,7 @@
         <select
           :value="startHour"
           @change="onStartHourChange"
-          class="w-full p-2 bg-app-bg border border-app-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-spa-primary/20"
+          class="w-full p-2 bg-app-bg border border-app-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
         >
           <option
             v-for="opt in SCHEDULE_VIEW_SETTINGS.HOUR_OPTIONS"
@@ -25,7 +25,7 @@
         <select
           :value="endHour"
           @change="onEndHourChange"
-          class="w-full p-2 bg-app-bg border border-app-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-spa-primary/20"
+          class="w-full p-2 bg-app-bg border border-app-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
         >
           <option
             v-for="opt in SCHEDULE_VIEW_SETTINGS.HOUR_OPTIONS"
@@ -41,7 +41,7 @@
         <select
           :value="slotDurationMinutes"
           @change="onSlotDurationChange"
-          class="w-full p-2 bg-app-bg border border-app-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-spa-primary/20"
+          class="w-full p-2 bg-app-bg border border-app-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
         >
           <option
             v-for="opt in SCHEDULE_VIEW_SETTINGS.SLOT_DURATION_OPTIONS"
@@ -57,7 +57,7 @@
         <select
           :value="pixelsPerHour"
           @change="onPixelsPerHourChange"
-          class="w-full p-2 bg-app-bg border border-app-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-spa-primary/20"
+          class="w-full p-2 bg-app-bg border border-app-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
         >
           <option
             v-for="px in pixelOptions"

@@ -1,17 +1,15 @@
 <template>
   <div class="min-h-full py-6 px-4 sm:px-6 lg:px-8">
     <div class="mx-auto max-w-4xl">
-      <RouterLink
+      <BackLink
         to="/config"
-        class="mb-6 inline-flex items-center gap-1 text-sm font-medium text-app-text/70 hover:text-spa-teal transition-colors duration-200"
-      >
-        ← Volver a configuración
-      </RouterLink>
+        :label="$t('common.backToConfig')"
+      />
       <h1 class="text-2xl font-bold tracking-tight text-app-title transition-colors duration-200">
-        Iconos del menú
+        {{ $t('config.icons.title') }}
       </h1>
       <p class="mt-1 text-sm text-app-text/70 transition-colors duration-200">
-        Elige el icono que quieres ver en el menú lateral y en el panel de control para cada sección.
+        {{ $t('configIconos.description') }}
       </p>
 
       <section
@@ -27,9 +25,9 @@
             v-for="opt in MODULE_ICON_OPTIONS[category]"
             :key="opt.value"
             type="button"
-            class="flex h-14 w-14 items-center justify-center rounded-xl border-2 text-2xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-spa-teal"
+            class="flex h-14 w-14 items-center justify-center rounded-xl border-2 text-2xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent"
             :class="selectedIcon(category) === opt.value
-              ? 'border-spa-teal bg-spa-teal/10 ring-2 ring-spa-teal/30'
+              ? 'border-brand-accent bg-brand-accent/10 ring-2 ring-brand-accent/30'
               : 'border-gray-200 bg-app-surface hover:border-gray-300 hover:bg-gray-50'"
             :title="opt.label"
             @click="onSelectIcon(category, opt.value)"
@@ -49,6 +47,7 @@
   import { useModuleIconsStore } from "@/stores/moduleIcons";
   import { useAuthStore } from "@/stores/auth";
   import { storeToRefs } from "pinia";
+  import BackLink from "@/components/common/BackLink.vue";
 
   const categories: ModuleIconCategory[] = [
     "calendarios",

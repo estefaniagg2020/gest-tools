@@ -5,7 +5,7 @@ import { useScheduleStore } from "@/stores/schedule";
 const STORAGE_KEY = "spa-schedule-blocks";
 
 const createBlockInput = () => ({
-  therapistId: "th-1",
+  memberId: "th-1",
   start: "2025-02-03T09:00:00.000Z",
   end: "2025-02-03T10:00:00.000Z",
   type: "work" as const,
@@ -48,20 +48,20 @@ describe("useScheduleStore", () => {
     expect(store.blocks).toHaveLength(0);
   });
 
-  it("should_return_blocks_by_therapist", () => {
+  it("should_return_blocks_by_member", () => {
     const store = useScheduleStore();
     store.addBlock(createBlockInput());
-    store.addBlock({ ...createBlockInput(), therapistId: "th-2" });
-    const forTh1 = store.getBlocksByTherapist("th-1");
+    store.addBlock({ ...createBlockInput(), memberId: "th-2" });
+    const forTh1 = store.getBlocksByMember("th-1");
     expect(forTh1).toHaveLength(1);
-    expect(forTh1[0].therapistId).toBe("th-1");
+    expect(forTh1[0].memberId).toBe("th-1");
   });
 
   it("should_initialize_from_localStorage", () => {
     const stored = [
       {
         id: "b1",
-        therapistId: "th-1",
+        memberId: "th-1",
         start: "2025-02-03T09:00:00.000Z",
         end: "2025-02-03T10:00:00.000Z",
         type: "work",

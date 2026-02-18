@@ -1,17 +1,15 @@
 <template>
   <div class="min-h-full py-6 px-4 sm:px-6 lg:px-8">
     <div class="mx-auto max-w-4xl">
-      <RouterLink
+      <BackLink
         to="/config"
-        class="mb-6 inline-flex items-center gap-1 text-sm font-medium text-app-text/70 hover:text-spa-teal transition-colors duration-200"
-      >
-        ← Volver a configuración
-      </RouterLink>
+        :label="$t('common.backToConfig')"
+      />
       <h1 class="text-2xl font-bold tracking-tight text-app-title transition-colors duration-200">
-        Diseño de la cuadrícula
+        {{ $t('config.grid.title') }}
       </h1>
       <p class="mt-1 text-sm text-app-text/70 transition-colors duration-200">
-        Coloca el menú donde quieras, elige si quieres barra superior y cómo ver la agenda. Los cambios se aplican al instante.
+        {{ $t('config.grid.description') }}
       </p>
 
       <section class="mt-8">
@@ -87,7 +85,7 @@
         <p class="text-sm text-app-text/70 mb-3">
           Arrastra los módulos para cambiar el orden en el menú lateral.
         </p>
-        <div class="rounded-2xl border-2 border-spa-teal/20 bg-app-surface/50 p-4 max-w-md">
+        <div class="rounded-2xl border-2 border-brand-accent/20 bg-app-surface/50 p-4 max-w-md">
           <LayoutModulesList
             :ordered-modules="orderedModules"
             @reorder="reorderFromDrag"
@@ -107,6 +105,7 @@
   import LayoutOptionCard from "@/components/config/LayoutOptionCard.vue";
   import LayoutModulesList from "@/components/config/LayoutModulesList.vue";
   import LayoutPreview from "@/components/config/LayoutPreview.vue";
+  import BackLink from "@/components/common/BackLink.vue";
 
   const {
     sidebarPosition,

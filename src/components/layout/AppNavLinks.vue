@@ -4,10 +4,10 @@
       v-for="item in navItems"
       :key="item.to"
       :to="item.to"
-      class="flex items-center gap-2 text-gray-600 hover:text-spa-teal font-medium transition-colors"
+      class="flex items-center gap-2 text-gray-600 hover:text-brand-accent font-medium transition-colors"
     >
       <span>{{ item.icon }}</span>
-      {{ item.label }}
+      {{ $t(item.labelKey) }}
     </RouterLink>
   </nav>
 </template>

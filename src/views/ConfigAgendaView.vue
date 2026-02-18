@@ -1,12 +1,10 @@
 <template>
   <div class="min-h-full pt-6 pb-12 px-4 sm:px-6 lg:px-8">
     <div class="mx-auto max-w-4xl">
-      <RouterLink
+      <BackLink
         to="/config"
-        class="mb-6 inline-flex items-center gap-1 text-sm font-medium text-app-text/70 hover:text-spa-teal transition-colors duration-200"
-      >
-        ← {{ CONFIG_AGENDA.BACK_TO_CONFIG }}
-      </RouterLink>
+        :label="CONFIG_AGENDA.BACK_TO_CONFIG"
+      />
       <h1 class="text-2xl font-bold tracking-tight text-app-title transition-colors duration-200">
         {{ CONFIG_AGENDA.TITLE }}
       </h1>
@@ -14,7 +12,7 @@
         {{ CONFIG_AGENDA.SUBTITLE }}
       </p>
 
-      <section class="mt-8 p-4 rounded-2xl border-2 border-spa-teal/20 bg-app-surface/30">
+      <section class="mt-8 p-4 rounded-2xl border-2 border-brand-accent/20 bg-app-surface/30">
         <div class="flex flex-wrap items-end gap-4">
           <div class="min-w-[120px]">
             <label class="text-sm text-app-text/70 block mb-1">{{ CONFIG_AGENDA.LABEL_NUM_AGENDAS }}</label>
@@ -24,7 +22,7 @@
               :max="agendas.maxAgendas"
               :value="agendas.numberOfAgendas.value"
               @input="onNumberOfAgendasInput"
-              class="w-full p-2.5 bg-app-surface border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-spa-teal/30"
+              class="w-full p-2.5 bg-app-surface border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent/30"
             />
           </div>
           <div class="min-w-[200px] flex-1">
@@ -32,7 +30,7 @@
             <select
               :value="selectedAgendaIndex"
               @change="onSelectAgenda"
-              class="w-full p-2.5 bg-app-surface border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-spa-teal/30"
+              class="w-full p-2.5 bg-app-surface border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent/30"
             >
               <option
                 v-for="(entry, index) in agendas.agendas.value"
@@ -45,11 +43,11 @@
           </div>
           <label
             class="flex items-center gap-3 cursor-pointer group p-3 rounded-xl border-2 transition-colors shrink-0"
-            :class="agendaColors.sameColorsForAll.value ? 'border-spa-teal bg-spa-teal/5' : 'border-gray-200 bg-app-surface hover:border-gray-300'"
+            :class="agendaColors.sameColorsForAll.value ? 'border-brand-accent bg-brand-accent/5' : 'border-gray-200 bg-app-surface hover:border-gray-300'"
           >
             <span
               class="flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-colors"
-              :class="agendaColors.sameColorsForAll.value ? 'border-spa-teal bg-spa-teal text-white' : 'border-gray-300 bg-white'"
+              :class="agendaColors.sameColorsForAll.value ? 'border-brand-accent bg-brand-accent text-white' : 'border-gray-300 bg-white'"
               aria-hidden="true"
             >
               <span v-if="agendaColors.sameColorsForAll.value" class="text-xs leading-none">✓</span>
@@ -80,7 +78,7 @@
               :class="[
                 'px-4 py-2 rounded-xl text-sm font-medium transition-colors',
                 agenda.defaultView.value === opt.value
-                  ? 'bg-spa-teal text-white'
+                  ? 'bg-brand-accent text-white'
                   : 'bg-app-surface text-app-text/70 hover:bg-gray-100 border border-gray-200',
               ]"
               @click="onDefaultViewChange(opt.value)"
@@ -116,7 +114,7 @@
               :value="selectedEntry.name"
               :placeholder="AGENDA_LIST.PLACEHOLDER_NAME_EXAMPLES"
               @input="(e) => onAgendaNameInput(selectedAgendaIndex, e)"
-              class="w-full max-w-md p-2.5 bg-app-surface border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-spa-teal/30"
+              class="w-full max-w-md p-2.5 bg-app-surface border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent/30"
             />
           </div>
 
@@ -126,7 +124,7 @@
               <select
                 :value="selectedEntry.startHour ?? ''"
                 @change="(e) => onAgendaStartHourChange(selectedAgendaIndex, e)"
-                class="w-full p-2.5 bg-app-surface border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-spa-teal/30"
+                class="w-full p-2.5 bg-app-surface border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent/30"
               >
                 <option value="">{{ agendas.useGlobalHours }}</option>
                 <option
@@ -143,7 +141,7 @@
               <select
                 :value="selectedEntry.endHour ?? ''"
                 @change="(e) => onAgendaEndHourChange(selectedAgendaIndex, e)"
-                class="w-full p-2.5 bg-app-surface border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-spa-teal/30"
+                class="w-full p-2.5 bg-app-surface border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent/30"
               >
                 <option value="">{{ agendas.useGlobalHours }}</option>
                 <option
@@ -168,7 +166,7 @@
                 :class="[
                   'px-4 py-2 rounded-xl text-sm font-medium transition-colors',
                   (selectedEntry.workDaysPerWeek ?? agenda.workDaysPerWeek.value) === d
-                    ? 'bg-spa-teal text-white'
+                    ? 'bg-brand-accent text-white'
                     : 'bg-app-surface text-app-text/70 hover:bg-gray-100 border border-gray-200',
                 ]"
                 @click="onWorkDaysChange(d)"
@@ -242,7 +240,7 @@
             <select
               :value="agenda.startHour.value"
               @change="onStartHourChange"
-              class="w-full p-2.5 bg-app-surface border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-spa-teal/30"
+              class="w-full p-2.5 bg-app-surface border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent/30"
             >
               <option
                 v-for="opt in SCHEDULE_VIEW_SETTINGS.HOUR_OPTIONS"
@@ -258,7 +256,7 @@
             <select
               :value="agenda.endHour.value"
               @change="onEndHourChange"
-              class="w-full p-2.5 bg-app-surface border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-spa-teal/30"
+              class="w-full p-2.5 bg-app-surface border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent/30"
             >
               <option
                 v-for="opt in SCHEDULE_VIEW_SETTINGS.HOUR_OPTIONS"
@@ -274,7 +272,7 @@
             <select
               :value="agenda.slotDurationMinutes.value"
               @change="onSlotDurationChange"
-              class="w-full p-2.5 bg-app-surface border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-spa-teal/30"
+              class="w-full p-2.5 bg-app-surface border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent/30"
             >
               <option
                 v-for="opt in SCHEDULE_VIEW_SETTINGS.SLOT_DURATION_OPTIONS"
@@ -301,9 +299,26 @@
             :max="SCHEDULE_VIEW_SETTINGS.MAX_PEOPLE_PER_SLOT_MAX"
             :value="agenda.maxPeoplePerSlot.value"
             @input="onMaxPeopleInput"
-            class="w-full p-2.5 bg-app-surface border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-spa-teal/30"
+            class="w-full p-2.5 bg-app-surface border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent/30"
           />
         </div>
+      </section>
+
+      <section class="mt-10 pt-10 border-t border-app-border-subtle">
+        <h2 class="text-lg font-semibold text-app-title mb-3">Citas de las agendas</h2>
+        <p class="text-sm text-app-text/70 mb-3">
+          Borra todas las citas guardadas en este navegador. Las reservas en el servidor se borran con el script del backend.
+        </p>
+        <button
+          type="button"
+          class="px-4 py-2 rounded-xl text-sm font-medium border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+          @click="handleClearAllAppointments"
+        >
+          Vaciar todas las citas
+        </button>
+        <p v-if="clearedMessage" class="mt-2 text-sm text-brand-accent">
+          {{ clearedMessage }}
+        </p>
       </section>
     </div>
   </div>
@@ -315,13 +330,17 @@
   import { useConfigAgenda } from "@/composables/useConfigAgenda";
   import { useAgendaList } from "@/composables/useAgendaList";
   import { useAgendaColors } from "@/composables/useAgendaColors";
+  import { useAppointmentStore } from "@/stores/appointment";
   import { SCHEDULE_VIEW_SETTINGS, AGENDA_COLORS, CONFIG_AGENDA, AGENDA_LIST } from "@/data/constants";
   import { useBusinessTerminology } from "@/composables/useBusinessTerminology";
   import { HEX_REGEX } from "@/interfaces/agendaColors";
   import ConfigAgendaPreview from "@/components/config/ConfigAgendaPreview.vue";
   import ColorPickerRow from "@/components/config/ColorPickerRow.vue";
+  import BackLink from "@/components/common/BackLink.vue";
 
   const agenda = useConfigAgenda();
+  const appointmentStore = useAppointmentStore();
+  const clearedMessage = ref("");
   const agendas = useAgendaList();
   const agendaColors = useAgendaColors();
   const terminology = useBusinessTerminology();
@@ -433,5 +452,14 @@
     if (!Number.isNaN(n) && n >= 1 && n <= 20) {
       agenda.updateSettings({ maxPeoplePerSlot: n });
     }
+  };
+
+  const handleClearAllAppointments = () => {
+    if (!window.confirm("¿Borrar todas las citas de las agendas? Esta acción no se puede deshacer.")) return;
+    appointmentStore.clearAll();
+    clearedMessage.value = "Citas borradas. Recarga la agenda para ver el cambio.";
+    setTimeout(() => {
+      clearedMessage.value = "";
+    }, 4000);
   };
 </script>

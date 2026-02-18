@@ -6,8 +6,8 @@
       class="flex flex-col gap-3"
     >
       <h3
-        class="text-sm font-bold uppercase tracking-wider sticky top-0 z-10 py-2 bg-white border-b border-gray-100"
-        :class="dates.isToday(day) ? 'text-spa-teal' : 'text-gray-500'"
+        class="text-sm font-bold uppercase tracking-wider sticky top-0 z-10 py-2 bg-[var(--chrome-surface)] border-b border-[var(--chrome-border)]"
+        :class="dates.isToday(day) ? 'text-brand-accent' : 'text-app-text/70'"
       >
         {{ dates.formatDayName(day) }} {{ day.getDate() }}
       </h3>
@@ -30,7 +30,7 @@
               <span
                 v-if="block.status === 'pending'"
                 class="shrink-0 text-[10px] bg-white/70 px-1.5 py-0.5 rounded"
-                :title="SCHEDULER_UI.PENDIENTE_CONFIRMACION"
+                :title="$t('scheduler.pendingConfirmation')"
               >
                 ⏳
               </span>
@@ -48,27 +48,28 @@
               {{ formatDuration(block.start, block.end) }}
             </p>
             <div
-              v-if="therapistForBlock(block)"
+              v-if="memberForBlock(block)"
               class="flex items-center gap-2 mt-2"
             >
               <Avatar
-                :name="therapistForBlock(block)!.name"
-                :src="therapistForBlock(block)!.photoUrl"
+                :name="memberForBlock(block)!.name"
+                :src="memberForBlock(block)!.photoUrl"
                 :size="24"
                 class="ring-1 ring-white shrink-0"
               />
-              <span class="text-xs text-gray-600 truncate">{{ therapistForBlock(block)!.name }}</span>
+              <span class="text-xs text-gray-600 truncate">{{ memberForBlock(block)!.name }}</span>
             </div>
           </div>
         </article>
         <p
           v-if="sortedBlocksByDay(day).length === 0"
-          class="text-xs text-gray-400 py-2 pl-2"
+          class="text-xs text-app-text/60 py-2 pl-2"
         >
-          {{ SCHEDULER_UI.SIN_BLOQUES_DIA }}
+          {{ $t('scheduler.noBlocksToday') }}
         </p>
       </div>
     </section>
+    <div class="h-4 shrink-0" aria-hidden="true" />
   </div>
 </template>
 
@@ -76,14 +77,13 @@
   import { filterBlocksByDay } from "@/composables/useScheduleBlocks";
   import { useScheduleDates } from "@/composables/useScheduleDates";
   import { getBlockTypeCardStyle } from "@/data/scheduleBlockTypes";
-  import { SCHEDULER_UI } from "@/data/constants";
-  import type { ScheduleBlock, Therapist } from "@/interfaces";
+  import type { ScheduleBlock, TeamMember } from "@/interfaces";
   import Avatar from "@/components/common/Avatar.vue";
 
   const props = defineProps<{
     weekDays: Date[];
     blocks: ScheduleBlock[];
-    therapists: Therapist[];
+    members: TeamMember[];
   }>();
 
   defineEmits<{
@@ -107,6 +107,6 @@
     );
   };
 
-  const therapistForBlock = (block: ScheduleBlock): Therapist | undefined =>
-    props.therapists.find((t) => t.id === block.therapistId);
+  const memberForBlock = (block: ScheduleBlock): TeamMember | undefined =>
+    props.members.find((m) => m.id === block.memberId);
 </script>

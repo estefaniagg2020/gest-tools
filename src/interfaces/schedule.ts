@@ -2,14 +2,13 @@ export type ScheduleBlockType = "work" | "vacation" | "training" | "admin" | "ot
 
 export interface ScheduleBlock {
   id: string;
-  therapistId: string;
+  memberId: string;
   start: string;
   end: string;
   type: ScheduleBlockType;
   title: string;
   description?: string;
-  status?: "confirmed" | "pending";
-  /** Servicio asociado (opcional), p. ej. para bloques de tipo work. */
+  status?: "confirmed" | "pending" | "cancelled";
   serviceId?: string;
 }
 
@@ -23,7 +22,7 @@ export interface RejectedRequestSnapshot {
 
 export interface RejectedRequest {
   id: string;
-  therapistId: string;
+  memberId: string;
   blockSnapshot: RejectedRequestSnapshot;
   rejectedAt: string;
 }
@@ -37,6 +36,8 @@ export type SlotDurationMinutes = 30 | 60 | 90 | 120;
 
 export type DefaultViewType = "day" | "week" | "month";
 
+export type WeekStartOption = "locale" | "monday" | "sunday";
+
 export interface SchedulerViewSettings {
   startHour: number;
   endHour: number;
@@ -45,6 +46,7 @@ export interface SchedulerViewSettings {
   workDaysPerWeek: number;
   maxPeoplePerSlot: number;
   defaultView?: DefaultViewType;
+  weekStart?: WeekStartOption;
 }
 
 export type AgendaItem = ScheduleBlock | import("./appointment").Appointment;

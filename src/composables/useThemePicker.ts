@@ -34,6 +34,8 @@ export const useThemePicker = () => {
     displayTextColor,
     setTitleTextOverride: themeStore.setTitleTextOverride,
     applySystemColors: themeStore.applySystemColors,
+    resetToThemeDefaults: themeStore.resetToThemeDefaults,
+    resetToAppDefaults: themeStore.resetToAppDefaults,
   };
 };
 

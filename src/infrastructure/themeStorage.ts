@@ -3,6 +3,9 @@ import type { ThemeColors } from "@/data/themes";
 const THEME_KEY = "gestor-theme";
 const CUSTOM_COLORS_KEY = "gestor-theme-custom";
 const TITLE_TEXT_OVERRIDES_KEY = "gestor-theme-title-text";
+const COLOR_MODE_KEY = "gestor-color-mode";
+
+export type ColorMode = "light" | "dark" | "mixed" | "system";
 
 const isHexColor = (v: unknown): v is string =>
   typeof v === "string" && /^#[0-9A-Fa-f]{6}$/.test(v);
@@ -78,6 +81,32 @@ export const themeStorage = {
   setTitleTextOverrides(colors: { title: string; text: string }): void {
     try {
       localStorage.setItem(TITLE_TEXT_OVERRIDES_KEY, JSON.stringify(colors));
+    } catch {
+      /* ignore */
+    }
+  },
+
+  clearTitleTextOverrides(): void {
+    try {
+      localStorage.removeItem(TITLE_TEXT_OVERRIDES_KEY);
+    } catch {
+      /* ignore */
+    }
+  },
+
+  getColorMode(): ColorMode | null {
+    try {
+      const raw = localStorage.getItem(COLOR_MODE_KEY);
+      if (raw === "light" || raw === "dark" || raw === "mixed" || raw === "system") return raw;
+      return null;
+    } catch {
+      return null;
+    }
+  },
+
+  setColorMode(mode: ColorMode): void {
+    try {
+      localStorage.setItem(COLOR_MODE_KEY, mode);
     } catch {
       /* ignore */
     }

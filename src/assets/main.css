@@ -1,22 +1,67 @@
 @import "tailwindcss";
 
 @theme {
-  --color-spa-primary: #7c3aed;
-  --color-spa-olive: #6d28d9;
-  --color-spa-peach: #ede9fe;
-  --color-spa-teal: #6d28d9;
-  --color-spa-white: #ffffff;
-  --color-app-bg: #f5f5f5;
+  --color-brand-primary: #187bcd;
+  --color-brand-secondary: #0a6fb4;
+  --color-brand-soft: #e8f4fc;
+  --color-brand-accent: #187bcd;
+  --color-brand-white: #ffffff;
+  --color-app-bg: #f5f7fa;
   --color-app-surface: #ffffff;
-  --color-app-title: #1a1a1a;
-  --color-app-text: #374151;
-  --color-app-border: #e5e7eb;
-  --color-app-border-subtle: #f3f4f6;
+  --color-app-title: #2c3e50;
+  --color-app-text: #333333;
+  --color-app-border: #e0e0e0;
+  --color-app-border-subtle: #f0f2f5;
   --agenda-bg: #ffffff;
-  --agenda-marked-days: #6d28d9;
-  --agenda-vacation: #7c3aed;
-  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
-  --shadow-card-hover: 0 4px 6px -1px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --agenda-marked-days: #187bcd;
+  --agenda-vacation: #0a6fb4;
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+  --shadow-card-hover: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+}
+
+:root {
+  --chrome-bg: var(--color-app-surface);
+  --chrome-surface: var(--color-app-surface);
+  --chrome-title: var(--color-app-title);
+  --chrome-text: var(--color-app-text);
+  --chrome-border: var(--color-app-border-subtle);
+  --footer-bg: #1e293b;
+  --footer-text: #f1f5f9;
+  --footer-check: #e8dcc8;
+}
+
+.sidebar-column {
+  background: transparent;
+}
+
+.color-mode-mixed .sidebar-column {
+  background: transparent;
+}
+
+html.dark .sidebar-column {
+  background: transparent;
+  --chrome-surface: var(--footer-bg);
+  --chrome-border: #334155;
+  --chrome-title: #f0f1f3;
+  --chrome-text: #d1d3d6;
+}
+
+.color-mode-mixed .sidebar-column .sidebar-inner {
+  background: var(--chrome-surface);
+  border-color: var(--chrome-border);
+  --color-app-title: #f0f1f3;
+  --color-app-text: #d1d3d6;
+  --color-app-border-subtle: var(--chrome-border);
+  --color-app-border: var(--chrome-border);
+}
+
+.dark .sidebar-column .sidebar-inner {
+  background: var(--footer-bg);
+  border-color: #334155;
+  --color-app-title: var(--chrome-title);
+  --color-app-text: var(--chrome-text);
+  --color-app-border-subtle: var(--chrome-border);
+  --color-app-border: var(--chrome-border);
 }
 
 .app-card {
@@ -27,161 +72,143 @@
 }
 
 [data-theme="minimal-premium"] {
-  --color-spa-primary: #7c3aed;
-  --color-spa-teal: #6d28d9;
-  --color-spa-white: #ffffff;
-  --color-app-bg: #f5f5f5;
-  --color-app-surface: #ffffff;
-  --color-app-title: #1a1a1a;
-  --color-app-text: #374151;
-  --color-app-border: #e5e7eb;
-  --color-app-border-subtle: #f3f4f6;
-  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
-  --shadow-card-hover: 0 4px 6px -1px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --color-brand-primary: #7c3aed;
+  --color-brand-accent: #6d28d9;
+  --color-brand-secondary: #6d28d9;
+  --color-brand-soft: #ede9fe;
+}
+
+[data-theme="amarillo"] {
+  --color-brand-primary: #ca8a04;
+  --color-brand-accent: #a16207;
+  --color-brand-secondary: #a16207;
+  --color-brand-soft: #fef9c3;
+}
+
+[data-theme="verde"] {
+  --color-brand-primary: #15803d;
+  --color-brand-accent: #166534;
+  --color-brand-secondary: #166534;
+  --color-brand-soft: #dcfce7;
+}
+
+[data-theme="azul"] {
+  --color-brand-primary: #187bcd;
+  --color-brand-accent: #0a6fb4;
+  --color-brand-secondary: #0a6fb4;
+  --color-brand-soft: #e8f4fc;
+}
+
+[data-theme="azul-oscuro"] {
+  --color-brand-primary: #0ea5e9;
+  --color-brand-accent: #0284c7;
+  --color-brand-secondary: #0284c7;
+  --color-brand-soft: #e0f2fe;
+}
+
+[data-theme="rojo"] {
+  --color-brand-primary: #dc2626;
+  --color-brand-accent: #b91c1c;
+  --color-brand-secondary: #b91c1c;
+  --color-brand-soft: #fee2e2;
 }
 
 [data-theme="calido"] {
-  --color-spa-primary: #b45309;
-  --color-spa-teal: #a16207;
-  --color-spa-white: #fffbeb;
-  --color-app-bg: #fef3c7;
-  --color-app-surface: #fffbeb;
-  --color-app-title: #78350f;
-  --color-app-text: #92400e;
-  --color-app-border: #fde68a;
-  --color-app-border-subtle: #fef9c3;
-  --shadow-card: 0 1px 3px 0 rgb(120 53 15 / 0.06), 0 1px 2px -1px rgb(120 53 15 / 0.04);
-  --shadow-card-hover: 0 4px 6px -1px rgb(120 53 15 / 0.07), 0 2px 4px -2px rgb(120 53 15 / 0.04);
+  --color-brand-primary: #b45309;
+  --color-brand-accent: #a16207;
+  --color-brand-secondary: #a16207;
+  --color-brand-soft: #fef3c7;
 }
 
 [data-theme="teal"] {
-  --color-spa-primary: #db7f50;
-  --color-spa-teal: #017074;
-  --color-spa-white: #ffffff;
-  --color-app-bg: #f0fdfa;
-  --color-app-surface: #ffffff;
-  --color-app-title: #111827;
-  --color-app-text: #111827;
+  --color-brand-primary: #0d9488;
+  --color-brand-accent: #017074;
+  --color-brand-secondary: #017074;
+  --color-brand-soft: #ccfbf1;
 }
 
 [data-theme="claro"] {
-  --color-spa-primary: #4f46e5;
-  --color-spa-teal: #0d9488;
-  --color-spa-white: #fafafa;
-  --color-app-bg: #f4f4f5;
-  --color-app-surface: #ffffff;
-  --color-app-title: #18181b;
-  --color-app-text: #18181b;
+  --color-brand-primary: #4f46e5;
+  --color-brand-accent: #0d9488;
+  --color-brand-secondary: #0d9488;
+  --color-brand-soft: #e0e7ff;
 }
 
 [data-theme="oscuro"] {
-  --color-spa-primary: #f59e0b;
-  --color-spa-teal: #2dd4bf;
-  --color-spa-white: #1f2937;
-  --color-app-bg: #111827;
-  --color-app-surface: #1f2937;
-  --color-app-title: #f9fafb;
-  --color-app-text: #f9fafb;
+  --color-brand-primary: #f59e0b;
+  --color-brand-accent: #2dd4bf;
+  --color-brand-secondary: #2dd4bf;
+  --color-brand-soft: #1f2937;
 }
 
 [data-theme="oceano"] {
-  --color-spa-primary: #0ea5e9;
-  --color-spa-teal: #0369a1;
-  --color-spa-white: #f0f9ff;
-  --color-app-bg: #e0f2fe;
-  --color-app-surface: #f0f9ff;
-  --color-app-title: #0c4a6e;
-  --color-app-text: #0c4a6e;
+  --color-brand-primary: #0ea5e9;
+  --color-brand-accent: #0369a1;
+  --color-brand-secondary: #0369a1;
+  --color-brand-soft: #e0f2fe;
 }
 
 [data-theme="bosque"] {
-  --color-spa-primary: #65a30d;
-  --color-spa-teal: #15803d;
-  --color-spa-white: #f7fee7;
-  --color-app-bg: #ecfccb;
-  --color-app-surface: #f7fee7;
-  --color-app-title: #166534;
-  --color-app-text: #166534;
+  --color-brand-primary: #65a30d;
+  --color-brand-accent: #15803d;
+  --color-brand-secondary: #15803d;
+  --color-brand-soft: #ecfccb;
 }
 
 [data-theme="atardecer"] {
-  --color-spa-primary: #ea580c;
-  --color-spa-teal: #c2410c;
-  --color-spa-white: #fff7ed;
-  --color-app-bg: #ffedd5;
-  --color-app-surface: #fff7ed;
-  --color-app-title: #9a3412;
-  --color-app-text: #9a3412;
+  --color-brand-primary: #ea580c;
+  --color-brand-accent: #c2410c;
+  --color-brand-secondary: #c2410c;
+  --color-brand-soft: #ffedd5;
 }
 
 [data-theme="lavanda"] {
-  --color-spa-primary: #7c3aed;
-  --color-spa-teal: #6d28d9;
-  --color-spa-white: #f5f3ff;
-  --color-app-bg: #ede9fe;
-  --color-app-surface: #f5f3ff;
-  --color-app-title: #5b21b6;
-  --color-app-text: #5b21b6;
+  --color-brand-primary: #7c3aed;
+  --color-brand-accent: #6d28d9;
+  --color-brand-secondary: #6d28d9;
+  --color-brand-soft: #ede9fe;
 }
 
 [data-theme="coral"] {
-  --color-spa-primary: #e11d48;
-  --color-spa-teal: #be123c;
-  --color-spa-white: #fff1f2;
-  --color-app-bg: #ffe4e6;
-  --color-app-surface: #fff1f2;
-  --color-app-title: #9f1239;
-  --color-app-text: #9f1239;
+  --color-brand-primary: #e11d48;
+  --color-brand-accent: #be123c;
+  --color-brand-secondary: #be123c;
+  --color-brand-soft: #ffe4e6;
 }
 
 [data-theme="indigo"] {
-  --color-spa-primary: #4f46e5;
-  --color-spa-teal: #3730a3;
-  --color-spa-white: #eef2ff;
-  --color-app-bg: #e0e7ff;
-  --color-app-surface: #eef2ff;
-  --color-app-title: #312e81;
-  --color-app-text: #312e81;
+  --color-brand-primary: #4f46e5;
+  --color-brand-accent: #3730a3;
+  --color-brand-secondary: #3730a3;
+  --color-brand-soft: #e0e7ff;
 }
 
 [data-theme="rosa"] {
-  --color-spa-primary: #db2777;
-  --color-spa-teal: #be185d;
-  --color-spa-white: #fdf2f8;
-  --color-app-bg: #fce7f3;
-  --color-app-surface: #fdf2f8;
-  --color-app-title: #831843;
-  --color-app-text: #831843;
+  --color-brand-primary: #db2777;
+  --color-brand-accent: #be185d;
+  --color-brand-secondary: #be185d;
+  --color-brand-soft: #fce7f3;
 }
 
 [data-theme="minimal"] {
-  --color-spa-primary: #525252;
-  --color-spa-teal: #404040;
-  --color-spa-white: #ffffff;
-  --color-app-bg: #fafafa;
-  --color-app-surface: #ffffff;
-  --color-app-title: #171717;
-  --color-app-text: #171717;
+  --color-brand-primary: #525252;
+  --color-brand-accent: #404040;
+  --color-brand-secondary: #404040;
+  --color-brand-soft: #f5f5f5;
 }
 
 [data-theme="arena"] {
-  --color-spa-primary: #b45309;
-  --color-spa-teal: #a16207;
-  --color-spa-white: #fefce8;
-  --color-app-bg: #fef9c3;
-  --color-app-surface: #fefce8;
-  --color-app-title: #713f12;
-  --color-app-text: #713f12;
+  --color-brand-primary: #b45309;
+  --color-brand-accent: #a16207;
+  --color-brand-secondary: #a16207;
+  --color-brand-soft: #fef9c3;
 }
 
 [data-theme="esmeralda"] {
-  --color-spa-primary: #059669;
-  --color-spa-teal: #047857;
-  --color-spa-white: #ecfdf5;
-  --color-app-bg: #d1fae5;
-  --color-app-surface: #ecfdf5;
-  --color-app-title: #065f46;
-  --color-app-text: #065f46;
+  --color-brand-primary: #059669;
+  --color-brand-accent: #047857;
+  --color-brand-secondary: #047857;
+  --color-brand-soft: #d1fae5;
 }
 
 .agenda-block-work {
@@ -208,4 +235,83 @@
 
 .agenda-grid-bg {
   background-color: var(--agenda-bg);
+}
+
+html.dark {
+  --color-app-bg: #0f172a;
+  --color-app-surface: var(--footer-bg);
+  --chrome-surface: var(--footer-bg);
+  --chrome-bg: #0f172a;
+  --color-app-title: #f0f1f3;
+  --color-app-text: #d1d3d6;
+  --chrome-title: #f0f1f3;
+  --chrome-text: #d1d3d6;
+  --color-app-border: #3d4248;
+  --color-app-border-subtle: #334155;
+  --chrome-border: #334155;
+  --color-brand-primary: #2563eb;
+  --color-brand-accent: #1d4ed8;
+  --color-brand-secondary: #1e40af;
+  --color-brand-soft: #1e3a5f;
+  --agenda-bg: var(--color-app-surface);
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.2), 0 1px 2px -1px rgb(0 0 0 / 0.15);
+  --shadow-card-hover: 0 4px 6px -1px rgb(0 0 0 / 0.25), 0 2px 4px -2px rgb(0 0 0 / 0.2);
+}
+
+html.dark .config-temas-page {
+  --config-bg: #1a1d21;
+  --config-muted: #9ca3af;
+  --config-title: #f0f1f3;
+  --config-border: #3d4248;
+  --config-subtle: #25282c;
+  --config-accent: var(--color-brand-accent);
+}
+
+html.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+html.dark [data-app-brand-logo-box] {
+  background: #1e3a5f !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.color-mode-mixed .sidebar-column [data-app-brand-logo-box] {
+  background: #1e3a5f !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.color-mode-mixed {
+  --chrome-bg: var(--footer-bg);
+  --chrome-surface: var(--footer-bg);
+  --chrome-title: #f0f1f3;
+  --chrome-text: #d1d3d6;
+  --chrome-border: #334155;
+}
+
+.color-mode-mixed .layout-header {
+  --color-app-title: var(--chrome-title);
+  --color-app-text: var(--chrome-text);
+  border-color: var(--chrome-border);
+}
+
+.color-mode-mixed .scheduler-header-card {
+  background: var(--chrome-surface);
+  border-color: var(--chrome-border);
+  --color-app-title: var(--chrome-title);
+  --color-app-text: var(--chrome-text);
+  --color-app-border: var(--chrome-border);
+  --color-app-border-subtle: var(--chrome-border);
+}
+
+.color-mode-mixed .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
+}
+.color-mode-mixed .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
 }

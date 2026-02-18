@@ -11,6 +11,15 @@
       @submit.prevent="editor.save"
       class="space-y-4"
     >
+      <div v-if="editor.members.value.length > 0">
+        <label class="block text-sm font-bold text-gray-700 mb-1">Empleado</label>
+        <SearchableSelect
+          v-model="editor.form.memberId"
+          :options="editor.memberOptions"
+          placeholder="Buscar empleado..."
+        />
+      </div>
+
       <div>
         <label class="block text-sm font-bold text-gray-700 mb-1">{{ editor.labels.LABEL_TITLE }}</label>
         <input
@@ -18,17 +27,17 @@
           type="text"
           :placeholder="editor.labels.PLACEHOLDER_TITLE"
           required
-          class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-spa-teal/50 transition-all font-medium"
+          class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-accent/50 transition-all font-medium"
         />
       </div>
 
-      <div v-if="!editor.isEditing">
+      <div>
         <label class="block text-sm font-bold text-gray-700 mb-1">{{ editor.labels.LABEL_DATE }}</label>
         <input
           :value="chosenDateStr"
           type="date"
           required
-          class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-spa-teal/50"
+          class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
           @input="onDateInput"
         />
       </div>
@@ -55,19 +64,12 @@
 
       <div v-if="editor.form.type === 'work'">
         <label class="block text-sm font-bold text-gray-700 mb-1">Servicio (opcional)</label>
-        <select
+        <SearchableSelect
           v-model="editor.form.serviceId"
-          class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-spa-teal/50"
-        >
-          <option value="">Ninguno</option>
-          <option
-            v-for="s in editor.serviceStore.services"
-            :key="s.id"
-            :value="s.id"
-          >
-            {{ s.name }} ({{ s.duration }} min)
-          </option>
-        </select>
+          :options="editor.serviceOptions"
+          placeholder="Buscar servicio..."
+          empty-option-label="Ninguno"
+        />
       </div>
 
       <div class="grid grid-cols-2 gap-4">
@@ -77,7 +79,7 @@
             v-model="editor.form.startTime"
             type="time"
             required
-            class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-spa-teal/50"
+            class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
           />
         </div>
         <div>
@@ -86,7 +88,7 @@
             v-model="editor.form.endTime"
             type="time"
             required
-            class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-spa-teal/50"
+            class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
           />
         </div>
       </div>
@@ -96,7 +98,7 @@
         <textarea
           v-model="editor.form.description"
           rows="2"
-          class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-spa-teal/50"
+          class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
         ></textarea>
       </div>
 
@@ -107,15 +109,23 @@
         {{ editor.error }}
       </div>
 
-      <div class="pt-4 flex justify-end gap-3 border-t border-gray-100">
-        <button
-          v-if="editor.isEditing"
-          type="button"
-          @click="$emit('delete')"
-          class="mr-auto text-red-400 hover:text-red-600 font-medium text-sm px-2"
-        >
-          {{ editor.labels.BTN_DELETE }}
-        </button>
+      <div class="pt-4 flex flex-wrap justify-end gap-3 border-t border-gray-100">
+        <template v-if="editor.isEditing">
+          <button
+            type="button"
+            class="mr-auto text-amber-600 hover:text-amber-700 font-medium text-sm px-2"
+            @click="onCancelBlockClick"
+          >
+            {{ editor.labels.BTN_CANCEL_BLOCK }}
+          </button>
+          <button
+            type="button"
+            class="text-red-400 hover:text-red-600 font-medium text-sm px-2"
+            @click="onDeleteBlockClick"
+          >
+            {{ editor.labels.BTN_DELETE }}
+          </button>
+        </template>
         <BaseButton
           variant="ghost"
           type="button"
@@ -132,16 +142,20 @@
   import { ref, watch } from "vue";
   import Modal from "../common/Modal.vue";
   import BaseButton from "../common/BaseButton.vue";
+  import SearchableSelect from "../common/SearchableSelect.vue";
   import type { ScheduleBlock } from "@/interfaces";
   import type { BlockEditorModalProps } from "@/interfaces/components";
   import { useBlockEditorForm } from "@/composables/useBlockEditorForm";
+  import { useScheduleStore } from "@/stores/schedule";
 
   const props = defineProps<BlockEditorModalProps>();
+  const scheduleStore = useScheduleStore();
 
   const emit = defineEmits<{
     (e: "close"): void;
     (e: "save", data: Partial<ScheduleBlock>): void;
     (e: "delete"): void;
+    (e: "cancel"): void;
     (e: "update:date", value: Date): void;
   }>();
 
@@ -157,9 +171,12 @@
   const chosenDateStr = ref("");
 
   watch(
-    () => [props.isOpen, props.initialDate] as const,
-    ([open, initial]) => {
-      if (open && initial) {
+    () => [props.isOpen, props.initialDate, props.editBlock] as const,
+    ([open, initial, editBlock]) => {
+      if (!open) return;
+      if (editBlock?.start) {
+        chosenDateStr.value = toYYYYMMDD(new Date(editBlock.start));
+      } else if (initial) {
         chosenDateStr.value = toYYYYMMDD(initial);
       }
     },
@@ -176,5 +193,23 @@
         emit("update:date", next);
       }
     }
+  };
+
+  const onCancelBlockClick = () => {
+    const id = props.editBlock?.id;
+    if (id) {
+      scheduleStore.cancelBlock(id);
+      emit("cancel");
+    }
+    emit("close");
+  };
+
+  const onDeleteBlockClick = () => {
+    const id = props.editBlock?.id;
+    if (id) {
+      scheduleStore.deleteBlock(id);
+      emit("delete");
+    }
+    emit("close");
   };
 </script>

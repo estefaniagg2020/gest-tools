@@ -1,10 +1,18 @@
 import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 import { storeToRefs } from "pinia";
 import { useScheduleStore } from "@/stores/schedule";
-import { useTherapistStore } from "@/stores/therapist";
+import { useTeamStore } from "@/stores/team";
 import { useSchedulerSettingsStore } from "@/stores/schedulerSettings";
 import { isSameDay } from "@/composables/useScheduleDates";
 import { blockDurationMinutes } from "@/composables/useScheduleDates";
+
+const LOCALE_MAP: Record<string, string> = {
+  es: "es-ES",
+  ca: "ca-ES",
+  en: "en-GB",
+  de: "de-DE",
+};
 
 export interface HourOccupancy {
   hour: number;
@@ -38,18 +46,20 @@ const blockOverlapsHour = (
 };
 
 export const useDashboardAgendaStats = () => {
+  const { locale } = useI18n();
   const scheduleStore = useScheduleStore();
-  const therapistStore = useTherapistStore();
+  const teamStore = useTeamStore();
   const schedulerSettingsStore = useSchedulerSettingsStore();
   const { blocks } = storeToRefs(scheduleStore);
-  const { therapists } = storeToRefs(therapistStore);
+  const { members } = storeToRefs(teamStore);
   const { startHour, endHour } = storeToRefs(schedulerSettingsStore);
 
   const tomorrow = computed(() => getTomorrow());
 
-  const tomorrowLabel = computed(() =>
-    tomorrow.value.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" }),
-  );
+  const tomorrowLabel = computed(() => {
+    const localeTag = LOCALE_MAP[locale.value] ?? "es-ES";
+    return tomorrow.value.toLocaleDateString(localeTag, { weekday: "long", day: "numeric", month: "long" });
+  });
 
   const workBlocksTomorrow = computed(() => {
     const date = tomorrow.value;
@@ -66,7 +76,7 @@ export const useDashboardAgendaStats = () => {
   );
 
   const totalAvailableMinutes = computed(() => {
-    const n = therapists.value.length;
+    const n = members.value.length;
     if (n === 0) return 0;
     const hours = Math.max(0, endHour.value - startHour.value);
     return n * hours * 60;
@@ -83,7 +93,7 @@ export const useDashboardAgendaStats = () => {
     const workBlocks = blocks.value.filter(
       (b) => b.type === WORK_TYPE && isSameDay(new Date(b.start), date),
     );
-    const maxPeople = Math.max(1, therapists.value.length);
+    const maxPeople = Math.max(1, members.value.length);
     const rows: HourOccupancy[] = [];
     for (let h = startHour.value; h < endHour.value; h++) {
       const count = workBlocks.filter((b) =>
@@ -124,6 +134,6 @@ export const useDashboardAgendaStats = () => {
     slotsByHour,
     occupiedHoursFormatted,
     totalHoursFormatted,
-    therapistCount: computed(() => therapists.value.length),
+    memberCount: computed(() => members.value.length),
   };
 };

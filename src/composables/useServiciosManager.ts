@@ -1,24 +1,30 @@
-import { ref, reactive, onMounted, computed } from "vue";
+import { ref, reactive, computed, onMounted } from "vue";
 import { storeToRefs } from "pinia";
 import { useServiceStore } from "@/stores/service";
 import { useServiceCategoryStore } from "@/stores/serviceCategory";
+import { useGestorConfigStore } from "@/stores/gestorConfig";
 import { useToast } from "@/composables/useToast";
+import { useAuthStore } from "@/stores/auth";
+import {
+  getServiceTemplates,
+  getBusinessServiceDefaults,
+  type ServiceTemplate,
+} from "@/data/serviceTemplates";
 import type { Service } from "@/interfaces";
 
-const getDefaultForm = (firstCategoryId: string) => ({
+const buildDefaultForm = (firstCategoryId: string) => ({
   name: "",
   category: firstCategoryId,
   duration: 60,
   price: 0,
   description: "",
-  requiresCabin: false,
-  requiresTherapist: true,
-  employeesCount: 1,
 });
 
 export const useServiciosManager = () => {
   const serviceStore = useServiceStore();
   const categoryStore = useServiceCategoryStore();
+  const configStore = useGestorConfigStore();
+  const authStore = useAuthStore();
   const { categories } = storeToRefs(categoryStore);
   const { addToast } = useToast();
 
@@ -30,10 +36,10 @@ export const useServiciosManager = () => {
     () => categories.value[0]?.id ?? "general"
   );
 
-  const form = reactive(getDefaultForm("general"));
+  const form = reactive(buildDefaultForm("general"));
 
   const resetForm = () => {
-    Object.assign(form, getDefaultForm(firstCategoryId.value));
+    Object.assign(form, buildDefaultForm(firstCategoryId.value));
   };
 
   const openCreateModal = () => {
@@ -51,9 +57,6 @@ export const useServiciosManager = () => {
     form.duration = service.duration;
     form.price = service.price;
     form.description = service.description ?? "";
-    form.requiresCabin = service.requiresCabin ?? false;
-    form.requiresTherapist = service.requiresTherapist ?? false;
-    form.employeesCount = service.employeesCount ?? 1;
     isModalOpen.value = true;
   };
 
@@ -65,15 +68,16 @@ export const useServiciosManager = () => {
   };
 
   const saveService = () => {
+    const businessDefaults = getBusinessServiceDefaults(configStore.businessType);
     const payload = {
       name: form.name.trim(),
       category: form.category,
       duration: form.duration,
       price: form.price,
       description: form.description.trim() || undefined,
-      requiresCabin: form.requiresCabin,
-      requiresTherapist: form.requiresTherapist,
-      employeesCount: form.requiresTherapist ? form.employeesCount : undefined,
+      requiresCabin: businessDefaults.requiresCabin,
+      requiresTherapist: businessDefaults.requiresStaff,
+      employeesCount: businessDefaults.requiresStaff ? 1 : undefined,
     };
     if (isEditing.value && editingId.value) {
       serviceStore.updateService(editingId.value, payload);
@@ -115,13 +119,63 @@ export const useServiciosManager = () => {
     closeCategoryModal();
   };
 
-  const initialize = () => {
-    serviceStore.initialize();
+  const suggestedTemplates = computed(() =>
+    getServiceTemplates(configStore.businessType)
+  );
+
+  const ensureCategoryExists = (id: string, label: string, icon: string): string => {
+    const existing = categoryStore.getCategoryById(id);
+    if (existing) return existing.id;
+    const byLabel = categories.value.find(
+      (c) => c.label.toLowerCase() === label.toLowerCase()
+    );
+    if (byLabel) return byLabel.id;
+    return categoryStore.addCategory({ label, icon }).id;
   };
 
+  const quickAddFromTemplate = (template: ServiceTemplate) => {
+    const businessDefaults = getBusinessServiceDefaults(configStore.businessType);
+    const categoryId = ensureCategoryExists(
+      template.suggestedCategory,
+      template.suggestedCategory,
+      template.suggestedCategoryIcon,
+    );
+    serviceStore.addService({
+      name: template.name,
+      category: categoryId,
+      duration: template.duration,
+      price: template.price,
+      description: template.description,
+      requiresCabin: businessDefaults.requiresCabin,
+      requiresTherapist: businessDefaults.requiresStaff,
+      employeesCount: businessDefaults.requiresStaff ? 1 : undefined,
+    });
+    addToast(`"${template.name}" añadido`, "success");
+  };
+
+  const quickAddAllTemplates = () => {
+    const templates = suggestedTemplates.value;
+    if (!templates) return;
+    templates.categories.forEach((cat) => ensureCategoryExists(cat.id, cat.label, cat.icon));
+    templates.services.forEach((template) => {
+      const alreadyExists = serviceStore.services.some(
+        (s) => s.name.toLowerCase() === template.name.toLowerCase()
+      );
+      if (!alreadyExists) quickAddFromTemplate(template);
+    });
+    addToast("Servicios sugeridos añadidos", "success");
+  };
+
+  const isTemplateAdded = (template: ServiceTemplate) =>
+    serviceStore.services.some(
+      (s) => s.name.toLowerCase() === template.name.toLowerCase()
+    );
+
   onMounted(() => {
+    const userId = authStore.currentUserId ?? "local";
+    configStore.initialize(userId);
     categoryStore.initialize();
-    initialize();
+    serviceStore.initialize();
   });
 
   return {
@@ -141,5 +195,9 @@ export const useServiciosManager = () => {
     openCategoryModal,
     closeCategoryModal,
     saveCategory,
+    suggestedTemplates,
+    quickAddFromTemplate,
+    quickAddAllTemplates,
+    isTemplateAdded,
   };
 };

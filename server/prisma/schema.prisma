@@ -29,6 +29,11 @@ enum CalendarAppearance {
   spacious
 }
 
+enum UserRole {
+  gestor
+  client
+}
+
 model Company {
   id         String     @id @default(uuid())
   name       String
@@ -38,16 +43,19 @@ model Company {
 }
 
 model Business {
-  id           String        @id @default(uuid())
-  name         String
-  themeColor   String?
-  companyId    String
-  company      Company       @relation(fields: [companyId], references: [id])
-  employees    Employee[]
-  services     Service[]
-  gestorConfig GestorConfig?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id                  String               @id @default(uuid())
+  name                String
+  themeColor          String?
+  companyId           String
+  company             Company              @relation(fields: [companyId], references: [id])
+  employees           Employee[]
+  services            Service[]
+  gestorConfig        GestorConfig?
+  users               User[]
+  appointments        Appointment[]
+  slotWaitlistEntries SlotWaitlistEntry[]
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
 }
 
 model GestorConfig {
@@ -83,6 +91,14 @@ model GestorConfig {
   workDaysPerWeek     Int                @default(5)
   maxPeoplePerSlot    Int                @default(1)
 
+  // Smart Filling (huecos con micro-descuento)
+  smartFillingEnabled         Boolean @default(false)
+  smartFillingDiscountPercent Int     @default(10)
+
+  // WhatsApp reminders (recordatorios de cita)
+  whatsappRemindersEnabled Boolean @default(false)
+  whatsappPhoneNumberId    String?
+
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 }
@@ -106,16 +122,81 @@ model Employee {
 }
 
 model Service {
-  id                String          @id @default(uuid())
-  name              String
-  category          String
-  duration          Int
-  price             Float
-  description       String?
-  requiresCabin     Boolean         @default(false)
-  requiresTherapist Boolean         @default(true)
-  businessId        String
-  business          Business        @relation(fields: [businessId], references: [id])
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
+  id                  String              @id @default(uuid())
+  name                String
+  category            String
+  duration            Int
+  price               Float
+  description         String?
+  requiresCabin       Boolean             @default(false)
+  requiresTherapist   Boolean             @default(true)
+  businessId          String
+  business            Business            @relation(fields: [businessId], references: [id])
+  appointments        Appointment[]
+  slotWaitlistEntries SlotWaitlistEntry[]
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+}
+
+model User {
+  id           String    @id @default(uuid())
+  username     String    @unique
+  passwordHash String
+  salt         String
+  role         UserRole  @default(gestor)
+  name         String?
+  email        String?
+  phone        String?
+  businessId   String?
+  business     Business? @relation(fields: [businessId], references: [id])
+  sessionToken          String?
+  appointments          Appointment[]
+  slotWaitlistEntries   SlotWaitlistEntry[]
+  waitlistNotifications WaitlistNotification[]
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+model Appointment {
+  id              String          @id @default(uuid())
+  businessId      String
+  business        Business        @relation(fields: [businessId], references: [id])
+  serviceId       String
+  service         Service         @relation(fields: [serviceId], references: [id])
+  userId          String
+  user            User            @relation(fields: [userId], references: [id])
+  employeeId      String?
+  start           DateTime
+  end            DateTime
+  status          String          @default("confirmed")
+  paymentStatus   String          @default("simulated_paid")
+  notes           String?
+  discountPercent Int?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model SlotWaitlistEntry {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  businessId    String
+  business      Business @relation(fields: [businessId], references: [id])
+  serviceId     String
+  service       Service  @relation(fields: [serviceId], references: [id])
+  preferredStart DateTime
+  preferredEnd   DateTime
+  createdAt     DateTime @default(now())
+}
+
+model WaitlistNotification {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  businessId String
+  serviceId  String
+  slotStart  DateTime
+  slotEnd    DateTime
+  readAt     DateTime?
+  createdAt  DateTime @default(now())
 }

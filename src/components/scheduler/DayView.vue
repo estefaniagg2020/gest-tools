@@ -1,16 +1,16 @@
 <template>
-  <div class="flex flex-col h-full agenda-grid-bg rounded-xl overflow-hidden border border-[var(--color-app-border-subtle)] shadow-[var(--shadow-card)]">
-    <div class="flex border-b border-[var(--color-app-border-subtle)] bg-app-bg">
-      <div class="w-16 shrink-0 border-r border-[var(--color-app-border-subtle)] bg-app-surface z-20"></div>
+  <div class="flex flex-col h-full agenda-grid-bg rounded-xl overflow-hidden border border-app-border-subtle shadow-(--shadow-card)">
+    <div class="flex border-b border-app-border-subtle bg-app-surface">
+      <div class="w-16 shrink-0 border-r border-app-border-subtle bg-app-surface z-20"></div>
       <div class="flex-1 flex overflow-hidden">
         <div
-          v-for="therapist in therapists"
-          :key="therapist.id"
-          class="flex-1 py-3 text-center border-r border-[var(--color-app-border-subtle)] last:border-0 min-w-[150px]"
-          :style="{ backgroundColor: therapist.color || 'var(--color-app-bg)', color: 'var(--color-app-title)' }"
+          v-for="member in members"
+          :key="member.id"
+          class="flex-1 py-3 text-center border-r border-app-border-subtle last:border-0 min-w-[150px]"
+          :style="{ backgroundColor: member.color || 'var(--color-app-bg)', color: 'var(--color-app-title)' }"
         >
-          <div class="font-semibold truncate px-2 text-app-title">{{ therapist.name.split(" ")[0] }}</div>
-          <div class="text-xs text-app-text/80">{{ therapist.weeklyHours }}h</div>
+          <div class="font-semibold truncate px-2 text-app-title">{{ member.name.split(" ")[0] }}</div>
+          <div class="text-xs text-app-text/80">{{ member.weeklyHours }}h</div>
         </div>
       </div>
     </div>
@@ -22,17 +22,17 @@
       >
         <div
           v-if="workingHoursStyle"
-          class="absolute left-0 right-0 z-0 pointer-events-none bg-spa-primary/[0.04]"
+          class="absolute left-0 right-0 z-0 pointer-events-none bg-brand-primary/4"
           :style="workingHoursStyle"
         />
         <div
           v-if="currentTimeStyle"
-          class="absolute left-0 right-0 z-[5] h-0.5 bg-spa-primary pointer-events-none"
+          class="absolute left-0 right-0 z-5 h-0.5 bg-brand-primary pointer-events-none"
           :style="currentTimeStyle"
         >
-          <span class="absolute -top-1 left-0 w-2 h-2 rounded-full bg-spa-primary" />
+          <span class="absolute -top-1 left-0 w-2 h-2 rounded-full bg-brand-primary" />
         </div>
-        <div class="w-16 shrink-0 border-r border-[var(--color-app-border-subtle)] agenda-grid-bg z-10 sticky left-0">
+        <div class="w-16 shrink-0 border-r border-app-border-subtle agenda-grid-bg z-10 sticky left-0">
           <div
             v-for="slotStart in gridSlotStarts"
             :key="slotStart"
@@ -42,31 +42,31 @@
             {{ grid.formatSlotLabel(slotStart) }}
           </div>
         </div>
-        <div class="flex-1 flex relative z-[2]">
+        <div class="flex-1 flex relative z-2">
           <div
-            v-for="therapist in therapists"
-            :key="therapist.id"
-            class="flex-1 relative border-r border-[var(--color-app-border-subtle)] last:border-0 min-w-[150px] group cursor-crosshair"
-            @click="handleGridClick($event, therapist.id)"
-            @mousemove="handleGridMouseMove($event, therapist.id)"
+            v-for="member in members"
+            :key="member.id"
+            class="flex-1 relative border-r border-app-border-subtle last:border-0 min-w-[150px] group cursor-crosshair"
+            @click="handleGridClick($event, member.id)"
+            @mousemove="handleGridMouseMove($event, member.id)"
             @mouseleave="hoverSlot = null"
           >
             <div
               v-for="slotStart in gridSlotStarts"
               :key="slotStart"
-              class="absolute w-full border-b border-[var(--color-app-border-subtle)] pointer-events-none"
+              class="absolute w-full border-b border-app-border-subtle pointer-events-none"
               :style="{ top: topOffset + (slotStart - props.startHour) * props.pixelsPerHour + 'px' }"
             ></div>
             <div
-              v-if="hoverSlot !== null && hoverTherapistId === therapist.id"
-              class="absolute left-0 right-0 rounded py-0.5 px-1.5 bg-spa-primary/10 border border-spa-primary/20 text-spa-primary text-[10px] font-medium pointer-events-none z-10"
+              v-if="hoverSlot !== null && hoverMemberId === member.id"
+              class="absolute left-0 right-0 rounded py-0.5 px-1.5 bg-brand-primary/10 border border-brand-primary/20 text-brand-primary text-[10px] font-medium pointer-events-none z-10"
               :style="{ top: (hoverSlot - props.startHour) * props.pixelsPerHour + topOffset + 2 + 'px' }"
             >
               Crear cita · {{ grid.formatSlotLabel(hoverSlot) }}
             </div>
 
             <BlockCard
-              v-for="item in filterAgendaItemsByDayAndTherapist(props.items, props.date, therapist.id)"
+              v-for="item in filterAgendaItemsByDayAndMember(props.items, props.date, member.id)"
               :key="item.id"
               :item="item"
               :start-hour="props.startHour"
@@ -84,9 +84,9 @@
 <script setup lang="ts">
   import { computed, ref } from "vue";
   import { useScheduleGrid } from "@/composables/useScheduleGrid";
-  import { filterAgendaItemsByDayAndTherapist } from "@/composables/useScheduleBlocks";
+  import { filterAgendaItemsByDayAndMember } from "@/composables/useScheduleBlocks";
   import { isToday } from "@/composables/useScheduleDates";
-  import type { AgendaItem, Therapist } from "@/interfaces";
+  import type { AgendaItem, TeamMember } from "@/interfaces";
   import BlockCard from "./BlockCard.vue";
 
   const WORK_START = 8;
@@ -96,7 +96,7 @@
     defineProps<{
       date: Date;
       items: AgendaItem[];
-      therapists: Therapist[];
+      members: TeamMember[];
       startHour?: number;
       endHour?: number;
       pixelsPerHour?: number;
@@ -107,7 +107,7 @@
 
   const emit = defineEmits<{
     (e: "item-click", item: AgendaItem): void;
-    (e: "grid-click", data: { date: Date; hour: number; therapistId: string }): void;
+    (e: "grid-click", data: { date: Date; hour: number; memberId: string }): void;
   }>();
 
   const grid = useScheduleGrid(
@@ -143,18 +143,18 @@
   });
 
   const hoverSlot = ref<number | null>(null);
-  const hoverTherapistId = ref<string | null>(null);
+  const hoverMemberId = ref<string | null>(null);
 
-  const handleGridMouseMove = (event: MouseEvent, therapistId: string) => {
+  const handleGridMouseMove = (event: MouseEvent, memberId: string) => {
     const hour = grid.getSlotStartFromClick(event, topOffset);
     hoverSlot.value = hour;
-    hoverTherapistId.value = therapistId;
+    hoverMemberId.value = memberId;
   };
 
-  const handleGridClick = (event: MouseEvent, therapistId: string) => {
+  const handleGridClick = (event: MouseEvent, memberId: string) => {
     const hour = grid.getSlotStartFromClick(event, topOffset);
     if (hour !== null) {
-      emit("grid-click", { date: props.date, hour, therapistId });
+      emit("grid-click", { date: props.date, hour, memberId });
     }
   };
 </script>
@@ -165,13 +165,13 @@
     height: 6px;
   }
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: transparent;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #d4d4d4;
+    background: var(--color-app-border-subtle);
     border-radius: 3px;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #c0c0c0;
+    background: var(--color-app-border);
   }
 </style>

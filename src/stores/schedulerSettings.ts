@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
-import type { DefaultViewType, SchedulerViewSettings, SlotDurationMinutes } from "@/interfaces";
+import type { DefaultViewType, SchedulerViewSettings, SlotDurationMinutes, WeekStartOption } from "@/interfaces";
 import { loadSchedulerSettings, saveSchedulerSettings } from "@/infrastructure/schedulerSettingsStorage";
 import { SCHEDULE_VIEW_SETTINGS } from "@/data/constants";
 import {
@@ -22,6 +22,7 @@ export const useSchedulerSettingsStore = defineStore("schedulerSettings", () => 
   const workDaysPerWeek = ref<number>(SCHEDULE_VIEW_SETTINGS.DEFAULT_WORK_DAYS_PER_WEEK);
   const maxPeoplePerSlot = ref<number>(SCHEDULE_VIEW_SETTINGS.DEFAULT_MAX_PEOPLE_PER_SLOT);
   const defaultView = ref<DefaultViewType>("week");
+  const weekStart = ref<WeekStartOption>("locale");
 
   const settings = computed<SchedulerViewSettings>(() => ({
     startHour: startHour.value,
@@ -31,6 +32,7 @@ export const useSchedulerSettingsStore = defineStore("schedulerSettings", () => 
     workDaysPerWeek: workDaysPerWeek.value,
     maxPeoplePerSlot: maxPeoplePerSlot.value,
     defaultView: defaultView.value,
+    weekStart: weekStart.value,
   }));
 
   function initialize() {
@@ -45,6 +47,7 @@ export const useSchedulerSettingsStore = defineStore("schedulerSettings", () => 
       workDaysPerWeek.value = clampWorkDaysPerWeek(stored.workDaysPerWeek ?? SCHEDULE_VIEW_SETTINGS.DEFAULT_WORK_DAYS_PER_WEEK);
       maxPeoplePerSlot.value = clampMaxPeoplePerSlot(stored.maxPeoplePerSlot ?? SCHEDULE_VIEW_SETTINGS.DEFAULT_MAX_PEOPLE_PER_SLOT);
       defaultView.value = stored.defaultView ?? "week";
+      weekStart.value = stored.weekStart ?? "locale";
       if (startHour.value >= endHour.value) {
         endHour.value = Math.min(MAX_HOUR, startHour.value + 1);
       }
@@ -56,6 +59,7 @@ export const useSchedulerSettingsStore = defineStore("schedulerSettings", () => 
       workDaysPerWeek.value = SCHEDULE_VIEW_SETTINGS.DEFAULT_WORK_DAYS_PER_WEEK;
       maxPeoplePerSlot.value = SCHEDULE_VIEW_SETTINGS.DEFAULT_MAX_PEOPLE_PER_SLOT;
       defaultView.value = "week";
+      weekStart.value = "locale";
     }
   }
 
@@ -68,6 +72,7 @@ export const useSchedulerSettingsStore = defineStore("schedulerSettings", () => 
     if (updates.workDaysPerWeek !== undefined) workDaysPerWeek.value = clampWorkDaysPerWeek(updates.workDaysPerWeek);
     if (updates.maxPeoplePerSlot !== undefined) maxPeoplePerSlot.value = clampMaxPeoplePerSlot(updates.maxPeoplePerSlot);
     if (updates.defaultView !== undefined) defaultView.value = updates.defaultView;
+    if (updates.weekStart !== undefined) weekStart.value = updates.weekStart;
     if (startHour.value >= endHour.value) {
       endHour.value = Math.min(MAX_HOUR, startHour.value + 1);
     }
@@ -82,6 +87,7 @@ export const useSchedulerSettingsStore = defineStore("schedulerSettings", () => 
     workDaysPerWeek,
     maxPeoplePerSlot,
     defaultView,
+    weekStart,
     settings,
     initialize,
     updateSettings,

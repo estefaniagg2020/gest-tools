@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-spa-white text-spa-teal transition-colors duration-200">
+  <div class="min-h-screen bg-[var(--color-app-bg)] text-[var(--color-app-text)] transition-colors duration-200">
     <RouterView />
     <ToastContainer />
   </div>

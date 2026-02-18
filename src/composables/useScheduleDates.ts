@@ -1,3 +1,5 @@
+import { getIntlLocale } from "@/utils/intlLocale";
+
 export const isSameDay = (d1: Date, d2: Date): boolean =>
   d1.getDate() === d2.getDate() && d1.getMonth() === d2.getMonth() && d1.getFullYear() === d2.getFullYear();
 
@@ -9,10 +11,11 @@ export const formatSlotLabel = (hour: number): string => {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 };
 
-export const formatDayName = (date: Date): string => new Intl.DateTimeFormat("es-ES", { weekday: "long" }).format(date);
+export const formatDayName = (date: Date): string =>
+  new Intl.DateTimeFormat(getIntlLocale(), { weekday: "long" }).format(date);
 
 export const formatTime = (dateStr: string): string =>
-  new Intl.DateTimeFormat("es-ES", { hour: "2-digit", minute: "2-digit" }).format(new Date(dateStr));
+  new Intl.DateTimeFormat(getIntlLocale(), { hour: "2-digit", minute: "2-digit" }).format(new Date(dateStr));
 
 export const blockDurationMinutes = (start: string, end: string): number =>
   Math.round((new Date(end).getTime() - new Date(start).getTime()) / 60_000);

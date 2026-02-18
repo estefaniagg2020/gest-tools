@@ -12,16 +12,21 @@ export interface MonthGridDay {
 
 const CELLS_COUNT = 42;
 
-export const useMonthGrid = (currentDate: MaybeRefOrGetter<Date>, blocks: MaybeRefOrGetter<ScheduleBlock[]>) => {
+export const useMonthGrid = (
+  currentDate: MaybeRefOrGetter<Date>,
+  blocks: MaybeRefOrGetter<ScheduleBlock[]>,
+  weekStartsOn: MaybeRefOrGetter<0 | 1> = 1,
+) => {
   const days = computed<MonthGridDay[]>(() => {
     const date = toValue(currentDate);
     const blocksList = toValue(blocks);
+    const startsOn = toValue(weekStartsOn);
     const year = date.getFullYear();
     const month = date.getMonth();
     const firstDay = new Date(year, month, 1);
     const startDate = new Date(firstDay);
     const dayOfWeek = startDate.getDay();
-    const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const diff = (dayOfWeek - startsOn + 7) % 7;
     startDate.setDate(startDate.getDate() - diff);
 
     const result: MonthGridDay[] = [];

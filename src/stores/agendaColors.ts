@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import type { AgendaColorSet, AgendaColorsConfig } from "@/interfaces/agendaColors";
 import { loadAgendaColorsConfig, saveAgendaColorsConfig } from "@/infrastructure/agendaColorsStorage";
 import { useThemeStore } from "@/stores/theme";
@@ -12,9 +12,15 @@ const CSS_VARS = {
   vacationColor: "--agenda-vacation",
 } as const;
 
+const DARK_AGENDA_BG = "#1e293b";
+
+const isDarkMode = () =>
+  typeof document !== "undefined" && document.documentElement.classList.contains("dark");
+
 const applyColorsToDocument = (set: AgendaColorSet) => {
   const root = document.documentElement;
-  root.style.setProperty(CSS_VARS.agendaBg, set.agendaBg);
+  const bg = isDarkMode() ? DARK_AGENDA_BG : set.agendaBg;
+  root.style.setProperty(CSS_VARS.agendaBg, bg);
   root.style.setProperty(CSS_VARS.markedDaysColor, set.markedDaysColor);
   root.style.setProperty(CSS_VARS.vacationColor, set.vacationColor);
 };
@@ -65,6 +71,19 @@ export const useAgendaColorsStore = defineStore("agendaColors", () => {
       : (perAgendaColors.value[0] ?? globalSetFromRefs(agendaBg.value, markedDaysColor.value, vacationColor.value));
     applyColorsToDocument(setToApply);
   };
+
+  const reapply = () => {
+    const setToApply = sameColorsForAll.value
+      ? globalSetFromRefs(agendaBg.value, markedDaysColor.value, vacationColor.value)
+      : (perAgendaColors.value[0] ?? globalSetFromRefs(agendaBg.value, markedDaysColor.value, vacationColor.value));
+    applyColorsToDocument(setToApply);
+  };
+
+  watch(
+    () => useThemeStore().colorMode,
+    () => reapply(),
+    { flush: "post" },
+  );
 
   const persistAndApply = () => {
     const config: AgendaColorsConfig = {

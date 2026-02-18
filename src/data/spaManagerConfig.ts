@@ -1,5 +1,5 @@
 export const THEME_COLORS = [
-  { value: "teal", label: "Teal", bgClass: "bg-spa-teal" },
+  { value: "teal", label: "Teal", bgClass: "bg-brand-accent" },
   { value: "purple", label: "Purple", bgClass: "bg-purple-500" },
   { value: "blue", label: "Blue", bgClass: "bg-blue-500" },
   { value: "orange", label: "Orange", bgClass: "bg-orange-500" },
@@ -11,7 +11,7 @@ export type ThemeColorValue = (typeof THEME_COLORS)[number]["value"];
 export const getThemeClasses = (color: string): string => {
   switch (color) {
     case "teal":
-      return "bg-spa-teal shadow-spa-teal/20";
+      return "bg-brand-accent shadow-brand-accent/20";
     case "purple":
       return "bg-purple-500 shadow-purple-500/20";
     case "blue":

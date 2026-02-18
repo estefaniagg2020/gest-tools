@@ -3,6 +3,36 @@ import type { AgendaColorsConfig } from "@/interfaces/agendaColors";
 type ThemeAgendaDefaults = Omit<AgendaColorsConfig, "sameColorsForAll">;
 
 const BY_THEME: Record<string, ThemeAgendaDefaults> = {
+  "minimal-premium": {
+    agendaBg: "#ffffff",
+    markedDaysColor: "#6d28d9",
+    vacationColor: "#7c3aed",
+  },
+  amarillo: {
+    agendaBg: "#ffffff",
+    markedDaysColor: "#a16207",
+    vacationColor: "#ca8a04",
+  },
+  verde: {
+    agendaBg: "#ffffff",
+    markedDaysColor: "#15803d",
+    vacationColor: "#16a34a",
+  },
+  azul: {
+    agendaBg: "#ffffff",
+    markedDaysColor: "#187bcd",
+    vacationColor: "#0a6fb4",
+  },
+  "azul-oscuro": {
+    agendaBg: "#ffffff",
+    markedDaysColor: "#38bdf8",
+    vacationColor: "#0ea5e9",
+  },
+  rojo: {
+    agendaBg: "#ffffff",
+    markedDaysColor: "#dc2626",
+    vacationColor: "#ef4444",
+  },
   teal: {
     agendaBg: "#ffffff",
     markedDaysColor: "#017074",

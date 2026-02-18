@@ -26,9 +26,9 @@
               class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition-colors"
               :class="
                 index + 1 === currentStep
-                  ? 'bg-spa-teal text-white ring-2 ring-spa-teal ring-offset-2'
+                  ? 'bg-brand-accent text-white ring-2 ring-brand-accent ring-offset-2'
                   : index + 1 < currentStep
-                    ? 'bg-spa-teal/20 text-spa-teal'
+                    ? 'bg-brand-accent/20 text-brand-accent'
                     : 'bg-gray-100 text-gray-400'
               "
             >
@@ -46,7 +46,7 @@
             class="h-0.5 flex-1 mx-1 rounded overflow-hidden bg-gray-200 min-w-[8px]"
           >
             <div
-              class="h-full rounded bg-spa-teal transition-all duration-300"
+              class="h-full rounded bg-brand-accent transition-all duration-300"
               :style="{ width: index + 1 < currentStep ? '100%' : '0%' }"
             />
           </div>
@@ -72,7 +72,7 @@
                 v-model="form.companyName"
                 type="text"
                 placeholder="Ej. Peluquería María"
-                class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-spa-teal/20 focus:border-spa-teal text-gray-900 placeholder-gray-400 transition-colors"
+                class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-brand-accent/20 focus:border-brand-accent text-gray-900 placeholder-gray-400 transition-colors"
               />
             </div>
             <div>
@@ -98,7 +98,7 @@
                   <input
                     type="file"
                     accept="image/*"
-                    class="block w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-spa-teal/10 file:text-spa-teal file:font-medium hover:file:bg-spa-teal/20 cursor-pointer"
+                    class="block w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-brand-accent/10 file:text-brand-accent file:font-medium hover:file:bg-brand-accent/20 cursor-pointer"
                     @change="onLogoChange"
                   />
                   <button
@@ -114,65 +114,9 @@
             </div>
           </div>
 
-          <!-- Step 2: Equipo (personas + tipo de negocio) -->
+          <!-- Step 2: Actividad -->
           <div
             v-show="currentStep === 2"
-            class="space-y-6"
-          >
-            <div>
-              <label
-                for="wizard-business-type"
-                class="block text-sm font-semibold text-gray-800 mb-2"
-              >
-                Tipo de negocio
-              </label>
-              <select
-                id="wizard-business-type"
-                v-model="form.businessType"
-                class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-spa-teal/20 focus:border-spa-teal text-gray-900 transition-colors"
-              >
-                <option
-                  value=""
-                  disabled
-                >
-                  Selecciona el tipo de negocio
-                </option>
-                <option
-                  v-for="opt in BUSINESS_TYPES"
-                  :key="opt.id"
-                  :value="opt.id"
-                >
-                  {{ opt.label }}
-                </option>
-              </select>
-              <p class="mt-1 text-xs text-gray-500">
-                Negocios que gestionan citas o agenda.
-              </p>
-            </div>
-            <div>
-              <label
-                for="wizard-people"
-                class="block text-sm font-semibold text-gray-800 mb-2"
-              >
-                ¿Cuántas personas forman el equipo?
-              </label>
-              <input
-                id="wizard-people"
-                v-model.number="form.numberOfPeople"
-                type="number"
-                min="1"
-                max="999"
-                class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-spa-teal/20 focus:border-spa-teal text-gray-900 transition-colors"
-              />
-              <p class="mt-1 text-xs text-gray-500">
-                Incluye a quien gestiona agendas o atiende citas.
-              </p>
-            </div>
-          </div>
-
-          <!-- Step 3: A qué se dedica -->
-          <div
-            v-show="currentStep === 3"
             class="space-y-6"
           >
             <div>
@@ -185,7 +129,7 @@
               <select
                 id="wizard-activity"
                 v-model="form.businessType"
-                class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-spa-teal/20 focus:border-spa-teal text-gray-900 transition-colors"
+                class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-brand-accent/20 focus:border-brand-accent text-gray-900 transition-colors"
               >
                 <option
                   value=""
@@ -201,7 +145,91 @@
                   {{ opt.label }}
                 </option>
               </select>
+              <p class="mt-1 text-xs text-gray-500">
+                Negocios que gestionan citas o agenda.
+              </p>
             </div>
+          </div>
+
+          <!-- Step 3: Equipo -->
+          <div
+            v-show="currentStep === 3"
+            class="space-y-5"
+          >
+            <div>
+              <p class="text-sm text-gray-500">
+                Añade las personas que forman tu equipo. Puedes indicar su especialidad si aplica.
+              </p>
+            </div>
+
+            <div class="space-y-3">
+              <div
+                v-for="(member, idx) in form.teamMembers"
+                :key="member.id"
+                class="flex items-start gap-3 p-3 rounded-xl border border-gray-200 bg-gray-50/50"
+              >
+                <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <input
+                    v-model="member.name"
+                    type="text"
+                    :placeholder="`Nombre (ej. María López)`"
+                    class="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white focus:ring-2 focus:ring-brand-accent/20 focus:border-brand-accent text-gray-900 placeholder-gray-400 text-sm transition-colors"
+                  />
+                  <input
+                    v-model="member.specialty"
+                    type="text"
+                    placeholder="Especialidad (opcional)"
+                    class="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white focus:ring-2 focus:ring-brand-accent/20 focus:border-brand-accent text-gray-900 placeholder-gray-400 text-sm transition-colors"
+                  />
+                </div>
+                <button
+                  type="button"
+                  class="mt-1 text-gray-400 hover:text-red-500 transition-colors cursor-pointer shrink-0"
+                  :aria-label="`Eliminar miembro ${idx + 1}`"
+                  @click="removeTeamMember(idx)"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="w-5 h-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <button
+                type="button"
+                class="flex items-center gap-2 text-sm font-medium text-brand-accent hover:text-brand-accent/80 transition-colors cursor-pointer"
+                @click="addTeamMember"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-5 h-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                Añadir persona
+              </button>
+            </div>
+
+            <p
+              v-if="form.teamMembers.length === 0"
+              class="text-xs text-gray-400"
+            >
+              Puedes dejarlo vacío y añadir el equipo más adelante.
+            </p>
           </div>
 
           <!-- Step 4: Datos de contacto -->
@@ -221,7 +249,7 @@
                 v-model="form.contactData.email"
                 type="email"
                 placeholder="contacto@tudominio.com"
-                class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-spa-teal/20 focus:border-spa-teal text-gray-900 placeholder-gray-400 transition-colors"
+                class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-brand-accent/20 focus:border-brand-accent text-gray-900 placeholder-gray-400 transition-colors"
               />
             </div>
             <div>
@@ -236,7 +264,7 @@
                 v-model="form.contactData.phone"
                 type="tel"
                 placeholder="+34 600 000 000"
-                class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-spa-teal/20 focus:border-spa-teal text-gray-900 placeholder-gray-400 transition-colors"
+                class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-brand-accent/20 focus:border-brand-accent text-gray-900 placeholder-gray-400 transition-colors"
               />
             </div>
             <div>
@@ -251,32 +279,33 @@
                 v-model="form.contactData.address"
                 type="text"
                 placeholder="Calle, número, localidad"
-                class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-spa-teal/20 focus:border-spa-teal text-gray-900 placeholder-gray-400 transition-colors"
+                class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-brand-accent/20 focus:border-brand-accent text-gray-900 placeholder-gray-400 transition-colors"
               />
             </div>
           </div>
         </div>
 
         <div class="px-6 sm:px-8 py-4 bg-gray-50/80 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
-          <BaseButton
-            v-if="currentStep > 1"
-            type="button"
-            variant="outline"
-            @click="goToPrevStep"
-          >
-            Atrás
-          </BaseButton>
-          <RouterLink
-            v-else
-            to="/config"
-            class="inline-flex"
-          >
-            <BaseButton variant="outline">
-              Volver a configuración
+          <div class="flex flex-wrap items-center gap-3">
+            <BaseButton
+              v-if="currentStep > 1"
+              type="button"
+              variant="outline"
+              @click="goToPrevStep"
+            >
+              Atrás
             </BaseButton>
-          </RouterLink>
+            <RouterLink
+              to="/config"
+              class="inline-flex"
+            >
+              <BaseButton variant="outline">
+                Volver a configuración
+              </BaseButton>
+            </RouterLink>
+          </div>
           <BaseButton
-            v-if="currentStep < 4"
+            v-if="currentStep < totalSteps"
             type="button"
             @click="goToNextStep"
           >
@@ -303,13 +332,15 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, onMounted, watch } from "vue";
+  import { ref, reactive, onMounted, watch, nextTick } from "vue";
   import { useRouter } from "vue-router";
   import { storeToRefs } from "pinia";
   import { useAuthStore } from "@/stores/auth";
   import { useGestorConfigStore } from "@/stores/gestorConfig";
+  import { syncWizardTeamMembers } from "@/composables/useTeamManager";
   import { BUSINESS_TYPES } from "@/data/businessTypes";
   import { DEFAULT_COMPANY_NAME, DEFAULT_CONTACT_DATA } from "@/interfaces";
+  import type { WizardTeamMember } from "@/interfaces";
   import BaseButton from "@/components/common/BaseButton.vue";
 
   const router = useRouter();
@@ -323,10 +354,11 @@
 
   const steps = [
     { id: "company", label: "Empresa" },
-    { id: "people", label: "Equipo" },
-    { id: "business", label: "Actividad" },
+    { id: "activity", label: "Actividad" },
+    { id: "team", label: "Equipo" },
     { id: "contact", label: "Contacto" },
   ];
+  const totalSteps = steps.length;
 
   const form = reactive({
     companyName: "",
@@ -335,6 +367,7 @@
     numberOfPeople: 1,
     businessType: "",
     contactData: { ...DEFAULT_CONTACT_DATA },
+    teamMembers: [] as WizardTeamMember[],
   });
 
   const syncFormFromStore = () => {
@@ -345,6 +378,15 @@
     form.numberOfPeople = c.numberOfPeople;
     form.businessType = c.businessType;
     form.contactData = { ...DEFAULT_CONTACT_DATA, ...c.contactData };
+    form.teamMembers = (c.teamMembers ?? []).map((m) => ({ ...m }));
+  };
+
+  const addTeamMember = () => {
+    form.teamMembers.push({ id: crypto.randomUUID(), name: "", specialty: "" });
+  };
+
+  const removeTeamMember = (idx: number) => {
+    form.teamMembers.splice(idx, 1);
   };
 
   onMounted(syncFormFromStore);
@@ -363,15 +405,29 @@
   };
 
   const goToStep = (step: number) => {
-    if (step >= 1 && step <= 4) currentStep.value = step;
+    if (step >= 1 && step <= totalSteps) currentStep.value = step;
   };
 
+  const nextStepPending = ref(false);
   const goToNextStep = () => {
-    if (currentStep.value < 4) currentStep.value += 1;
+    if (currentStep.value >= totalSteps || nextStepPending.value) return;
+    nextStepPending.value = true;
+    const next = currentStep.value + 1;
+    currentStep.value = next;
+    nextTick(() => {
+      nextStepPending.value = false;
+    });
   };
 
+  const prevStepPending = ref(false);
   const goToPrevStep = () => {
-    if (currentStep.value > 1) currentStep.value -= 1;
+    if (currentStep.value <= 1 || prevStepPending.value) return;
+    prevStepPending.value = true;
+    const prev = currentStep.value - 1;
+    currentStep.value = prev;
+    nextTick(() => {
+      prevStepPending.value = false;
+    });
   };
 
   const handleFinish = async () => {
@@ -379,10 +435,16 @@
     saveError.value = "";
     saving.value = true;
     try {
+      const validMembers = form.teamMembers.filter((m) => m.name.trim() !== "");
+      const normalizedMembers = validMembers.map((m) => ({
+        id: m.id,
+        name: m.name.trim(),
+        specialty: m.specialty.trim(),
+      }));
       gestorConfigStore.setConfig(user.value.id, {
         companyName: form.companyName.trim() || DEFAULT_COMPANY_NAME,
         logoUrl: form.logoDataUrl,
-        numberOfPeople: Math.max(1, Math.min(999, form.numberOfPeople)) || 1,
+        numberOfPeople: normalizedMembers.length || 1,
         businessType: form.businessType || BUSINESS_TYPES[0].id,
         contactData: {
           email: form.contactData.email.trim(),
@@ -390,7 +452,9 @@
           address: form.contactData.address?.trim() || "",
         },
         onboardingComplete: true,
+        teamMembers: normalizedMembers,
       });
+      syncWizardTeamMembers(normalizedMembers);
       router.push({ name: "config" });
     } catch {
       saveError.value = "No se pudo guardar. Inténtalo de nuevo.";

@@ -1,13 +1,17 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { setActivePinia, createPinia } from "pinia";
 import { useScheduleActions } from "@/composables/useScheduleActions";
+
+vi.mock("vue-i18n", () => ({
+  useI18n: () => ({ t: (key: string) => key }),
+}));
 import { useAuthStore } from "@/stores/auth";
 import { useScheduleStore } from "@/stores/schedule";
 
 describe("useScheduleActions", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
-    localStorage.removeItem("spa-schedule-blocks");
+    localStorage.removeItem("gestor-schedule-blocks");
   });
 
   it("should_create_new_block_when_no_editingBlock", () => {
@@ -23,8 +27,9 @@ describe("useScheduleActions", () => {
         end: "10:00",
         type: "work",
       },
-      therapistId: "th-1",
+      memberId: "th-1",
       currentDate: new Date(2025, 1, 3),
+      selectedDate: new Date(2025, 1, 3),
       onSuccess,
     });
 
@@ -37,7 +42,7 @@ describe("useScheduleActions", () => {
     useAuthStore().setUser("manager", "5");
     const scheduleStore = useScheduleStore();
     scheduleStore.addBlock({
-      therapistId: "th-1",
+      memberId: "th-1",
       start: "2025-02-03T09:00:00.000Z",
       end: "2025-02-03T10:00:00.000Z",
       type: "work",
@@ -49,7 +54,7 @@ describe("useScheduleActions", () => {
 
     saveBlock({
       data: { title: "Actualizado", start: "09:00", end: "11:00" },
-      therapistId: "th-1",
+      memberId: "th-1",
       currentDate: new Date(2025, 1, 3),
       editingBlock,
       onSuccess,

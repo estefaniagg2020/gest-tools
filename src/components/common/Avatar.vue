@@ -34,7 +34,6 @@
 
 <script setup lang="ts">
   import { ref, computed, watch } from "vue";
-  import { getCachedAvatarUrlForName } from "@/utils/avatar";
 
   const props = defineProps<{
     src?: string;
@@ -44,9 +43,7 @@
     href?: string;
   }>();
 
-  const effectiveSrc = computed(
-    () => props.src || (props.name ? getCachedAvatarUrlForName(props.name, props.size || 40) : undefined),
-  );
+  const effectiveSrc = computed(() => props.src || undefined);
 
   const hasError = ref(false);
   const size = computed(() => props.size || 40);

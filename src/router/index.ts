@@ -1,10 +1,11 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { useGestorConfigStore } from "@/stores/gestorConfig";
+import { useLayoutStore } from "@/stores/layout";
 import { setFavicon } from "@/utils/favicon";
 import AppLayout from "../components/layout/AppLayout.vue";
 import SchedulerView from "../views/SchedulerView.vue";
-import TherapistManagerView from "../views/TherapistManagerView.vue";
+import TeamManagerView from "../views/TeamManagerView.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -39,27 +40,32 @@ const router = createRouter({
           component: SchedulerView,
         },
         {
-          path: "therapists",
-          name: "therapists",
-          component: TherapistManagerView,
+          path: "team",
+          name: "team",
+          component: TeamManagerView,
         },
         {
           path: "spas",
-          redirect: { name: "servicios" },
+          redirect: { name: "services" },
         },
         {
-          path: "servicios",
-          name: "servicios",
+          path: "services",
+          name: "services",
           component: () => import("../views/ServiciosView.vue"),
         },
         {
-          path: "clientes",
-          name: "clientes",
+          path: "clients",
+          name: "clients",
           component: () => import("../views/ClientsView.vue"),
         },
         {
-          path: "inventario",
-          name: "inventario",
+          path: "clients/:id",
+          name: "client-detail",
+          component: () => import("../views/ClientDetailView.vue"),
+        },
+        {
+          path: "inventory",
+          name: "inventory",
           component: () => import("../views/InventarioView.vue"),
         },
         {
@@ -68,13 +74,13 @@ const router = createRouter({
           component: () => import("../views/ConfigHubView.vue"),
         },
         {
-          path: "config/datos",
-          name: "config-datos",
+          path: "config/data",
+          name: "config-data",
           component: () => import("../views/ConfigWizardView.vue"),
         },
         {
-          path: "config/temas",
-          name: "config-temas",
+          path: "config/themes",
+          name: "config-themes",
           component: () => import("../views/ConfigTemasView.vue"),
         },
         {
@@ -83,24 +89,49 @@ const router = createRouter({
           component: () => import("../views/ConfigGridView.vue"),
         },
         {
+          path: "config/dashboard",
+          name: "config-dashboard",
+          component: () => import("../views/ConfigDashboardView.vue"),
+        },
+        {
           path: "config/agenda",
           name: "config-agenda",
           component: () => import("../views/ConfigAgendaView.vue"),
         },
         {
-          path: "config/notificaciones",
-          name: "config-notificaciones",
+          path: "config/notifications",
+          name: "config-notifications",
           component: () => import("../views/ConfigNotificacionesView.vue"),
         },
         {
-          path: "config/iconos",
-          name: "config-iconos",
+          path: "config/icons",
+          name: "config-icons",
           component: () => import("../views/ConfigIconosView.vue"),
+        },
+        {
+          path: "config/language",
+          name: "config-language",
+          component: () => import("../views/ConfigIdiomaView.vue"),
         },
         {
           path: "settings",
           name: "settings",
           component: () => import("../views/SettingsView.vue"),
+        },
+        {
+          path: "privacy",
+          name: "privacy",
+          component: () => import("../views/PrivacidadView.vue"),
+        },
+        {
+          path: "terms",
+          name: "terms",
+          component: () => import("../views/TerminosView.vue"),
+        },
+        {
+          path: "legal-notice",
+          name: "legal-notice",
+          component: () => import("../views/AvisoLegalView.vue"),
         },
       ],
     },
@@ -133,6 +164,8 @@ router.beforeEach(async (to) => {
   if (authStore.isAuthenticated && to.name === "dashboard") {
     const userId = authStore.user?.id;
     if (userId) {
+      const layoutStore = useLayoutStore();
+      layoutStore.initialize(userId);
       const gestorConfigStore = useGestorConfigStore();
       gestorConfigStore.initialize(userId);
       if (!gestorConfigStore.onboardingComplete) {

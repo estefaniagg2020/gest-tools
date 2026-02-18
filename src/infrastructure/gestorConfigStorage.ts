@@ -1,4 +1,4 @@
-import type { GestorConfig, ContactData } from "@/interfaces";
+import type { GestorConfig, ContactData, WizardTeamMember } from "@/interfaces";
 import { DEFAULT_CONTACT_DATA } from "@/interfaces";
 
 const KEY_PREFIX = "gestor-config-";
@@ -26,6 +26,16 @@ function normalizeStored(value: unknown): GestorConfig | null {
     ? { ...DEFAULT_CONTACT_DATA, ...o.contactData }
     : DEFAULT_CONTACT_DATA;
   const onboardingComplete = typeof o.onboardingComplete === "boolean" ? o.onboardingComplete : false;
+  const teamMembers = Array.isArray(o.teamMembers)
+    ? (o.teamMembers as unknown[]).filter(
+        (m): m is WizardTeamMember =>
+          typeof m === "object" &&
+          m !== null &&
+          typeof (m as WizardTeamMember).id === "string" &&
+          typeof (m as WizardTeamMember).name === "string" &&
+          typeof (m as WizardTeamMember).specialty === "string",
+      )
+    : [];
   return {
     companyName: o.companyName,
     logoUrl,
@@ -33,6 +43,7 @@ function normalizeStored(value: unknown): GestorConfig | null {
     businessType,
     contactData,
     onboardingComplete,
+    teamMembers,
   };
 }
 

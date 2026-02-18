@@ -2,14 +2,14 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { setActivePinia, createPinia } from "pinia";
 import { useDashboard } from "@/composables/useDashboard";
 import { useAuthStore } from "@/stores/auth";
-import { useTherapistStore } from "@/stores/therapist";
+import { useTeamStore } from "@/stores/team";
 
 vi.stubGlobal("alert", vi.fn());
 
 describe("useDashboard", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
-    useTherapistStore().initialize();
+    useTeamStore().initialize();
   });
 
   it("should_return_currentUserName_as_manager_when_manager_user", () => {

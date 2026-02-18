@@ -1,9 +1,9 @@
 <template>
   <div
-    class="rounded-2xl border-2 border-spa-teal/30 bg-app-surface shadow-lg overflow-hidden"
+    class="rounded-2xl border-2 border-brand-accent/30 bg-app-surface shadow-lg overflow-hidden"
     aria-label="Vista previa del diseño"
   >
-    <p class="px-4 py-2 text-xs font-medium text-app-text/60 border-b border-spa-teal/10 bg-app-bg/50">
+    <p class="px-4 py-2 text-xs font-medium text-app-text/60 border-b border-brand-accent/10 bg-app-bg/50">
       Vista previa — así se verá tu gestor
     </p>
     <div
@@ -23,7 +23,7 @@
             v-for="mod in orderedModules"
             :key="mod.id"
             class="flex items-center justify-center w-8 h-8 rounded-lg bg-app-bg/80 text-base"
-            :title="mod.label"
+            :title="$t(mod.labelKey)"
           >
             {{ mod.icon }}
           </span>
@@ -33,7 +33,7 @@
       <div class="flex-1 min-w-0 flex flex-col">
         <nav
           v-if="showNavbar"
-          class="flex items-center gap-1 px-2 py-1.5 border-b border-spa-teal/10 bg-app-surface/80 shrink-0"
+          class="flex items-center gap-1 px-2 py-1.5 border-b border-brand-accent/10 bg-app-surface/80 shrink-0"
         >
           <span
             v-for="mod in orderedModules.slice(0, 4)"
@@ -45,7 +45,7 @@
         </nav>
         <div class="flex-1 p-2 min-h-0">
           <div
-            class="rounded-xl border border-spa-teal/20 bg-white overflow-hidden flex flex-col"
+            class="rounded-xl border border-brand-accent/20 bg-white overflow-hidden flex flex-col"
             :style="{ minHeight: previewCalendarHeight + 'px' }"
           >
             <div class="px-2 py-1.5 border-b border-gray-100 text-[10px] font-medium text-app-text/80 shrink-0">
@@ -61,7 +61,7 @@
                 <span class="text-[9px] text-app-text/50 w-5 shrink-0">{{ h }}:00</span>
                 <div
                   v-if="h === 10"
-                  class="ml-1 h-[80%] w-1/3 rounded bg-spa-teal/40 shrink-0"
+                  class="ml-1 h-[80%] w-1/3 rounded bg-brand-accent/40 shrink-0"
                 />
                 <div
                   v-if="h === 14"

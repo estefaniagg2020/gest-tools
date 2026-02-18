@@ -15,7 +15,7 @@
         class="flex flex-col items-center gap-2 group w-full h-full justify-end"
       >
         <div
-          class="w-full max-w-[40px] bg-spa-teal/20 rounded-t-lg relative group-hover:bg-spa-teal transition-colors duration-500"
+          class="w-full max-w-[40px] bg-brand-accent/20 rounded-t-lg relative group-hover:bg-brand-accent transition-colors duration-500"
           :style="{ height: day.percent + '%' }"
         >
           <div

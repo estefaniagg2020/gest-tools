@@ -1,4 +1,4 @@
-import type { Therapist } from "./therapist";
+import type { TeamMember } from "./team";
 
 export interface ChartItem {
   label: string;
@@ -18,7 +18,7 @@ export interface DashboardHeaderProps {
   currentUserPhoto: string;
   currentRole: string;
   currentUserId: string | null;
-  therapists: Therapist[];
+  members: TeamMember[];
 }
 
 export interface MetricCardProps {
@@ -56,6 +56,7 @@ export interface BlockEditorModalProps {
   editBlock?: import("./schedule").ScheduleBlock;
   initialDate?: Date;
   initialHour?: number;
+  members?: import("./team").TeamMember[];
 }
 
 export interface ConfigHubCardProps {

@@ -1,5 +1,5 @@
 import type { LayoutConfig } from "@/interfaces";
-import { DEFAULT_LAYOUT_CONFIG } from "@/interfaces";
+import { DEFAULT_LAYOUT_CONFIG, DEFAULT_DASHBOARD_MODULE_IDS } from "@/interfaces";
 
 const KEY_PREFIX = "layout-config-";
 
@@ -27,11 +27,21 @@ function normalizeStored(value: unknown): LayoutConfig | null {
   if (sidebarModuleIds.includes("centros") && !sidebarModuleIds.includes("servicios")) {
     sidebarModuleIds = sidebarModuleIds.map((id) => (id === "centros" ? "servicios" : id));
   }
+  if (sidebarModuleIds.includes("therapists")) {
+    sidebarModuleIds = sidebarModuleIds.map((id) => (id === "therapists" ? "equipo" : id));
+  }
+  let dashboardModuleIds = isStringArray(o.dashboardModuleIds)
+    ? o.dashboardModuleIds.filter((id) => DEFAULT_DASHBOARD_MODULE_IDS.includes(id))
+    : DEFAULT_LAYOUT_CONFIG.dashboardModuleIds;
+  if (dashboardModuleIds.length === 0) {
+    dashboardModuleIds = [...DEFAULT_LAYOUT_CONFIG.dashboardModuleIds];
+  }
   return {
     sidebarPosition,
     showNavbar,
     calendarAppearance,
     sidebarModuleIds,
+    dashboardModuleIds,
   };
 }
 

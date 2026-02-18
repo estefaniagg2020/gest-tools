@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
 import type { ScheduleBlock } from "@/interfaces";
-import { filterBlocksByDay, filterBlocksByDayAndTherapist, useScheduleBlocks } from "@/composables/useScheduleBlocks";
+import { filterBlocksByDay, filterBlocksByDayAndMember, useScheduleBlocks } from "@/composables/useScheduleBlocks";
 
-const block = (date: string, therapistId: string): ScheduleBlock => ({
+const block = (date: string, memberId: string): ScheduleBlock => ({
   id: "b1",
-  therapistId,
+  memberId,
   start: date,
   end: date.replace("T09:", "T10:"),
   type: "work",
@@ -28,13 +28,13 @@ describe("useScheduleBlocks", () => {
     });
   });
 
-  describe("filterBlocksByDayAndTherapist", () => {
-    it("should_return_blocks_on_date_for_therapist", () => {
+  describe("filterBlocksByDayAndMember", () => {
+    it("should_return_blocks_on_date_for_member", () => {
       const blocks = [block("2025-02-03T09:00:00.000Z", "th-1"), block("2025-02-03T11:00:00.000Z", "th-2")];
       const day = new Date(2025, 1, 3);
-      const result = filterBlocksByDayAndTherapist(blocks, day, "th-1");
+      const result = filterBlocksByDayAndMember(blocks, day, "th-1");
       expect(result).toHaveLength(1);
-      expect(result[0].therapistId).toBe("th-1");
+      expect(result[0].memberId).toBe("th-1");
     });
   });
 
@@ -42,7 +42,7 @@ describe("useScheduleBlocks", () => {
     it("should_return_filter_functions", () => {
       const composable = useScheduleBlocks();
       expect(composable.filterBlocksByDay).toBe(filterBlocksByDay);
-      expect(composable.filterBlocksByDayAndTherapist).toBe(filterBlocksByDayAndTherapist);
+      expect(composable.filterBlocksByDayAndMember).toBe(filterBlocksByDayAndMember);
     });
   });
 });

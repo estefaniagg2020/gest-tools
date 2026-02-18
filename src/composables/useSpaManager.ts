@@ -1,6 +1,6 @@
 import { ref, reactive, onMounted } from "vue";
 import { useSpaStore } from "@/stores/spa";
-import { useTherapistStore } from "@/stores/therapist";
+import { useTeamStore } from "@/stores/team";
 import { useServiceStore } from "@/stores/service";
 import { useToast } from "@/composables/useToast";
 import type { Spa } from "@/interfaces";
@@ -9,7 +9,7 @@ const DEFAULT_THEME = "teal";
 
 export const useSpaManager = () => {
   const spaStore = useSpaStore();
-  const therapistStore = useTherapistStore();
+  const teamStore = useTeamStore();
   const serviceStore = useServiceStore();
   const { addToast } = useToast();
 
@@ -26,11 +26,11 @@ export const useSpaManager = () => {
     themeColor: DEFAULT_THEME,
   });
 
-  const getTherapistCount = (spaId: string): number =>
-    therapistStore.therapists.filter((t) => t.spaId === spaId).length;
+  const getMemberCount = (spaId: string): number =>
+    teamStore.members.filter((m) => m.spaId === spaId).length;
 
-  const getTherapistsForSpa = (spaId: string) =>
-    therapistStore.therapists.filter((t) => t.spaId === spaId);
+  const getMembersForSpa = (spaId: string) =>
+    teamStore.members.filter((m) => m.spaId === spaId);
 
   const getServicesForSpaByCategory = (spa: Spa, category: string) => {
     if (!spa.serviceIds) return [];
@@ -78,10 +78,10 @@ export const useSpaManager = () => {
   };
 
   const confirmDelete = (id: string) => {
-    const count = getTherapistCount(id);
+    const count = getMemberCount(id);
     if (count > 0) {
       alert(
-        `No puedes eliminar este Spa porque tiene ${count} terapeutas asignados. Reasígnalos primero.`,
+        `No puedes eliminar esta ubicación porque tiene ${count} miembros asignados. Reasígnalos primero.`,
       );
       return;
     }
@@ -115,14 +115,14 @@ export const useSpaManager = () => {
 
   const initialize = () => {
     spaStore.initialize();
-    therapistStore.initialize();
+    teamStore.initialize();
   };
 
   onMounted(initialize);
 
   return {
     spaStore,
-    therapistStore,
+    teamStore,
     serviceStore,
     isModalOpen,
     isEditing,
@@ -130,8 +130,8 @@ export const useSpaManager = () => {
     editingSpaId,
     selectedServiceIds,
     form,
-    getTherapistCount,
-    getTherapistsForSpa,
+    getMemberCount,
+    getMembersForSpa,
     getServicesForSpaByCategory,
     openCreateModal,
     editSpa,

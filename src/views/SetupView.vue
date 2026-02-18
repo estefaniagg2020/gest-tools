@@ -31,7 +31,7 @@
               type="text"
               autocomplete="username"
               placeholder="Elige un usuario"
-              class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-spa-teal/20 placeholder:text-gray-400"
+              class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 placeholder:text-gray-400"
             />
           </div>
 
@@ -48,7 +48,7 @@
               type="password"
               autocomplete="new-password"
               placeholder="Mínimo 4 caracteres"
-              class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-spa-teal/20 placeholder:text-gray-400"
+              class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 placeholder:text-gray-400"
             />
           </div>
 
@@ -65,7 +65,7 @@
               type="password"
               autocomplete="new-password"
               placeholder="Repite la contraseña"
-              class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-spa-teal/20 placeholder:text-gray-400"
+              class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 placeholder:text-gray-400"
             />
             <p
               v-if="error"
@@ -88,7 +88,7 @@
           <RouterLink
             v-if="authStore.hasAnyUser()"
             to="/login"
-            class="text-sm text-spa-teal hover:underline"
+            class="text-sm text-brand-accent hover:underline"
           >
             Ya tengo cuenta
           </RouterLink>
@@ -135,7 +135,11 @@
     const result = await authStore.register(form.username, form.password);
     loading.value = false;
     if (result.ok) {
-      router.push({ name: "dashboard" });
+      if (authStore.isClient) {
+        router.push({ name: "reservar" });
+      } else {
+        router.push({ name: "dashboard" });
+      }
     } else {
       error.value = result.error;
     }

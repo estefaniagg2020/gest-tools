@@ -20,7 +20,7 @@
       class="mt-4 inline-flex items-center gap-1 text-sm font-medium"
       :class="accentTextClass"
     >
-      {{ actionLabel }}
+      {{ actionLabelText }}
       <span aria-hidden="true">→</span>
     </span>
   </RouterLink>
@@ -28,9 +28,12 @@
 
 <script setup lang="ts">
   import { computed } from "vue";
+  import { useI18n } from "vue-i18n";
   import type { ConfigHubCardProps } from "@/interfaces/components";
 
-  const props = withDefaults(defineProps<ConfigHubCardProps>(), { actionLabel: "Configurar" });
+  const { t } = useI18n();
+  const props = defineProps<ConfigHubCardProps>();
+  const actionLabelText = computed(() => props.actionLabel ?? t("common.configure"));
 
   const accentMap = computed(() => {
     const map = {

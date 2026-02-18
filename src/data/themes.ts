@@ -13,22 +13,28 @@ export interface ThemeColors {
   text: string;
 }
 
-const MINIMAL_PREMIUM_DEFAULTS: ThemeColors = {
-  primary: "#7c3aed",
-  accent: "#6d28d9",
-  bg: "#f5f5f5",
+const DEFAULT_APP_COLORS: ThemeColors = {
+  primary: "#187bcd",
+  accent: "#0a6fb4",
+  bg: "#f5f7fa",
   surface: "#ffffff",
-  title: "#1a1a1a",
-  text: "#374151",
+  title: "#2c3e50",
+  text: "#333333",
 };
 
-export const DEFAULT_THEME_ID = "minimal-premium";
+export const DEFAULT_THEME_ID = "azul";
 
-export const DEFAULT_CUSTOM_THEME_COLORS: ThemeColors = { ...MINIMAL_PREMIUM_DEFAULTS };
+export const DEFAULT_CUSTOM_THEME_COLORS: ThemeColors = { ...DEFAULT_APP_COLORS };
 
 export const THEME_OPTIONS: readonly ThemeOption[] = [
-  { id: "minimal-premium", label: "Minimal premium", description: "Blanco, gris cálido y acento morado (Stripe)" },
-  { id: "calido", label: "Cálido humano", description: "Crema y bordes suaves, ideal peluquería" },
+  { id: "amarillo", label: "Amarillo", description: "Fondo y barra en tonos amarillos" },
+  { id: "verde", label: "Verde", description: "Fondo y barra en tonos verdes" },
+  { id: "azul", label: "Azul", description: "Fondo y barra en tonos azules" },
+  { id: "azul-oscuro", label: "Azul oscuro", description: "Tema oscuro en azul" },
+  { id: "rojo", label: "Rojo", description: "Fondo y barra en tonos rojos" },
+  { id: "rosa", label: "Rosa", description: "Fondo y barra en tonos rosas" },
+  { id: "minimal-premium", label: "Minimal premium", description: "Blanco, gris cálido y acento morado" },
+  { id: "calido", label: "Cálido humano", description: "Crema y bordes suaves" },
   { id: "teal", label: "Teal", description: "Verde azulado" },
   { id: "claro", label: "Claro", description: "Blanco y grises suaves" },
   { id: "oscuro", label: "Oscuro", description: "Modo noche" },
@@ -38,7 +44,6 @@ export const THEME_OPTIONS: readonly ThemeOption[] = [
   { id: "lavanda", label: "Lavanda", description: "Violetas suaves" },
   { id: "coral", label: "Coral", description: "Rojos y rosas cálidos" },
   { id: "indigo", label: "Índigo", description: "Azul intenso" },
-  { id: "rosa", label: "Rosa", description: "Rosa y magenta" },
   { id: "minimal", label: "Minimal", description: "Muy limpio, poco color" },
   { id: "arena", label: "Arena", description: "Beige y tierra" },
   { id: "esmeralda", label: "Esmeralda", description: "Verde esmeralda" },

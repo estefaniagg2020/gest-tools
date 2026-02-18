@@ -14,6 +14,7 @@ export const useLayoutStore = defineStore("layout", () => {
   const showNavbar = ref(DEFAULT_LAYOUT_CONFIG.showNavbar);
   const calendarAppearance = ref<CalendarAppearance>(DEFAULT_LAYOUT_CONFIG.calendarAppearance);
   const sidebarModuleIds = ref<string[]>([...DEFAULT_LAYOUT_CONFIG.sidebarModuleIds]);
+  const dashboardModuleIds = ref<string[]>([...DEFAULT_LAYOUT_CONFIG.dashboardModuleIds]);
 
   const showSidebar = computed(
     () => sidebarPosition.value !== "none"
@@ -26,11 +27,16 @@ export const useLayoutStore = defineStore("layout", () => {
       showNavbar.value = stored.showNavbar;
       calendarAppearance.value = stored.calendarAppearance;
       sidebarModuleIds.value = [...stored.sidebarModuleIds];
+      dashboardModuleIds.value =
+        stored.dashboardModuleIds.length > 0
+          ? [...stored.dashboardModuleIds]
+          : [...DEFAULT_LAYOUT_CONFIG.dashboardModuleIds];
     } else {
       sidebarPosition.value = DEFAULT_LAYOUT_CONFIG.sidebarPosition;
       showNavbar.value = DEFAULT_LAYOUT_CONFIG.showNavbar;
       calendarAppearance.value = DEFAULT_LAYOUT_CONFIG.calendarAppearance;
       sidebarModuleIds.value = [...DEFAULT_LAYOUT_CONFIG.sidebarModuleIds];
+      dashboardModuleIds.value = [...DEFAULT_LAYOUT_CONFIG.dashboardModuleIds];
     }
   };
 
@@ -39,6 +45,7 @@ export const useLayoutStore = defineStore("layout", () => {
     showNavbar.value = config.showNavbar;
     calendarAppearance.value = config.calendarAppearance;
     sidebarModuleIds.value = [...config.sidebarModuleIds];
+    dashboardModuleIds.value = [...config.dashboardModuleIds];
     const uid = user.value?.id;
     if (uid) layoutStorage.saveLayoutConfig(uid, config);
   };
@@ -63,6 +70,11 @@ export const useLayoutStore = defineStore("layout", () => {
     persist();
   };
 
+  const setDashboardModuleIds = (ids: string[]) => {
+    dashboardModuleIds.value = [...ids];
+    persist();
+  };
+
   const persist = () => {
     const uid = user.value?.id;
     if (!uid) return;
@@ -71,6 +83,7 @@ export const useLayoutStore = defineStore("layout", () => {
       showNavbar: showNavbar.value,
       calendarAppearance: calendarAppearance.value,
       sidebarModuleIds: sidebarModuleIds.value,
+      dashboardModuleIds: dashboardModuleIds.value,
     });
   };
 
@@ -79,6 +92,7 @@ export const useLayoutStore = defineStore("layout", () => {
     showNavbar: showNavbar.value,
     calendarAppearance: calendarAppearance.value,
     sidebarModuleIds: [...sidebarModuleIds.value],
+    dashboardModuleIds: [...dashboardModuleIds.value],
   });
 
   return {
@@ -86,6 +100,7 @@ export const useLayoutStore = defineStore("layout", () => {
     showNavbar,
     calendarAppearance,
     sidebarModuleIds,
+    dashboardModuleIds,
     showSidebar,
     initialize,
     setLayout,
@@ -93,6 +108,7 @@ export const useLayoutStore = defineStore("layout", () => {
     setShowNavbar,
     setCalendarAppearance,
     setSidebarModuleIds,
+    setDashboardModuleIds,
     getConfig,
   };
 });

@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-screen bg-app-bg font-sans text-app-text relative transition-colors duration-200">
+  <div class="flex flex-col h-screen bg-app-bg font-sans text-app-text relative transition-colors duration-200">
     <div
       v-if="isMobileMenuOpen"
       @click="isMobileMenuOpen = false"
@@ -7,21 +7,22 @@
     ></div>
 
     <div
-      class="flex flex-1 min-w-0 overflow-hidden"
+      class="flex flex-1 min-h-0 min-w-0 overflow-hidden"
       :class="layoutSidebarRight ? 'flex-row-reverse' : 'flex-row'"
     >
-      <Sidebar
+      <div
         v-show="showSidebar"
-        :sidebar-position="sidebarPosition"
-        class="z-50 transition-transform duration-300 fixed md:static"
+        class="sidebar-column z-50 flex shrink-0 transition-transform duration-300 fixed md:static h-full"
         :class="[
-          isMobileMenuOpen ? 'flex translate-x-0 shadow-2xl' : 'hidden md:flex translate-x-0',
+          isMobileMenuOpen ? 'translate-x-0 shadow-2xl' : 'hidden md:flex translate-x-0',
         ]"
-      />
+      >
+        <Sidebar :sidebar-position="sidebarPosition" />
+      </div>
 
-      <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+      <main class="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden relative">
         <header
-          class="md:hidden bg-app-surface/90 backdrop-blur-md border-b border-spa-teal/20 p-4 flex items-center justify-between z-20 transition-colors duration-200"
+          class="layout-header shrink-0 md:hidden bg-(--chrome-surface) border-b border-(--chrome-border) p-4 flex items-center justify-between z-20 transition-colors duration-200"
         >
           <AppBrand
             size="sm"
@@ -30,14 +31,14 @@
           <RouterLink
             v-if="isConfigArea"
             to="/config"
-            class="p-2 text-app-text/80 rounded-lg hover:bg-spa-teal/10 transition-colors text-sm font-medium"
+            class="p-2 text-app-text/80 rounded-lg hover:bg-brand-accent/10 transition-colors text-sm font-medium"
           >
-            ← Config
+            ← {{ $t('nav.config') }}
           </RouterLink>
           <button
             v-else
             @click="isMobileMenuOpen = !isMobileMenuOpen"
-            class="p-2 text-app-text/80 rounded-lg hover:bg-spa-teal/10 transition-colors"
+            class="p-2 text-app-text/80 rounded-lg hover:bg-brand-accent/10 transition-colors"
           >
             {{ isMobileMenuOpen ? "✕" : "☰" }}
           </button>
@@ -45,20 +46,27 @@
 
         <nav
           v-if="showNavbarDesktop"
-          class="hidden md:flex items-center gap-6 px-6 py-3 border-b border-spa-teal/10 bg-app-surface/50"
+          class="layout-header shrink-0 hidden md:flex items-center gap-6 px-6 py-3 border-b border-(--chrome-border) bg-(--chrome-surface)"
         >
           <RouterLink
             v-for="item in orderedNavItems"
             :key="item.to"
             :to="item.to"
-            class="flex items-center gap-2 text-app-text/80 hover:text-spa-teal font-medium transition-colors"
+            :title="item.iconOnly ? item.label : undefined"
+            class="flex items-center gap-2 text-app-text/80 hover:text-brand-accent font-medium transition-colors"
           >
             <span>{{ item.icon }}</span>
-            {{ item.label }}
+            <span v-if="!item.iconOnly">{{ item.label }}</span>
           </RouterLink>
         </nav>
 
-        <div class="flex-1 min-h-0 flex flex-col overflow-y-auto p-4 md:p-6 lg:p-8 bg-app-bg">
+        <div
+          class="flex-1 min-h-0 flex flex-col overflow-y-auto px-4 py-5 sm:px-5 sm:py-6 md:px-6 md:py-6 lg:p-8 bg-app-bg"
+          :class="[
+            showSidebar && !layoutSidebarRight && 'md:pl-0',
+            showSidebar && layoutSidebarRight && 'md:pr-0',
+          ]"
+        >
           <RouterView v-slot="{ Component }">
             <transition
               name="fade"
@@ -70,6 +78,8 @@
         </div>
       </main>
     </div>
+
+    <AppFooter />
   </div>
 </template>
 
@@ -85,6 +95,7 @@
   import { useResolvedLayoutModules } from "@/composables/useResolvedModuleIcons";
   import { setFavicon } from "@/utils/favicon";
   import AppBrand from "@/components/common/AppBrand.vue";
+  import AppFooter from "./AppFooter.vue";
   import Sidebar from "./Sidebar.vue";
 
   const route = useRoute();
@@ -109,6 +120,7 @@
       to: m.to,
       icon: m.icon,
       label: m.label,
+      iconOnly: m.iconOnly ?? false,
     }))
   );
   const isMobileMenuOpen = ref(false);
