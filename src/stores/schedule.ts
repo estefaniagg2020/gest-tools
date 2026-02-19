@@ -1,54 +1,49 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import type { ScheduleBlock } from "@/interfaces";
-import { INDEX_NOT_FOUND } from "@/data/constants";
-
-const STORAGE_KEY = "spa-schedule-blocks";
+import { scheduleBlocksApi } from "@/infrastructure/scheduleBlocksApi";
 
 export const useScheduleStore = defineStore("schedule", () => {
   const blocks = ref<ScheduleBlock[]>([]);
 
-  const persistBlocks = () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(blocks.value));
-  };
-
-  const initialize = () => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        blocks.value = JSON.parse(stored);
-      } catch (e) {
-        console.error("Error parsing schedule blocks", e);
-        blocks.value = [];
-      }
+  const initialize = async (): Promise<void> => {
+    try {
+      blocks.value = await scheduleBlocksApi.getBlocks();
+    } catch {
+      blocks.value = [];
     }
   };
 
-  const addBlock = (block: Omit<ScheduleBlock, "id">) => {
-    const newBlock: ScheduleBlock = {
-      ...block,
-      id: crypto.randomUUID(),
-    };
-    blocks.value.push(newBlock);
-    persistBlocks();
+  const addBlock = async (block: Omit<ScheduleBlock, "id">): Promise<ScheduleBlock> => {
+    const created = await scheduleBlocksApi.createBlock(block);
+    blocks.value.push(created);
+    return created;
   };
 
-  const updateBlock = (id: string, updates: Partial<ScheduleBlock>) => {
-    const index = blocks.value.findIndex((block) => block.id === id);
-    if (index !== INDEX_NOT_FOUND) {
-      blocks.value[index] = { ...blocks.value[index], ...updates };
-      persistBlocks();
+  const updateBlock = async (id: string, updates: Partial<ScheduleBlock>): Promise<void> => {
+    const updated = await scheduleBlocksApi.updateBlock(id, updates);
+    const index = blocks.value.findIndex((b) => b.id === id);
+    if (index !== -1) blocks.value[index] = updated;
+  };
+
+  const deleteBlock = async (id: string): Promise<void> => {
+    await scheduleBlocksApi.deleteBlock(id);
+    blocks.value = blocks.value.filter((b) => b.id !== id);
+  };
+
+  const cancelBlock = async (id: string): Promise<void> => {
+    await updateBlock(id, { status: "cancelled" });
+  };
+
+  const clearAllBlocks = async (): Promise<void> => {
+    for (const b of blocks.value) {
+      try { await scheduleBlocksApi.deleteBlock(b.id); } catch { /* continue */ }
     }
+    blocks.value = [];
   };
 
-  const deleteBlock = (id: string) => {
-    blocks.value = blocks.value.filter((block) => block.id !== id);
-    persistBlocks();
-  };
-
-  const getBlocksByTherapist = (therapistId: string) => {
-    return blocks.value.filter((block) => block.therapistId === therapistId);
-  };
+  const getBlocksByMember = (memberId: string) =>
+    blocks.value.filter((b) => b.memberId === memberId);
 
   return {
     blocks,
@@ -56,6 +51,8 @@ export const useScheduleStore = defineStore("schedule", () => {
     addBlock,
     updateBlock,
     deleteBlock,
-    getBlocksByTherapist,
+    cancelBlock,
+    clearAllBlocks,
+    getBlocksByMember,
   };
 });

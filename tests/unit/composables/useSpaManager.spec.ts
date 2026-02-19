@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { setActivePinia, createPinia } from "pinia";
 import { useSpaManager } from "@/composables/useSpaManager";
 import { useSpaStore } from "@/stores/spa";
-import { useTherapistStore } from "@/stores/therapist";
+import { useTeamStore } from "@/stores/team";
 import * as spaStorage from "@/utils/spaStorage";
 
 vi.mock("@/utils/spaStorage", () => ({
@@ -17,20 +17,20 @@ describe("useSpaManager", () => {
     setActivePinia(createPinia());
     vi.mocked(spaStorage.loadStoredSpas).mockReturnValue(null);
     useSpaStore().initialize();
-    useTherapistStore().initialize();
+    useTeamStore().initialize();
   });
 
   it("should_expose_stores_and_helpers", () => {
     const m = useSpaManager();
     expect(m.spaStore).toBeDefined();
-    expect(m.getTherapistCount).toBeTypeOf("function");
-    expect(m.getTherapistsForSpa).toBeTypeOf("function");
+    expect(m.getMemberCount).toBeTypeOf("function");
+    expect(m.getMembersForSpa).toBeTypeOf("function");
     expect(m.getServicesForSpaByCategory).toBeTypeOf("function");
   });
 
-  it("should_return_zero_therapist_count_for_spa_with_none", () => {
+  it("should_return_zero_member_count_for_spa_with_none", () => {
     const m = useSpaManager();
-    const count = m.getTherapistCount("spa-1");
+    const count = m.getMemberCount("spa-1");
     expect(count).toBeGreaterThanOrEqual(0);
   });
 

@@ -33,7 +33,7 @@
               <div class="flex gap-2 text-xs font-medium text-gray-500 mt-1">
                 <span class="bg-gray-100 px-2 py-0.5 rounded-full">ID: {{ spa.id }}</span>
                 <span class="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full flex items-center gap-1">
-                  👥 {{ getTherapistCount(spa.id) }} Terapeutas
+                  👥 {{ getMemberCount(spa.id) }} en equipo
                 </span>
                 <span class="bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full flex items-center gap-1">
                   ✨ {{ (spa.serviceIds || []).length }} Servicios
@@ -44,7 +44,7 @@
           <div class="flex gap-2">
             <button
               @click="editSpa(spa)"
-              class="p-2 text-gray-400 hover:text-spa-teal hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-200"
+              class="p-2 text-gray-400 hover:text-brand-accent hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-200"
               title="Editar"
             >
               ✏️
@@ -63,24 +63,24 @@
           <div class="p-6">
             <h4 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Equipo Asignado</h4>
             <div
-              v-if="getTherapistsForSpa(spa.id).length > 0"
+              v-if="getMembersForSpa(spa.id).length > 0"
               class="flex flex-wrap gap-3"
             >
               <div
-                v-for="therapist in getTherapistsForSpa(spa.id)"
-                :key="therapist.id"
+                v-for="member in getMembersForSpa(spa.id)"
+                :key="member.id"
                 class="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-100 w-full sm:w-auto"
               >
                 <Avatar
-                  :src="therapist.photoUrl"
-                  :name="therapist.name"
+                  :src="member.photoUrl"
+                  :name="member.name"
                   :size="32"
-                  :href="therapist.linkedInUrl"
+                  :href="member.linkedInUrl"
                   class="border border-white shadow-sm"
                 />
                 <div class="text-sm">
-                  <div class="font-medium text-gray-800">{{ therapist.name.split(" ")[0] }}</div>
-                  <div class="text-[10px] text-gray-500">{{ therapist.role }}</div>
+                  <div class="font-medium text-gray-800">{{ member.name.split(" ")[0] }}</div>
+                  <div class="text-[10px] text-gray-500">{{ member.role }}</div>
                 </div>
               </div>
             </div>
@@ -88,7 +88,7 @@
               v-else
               class="text-sm text-gray-400 italic py-2"
             >
-              No hay terapeutas asignados. Ve a "Gestión Terapeutas" para asignar.
+              No hay miembros asignados. Ve a Equipo para asignar.
             </div>
           </div>
 
@@ -97,7 +97,7 @@
               <h4 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Servicios Ofrecidos</h4>
               <button
                 @click="toggleServiceModal(spa)"
-                class="text-xs text-spa-teal font-medium hover:underline"
+                class="text-xs text-brand-accent font-medium hover:underline"
               >
                 + Gestionar Servicios
               </button>
@@ -105,7 +105,7 @@
 
             <div class="space-y-3">
               <div
-                v-for="category in categories"
+                v-for="category in categoriesWithStyle"
                 :key="category.value"
               >
                 <div v-if="getServicesForSpaByCategory(spa, category.value).length > 0">
@@ -151,7 +151,7 @@
             v-model="form.name"
             type="text"
             required
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-spa-teal/20 focus:border-spa-teal"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent/20 focus:border-brand-accent"
             placeholder="Ej: Spa Madrid Centro"
           />
         </div>
@@ -204,7 +204,7 @@
     >
       <div class="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
         <div
-          v-for="category in categories"
+          v-for="category in categoriesWithStyle"
           :key="category.value"
           class="mb-6"
         >
@@ -218,14 +218,14 @@
               v-for="service in serviceStore.getServicesByCategory(category.value)"
               :key="service.id"
               class="flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer hover:bg-gray-50"
-              :class="selectedServiceIds.includes(service.id) ? 'border-spa-teal bg-spa-teal/5' : 'border-gray-200'"
+              :class="selectedServiceIds.includes(service.id) ? 'border-brand-accent bg-brand-accent/5' : 'border-gray-200'"
             >
               <div class="flex items-start gap-3">
                 <input
                   v-model="selectedServiceIds"
                   type="checkbox"
                   :value="service.id"
-                  class="mt-1 rounded text-spa-teal focus:ring-spa-teal"
+                  class="mt-1 rounded text-brand-accent focus:ring-brand-accent"
                 />
                 <div>
                   <div class="font-medium text-sm text-gray-900">{{ service.name }}</div>
@@ -259,15 +259,15 @@
 </template>
 
 <script setup lang="ts">
+  import { computed, onMounted } from "vue";
+  import { storeToRefs } from "pinia";
   import BaseButton from "@/components/common/BaseButton.vue";
   import Modal from "@/components/common/Modal.vue";
   import Avatar from "@/components/common/Avatar.vue";
   import { useSpaManager } from "@/composables/useSpaManager";
-  import {
-    THEME_COLORS,
-    SERVICE_CATEGORIES_FOR_SPA,
-    getThemeClasses,
-  } from "@/data/spaManagerConfig";
+  import { useServiceCategoryStore } from "@/stores/serviceCategory";
+  import { THEME_COLORS, getThemeClasses } from "@/data/spaManagerConfig";
+  import { getCategoryBorderClass } from "@/data/serviceCategoryDefaults";
 
   const {
     spaStore,
@@ -277,8 +277,8 @@
     isServiceModalOpen,
     selectedServiceIds,
     form,
-    getTherapistCount,
-    getTherapistsForSpa,
+    getMemberCount,
+    getMembersForSpa,
     getServicesForSpaByCategory,
     openCreateModal,
     editSpa,
@@ -290,8 +290,21 @@
     saveServices,
   } = useSpaManager();
 
+  const categoryStore = useServiceCategoryStore();
+  const { categories } = storeToRefs(categoryStore);
+
+  const categoriesWithStyle = computed(() =>
+    categories.value.map((cat, i) => ({
+      value: cat.id,
+      label: cat.label,
+      icon: cat.icon,
+      borderClass: getCategoryBorderClass(i) || "border-gray-200",
+    }))
+  );
+
   const themeColors = THEME_COLORS;
-  const categories = SERVICE_CATEGORIES_FOR_SPA;
+
+  onMounted(() => categoryStore.initialize());
 </script>
 
 <style scoped>

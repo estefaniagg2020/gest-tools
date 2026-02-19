@@ -1,0 +1,575 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Company {
+  id         String     @id @default(uuid())
+  name       String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  businesses Business[]
+}
+
+model Business {
+  id                  String              @id @default(uuid())
+  name                String
+  themeColor          String?
+  companyId           String
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  appointments        Appointment[]
+  bonoTemplates       BonoTemplate[]
+  company             Company             @relation(fields: [companyId], references: [id])
+  clients             Client[]
+  gestorConfig        GestorConfig?
+  products            Product[]
+  sales               Sale[]
+  scheduleBlocks      ScheduleBlock[]
+  services            Service[]
+  serviceCategories   ServiceCategory[]
+  slotWaitlistEntries SlotWaitlistEntry[]
+  suppliers           Supplier[]
+  workspaceMembers    WorkspaceMember[]
+}
+
+model GestorConfig {
+  id                          String             @id @default(uuid())
+  businessId                  String             @unique
+  logoUrl                     String?
+  numberOfPeople              Int                @default(0)
+  email                       String?
+  phone                       String?
+  address                     String?
+  onboardingComplete          Boolean            @default(false)
+  sidebarPosition             SidebarPosition    @default(left)
+  showNavbar                  Boolean            @default(false)
+  calendarAppearance          CalendarAppearance @default(default)
+  sidebarModuleIds            String[]           @default(["inicio", "agenda", "equipo", "centros", "config"])
+  dashboardModuleIds          String[]           @default([])
+  themeId                     String?
+  colorMode                   String?            @default("system")
+  customColors                Json?
+  titleTextOverrides          Json?
+  moduleIcons                 Json?
+  sameColorsForAll            Boolean            @default(true)
+  agendaBg                    String             @default("#ffffff")
+  markedDaysColor             String             @default("#3498db")
+  vacationColor               String             @default("#e74c3c")
+  perAgendaColors             Json?
+  startHour                   Int                @default(9)
+  endHour                     Int                @default(20)
+  pixelsPerHour               Int                @default(80)
+  slotDurationMinutes         Int                @default(60)
+  workDaysPerWeek             Int                @default(5)
+  maxPeoplePerSlot            Int                @default(1)
+  defaultView                 String?
+  weekStart                   String?            @default("locale")
+  agendaListConfig            Json?
+  smartFillingEnabled         Boolean            @default(false)
+  smartFillingDiscountPercent Int                @default(10)
+  whatsappRemindersEnabled    Boolean            @default(false)
+  whatsappPhoneNumberId       String?
+  defaultVatPercent           Int                @default(21)
+  cartEnabled                 Boolean            @default(false)
+  bonosEnabled                Boolean            @default(true)
+  serviciosEnabled            Boolean            @default(true)
+  inventarioEnabled           Boolean            @default(true)
+  hiddenSystemServiceNames    String[]           @default([])
+  locale                      String?
+  createdAt                   DateTime           @default(now())
+  updatedAt                   DateTime           @updatedAt
+  bookingEnabled              Boolean            @default(false)
+  depositPercent              Int                @default(0)
+  depositRequired             Boolean            @default(false)
+  description                 String?
+  publicPhoneNumber           String?
+  slug                        String?            @unique
+  socialLinks                 Json?
+  professionId                String?
+  taxId                       String?
+  businessAddress             String?
+  businessPopulation          String?
+  isCanarias                  Boolean            @default(false)
+  business                    Business           @relation(fields: [businessId], references: [id])
+  profession                  Profession?        @relation(fields: [professionId], references: [id])
+}
+
+model Service {
+  id                   String              @id @default(uuid())
+  name                 String
+  duration             Int
+  price                Float
+  description          String?
+  requiresCabin        Boolean             @default(false)
+  requiresTherapist    Boolean             @default(true)
+  businessId           String
+  categoryId           String
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  depositAmount        Float?
+  onlineBookingEnabled Boolean             @default(true)
+  sourceServiceId      String?
+  appointments         Appointment[]
+  business             Business            @relation(fields: [businessId], references: [id])
+  serviceCategory      ServiceCategory     @relation(fields: [categoryId], references: [id])
+  sourceService        ProfessionService?  @relation(fields: [sourceServiceId], references: [id])
+  slotWaitlistEntries  SlotWaitlistEntry[]
+}
+
+model User {
+  id                    String                 @id @default(uuid())
+  username              String                 @unique
+  passwordHash          String
+  salt                  String
+  role                  UserRole               @default(gestor)
+  name                  String?
+  email                 String?
+  phone                 String?
+  sessionToken          String?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  appointments          Appointment[]
+  clientNotes           ClientNote[]
+  clientPhotos          ClientPhoto[]
+  pets                  Pet[]
+  slotWaitlistEntries   SlotWaitlistEntry[]
+  waitlistNotifications WaitlistNotification[]
+  workspaces            WorkspaceMember[]
+}
+
+model Appointment {
+  id                 String            @id @default(uuid())
+  businessId         String
+  serviceId          String?
+  userId             String?
+  clientId           String?
+  petId              String?
+  clientName         String?
+  start              DateTime
+  end                DateTime
+  notes              String?
+  cancellationReason String?
+  isAtHome           Boolean           @default(false)
+  isVIP              Boolean           @default(false)
+  cartItems          Json?
+  discountPercent    Int?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  status             AppointmentStatus @default(pending)
+  paymentStatus      PaymentStatus     @default(pending)
+  origin             AppointmentOrigin @default(manual)
+  workspaceMemberId  String?
+  business           Business          @relation(fields: [businessId], references: [id])
+  client             Client?           @relation(fields: [clientId], references: [id])
+  pet                Pet?              @relation(fields: [petId], references: [id])
+  service            Service?          @relation(fields: [serviceId], references: [id])
+  user               User?             @relation(fields: [userId], references: [id])
+  workspaceMember    WorkspaceMember?  @relation(fields: [workspaceMemberId], references: [id])
+  sale               Sale?
+}
+
+model ScheduleBlock {
+  id          String      @id @default(uuid())
+  businessId  String
+  memberId    String
+  start       DateTime
+  end         DateTime
+  type        String
+  title       String
+  description String?
+  serviceId   String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  status      BlockStatus @default(active)
+  business    Business    @relation(fields: [businessId], references: [id])
+}
+
+model Client {
+  id                  String              @id @default(uuid())
+  businessId          String
+  name                String
+  email               String?
+  phone               String?
+  notes               String?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  appointments        Appointment[]
+  business            Business            @relation(fields: [businessId], references: [id])
+  clientBonos         ClientBono[]
+  sales               Sale[]
+  slotWaitlistEntries SlotWaitlistEntry[]
+}
+
+model ServiceCategory {
+  id               String              @id @default(uuid())
+  businessId       String
+  label            String
+  icon             String?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  sourceCategoryId String?
+  services         Service[]
+  business         Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  sourceCategory   ProfessionCategory? @relation(fields: [sourceCategoryId], references: [id])
+}
+
+model BonoTemplate {
+  id          String       @id @default(uuid())
+  businessId  String
+  name        String
+  sessions    Int?
+  price       Float?
+  validDays   Int?
+  serviceId   String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  type        BonoType
+  business    Business     @relation(fields: [businessId], references: [id])
+  clientBonos ClientBono[]
+}
+
+model ClientBono {
+  id                    String       @id @default(uuid())
+  clientId              String
+  templateId            String
+  sessionsUsed          Int          @default(0)
+  sessionsTotal         Int?
+  remainingSessions     Int?
+  paidCount             Int          @default(0)
+  freeSessionsRemaining Int?
+  assignedAt            DateTime     @default(now())
+  expiresAt             DateTime?
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+  client                Client       @relation(fields: [clientId], references: [id])
+  template              BonoTemplate @relation(fields: [templateId], references: [id])
+}
+
+model SlotWaitlistEntry {
+  id             String   @id @default(uuid())
+  userId         String?
+  clientId       String?
+  businessId     String
+  serviceId      String
+  petId          String?
+  preferredStart DateTime
+  preferredEnd   DateTime
+  createdAt      DateTime @default(now())
+  business       Business @relation(fields: [businessId], references: [id])
+  client         Client?  @relation(fields: [clientId], references: [id])
+  pet            Pet?     @relation(fields: [petId], references: [id])
+  service        Service  @relation(fields: [serviceId], references: [id])
+  user           User?    @relation(fields: [userId], references: [id])
+}
+
+model WaitlistNotification {
+  id         String    @id @default(uuid())
+  userId     String
+  businessId String
+  serviceId  String
+  slotStart  DateTime
+  slotEnd    DateTime
+  readAt     DateTime?
+  createdAt  DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id])
+}
+
+model Pet {
+  id                  String              @id @default(uuid())
+  ownerId             String
+  name                String
+  breed               String?
+  species             String?             @default("dog")
+  birthDate           DateTime?
+  weight              Float?
+  needsMuzzle         Boolean             @default(false)
+  allowsOtherPets     Boolean             @default(true)
+  needsSedation       Boolean             @default(false)
+  notes               String?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  appointments        Appointment[]
+  medicalNotes        ClientNote[]
+  photos              ClientPhoto[]
+  owner               User                @relation(fields: [ownerId], references: [id])
+  slotWaitlistEntries SlotWaitlistEntry[]
+}
+
+model Product {
+  id            String          @id @default(uuid())
+  businessId    String
+  name          String
+  sku           String?
+  barcode       String?
+  description   String?
+  price         Float           @default(0)
+  cost          Float           @default(0)
+  stockLevel    Int             @default(0)
+  minStockLevel Int             @default(5)
+  isService     Boolean         @default(false)
+  supplierId    String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  business      Business        @relation(fields: [businessId], references: [id])
+  supplier      Supplier?       @relation(fields: [supplierId], references: [id])
+  movements     StockMovement[]
+}
+
+model Supplier {
+  id            String    @id @default(uuid())
+  businessId    String
+  name          String
+  email         String?
+  phone         String?
+  contactPerson String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  products      Product[]
+  business      Business  @relation(fields: [businessId], references: [id])
+}
+
+model StockMovement {
+  id        String            @id @default(uuid())
+  productId String
+  quantity  Int
+  type      StockMovementType
+  reason    String?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  product   Product           @relation(fields: [productId], references: [id])
+}
+
+model ClientPhoto {
+  id          String   @id @default(uuid())
+  userId      String?
+  petId       String?
+  url         String
+  description String?
+  createdAt   DateTime @default(now())
+  pet         Pet?     @relation(fields: [petId], references: [id])
+  user        User?    @relation(fields: [userId], references: [id])
+}
+
+model ClientNote {
+  id        String         @id @default(uuid())
+  userId    String?
+  petId     String?
+  content   String
+  type      ClientNoteType @default(GENERAL)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  pet       Pet?           @relation(fields: [petId], references: [id])
+  user      User?          @relation(fields: [userId], references: [id])
+}
+
+model Profession {
+  label         String
+  code          String               @unique
+  id            String               @id @default(uuid())
+  sector        String?
+  gestorConfigs GestorConfig[]
+  categories    ProfessionCategory[]
+  synonyms      ProfessionSynonym[]
+}
+
+model ProfessionSynonym {
+  id           String     @id @default(uuid())
+  synonym      String     @unique
+  professionId String
+  profession   Profession @relation(fields: [professionId], references: [id], onDelete: Cascade)
+
+  @@index([professionId])
+}
+
+model ProfessionCategory {
+  professionId     String
+  label            String
+  icon             String
+  code             String              @unique
+  id               String              @id @default(uuid())
+  profession       Profession          @relation(fields: [professionId], references: [id], onDelete: Cascade)
+  services         ProfessionService[]
+  clonedCategories ServiceCategory[]
+
+  @@index([professionId])
+}
+
+model ProfessionService {
+  categoryId     String
+  name           String
+  duration       Int
+  price          Float
+  description    String?
+  code           String             @unique
+  id             String             @id @default(uuid())
+  category       ProfessionCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  clonedServices Service[]
+
+  @@index([categoryId])
+}
+
+model WorkspaceMember {
+  id                   String        @id @default(uuid())
+  userId               String?
+  businessId           String
+  role                 WorkspaceRole @default(member)
+  position             String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  name                 String
+  photoUrl             String?
+  linkedInUrl          String?
+  phone                String?
+  email                String?
+  weeklyHours          Float?
+  color                String?
+  defaultWorkStartHour Int?
+  defaultWorkEndHour   Int?
+  appointments         Appointment[]
+  business             Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user                 User?         @relation(fields: [userId], references: [id])
+
+  @@unique([userId, businessId])
+  @@index([businessId])
+}
+
+model Sale {
+  id             String        @id @default(uuid())
+  businessId     String
+  appointmentId  String?       @unique
+  clientId       String?
+  subtotal       Float         @default(0)
+  taxAmount      Float         @default(0)
+  discountAmount Float         @default(0)
+  total          Float         @default(0)
+  paymentMethod  PaymentMethod @default(cash)
+  status         SaleStatus    @default(open)
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  appointment    Appointment?  @relation(fields: [appointmentId], references: [id])
+  business       Business      @relation(fields: [businessId], references: [id])
+  client         Client?       @relation(fields: [clientId], references: [id])
+  items          SaleItem[]
+
+  @@index([businessId])
+  @@index([clientId])
+}
+
+model SaleItem {
+  id           String       @id @default(uuid())
+  saleId       String
+  type         SaleItemType
+  serviceId    String?
+  productId    String?
+  name         String
+  unitPrice    Float
+  quantity     Int          @default(1)
+  discount     Float        @default(0)
+  lineTotal    Float
+  clientBonoId String?
+  createdAt    DateTime     @default(now())
+  sale         Sale         @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  @@index([saleId])
+}
+
+enum SidebarPosition {
+  left
+  right
+  none
+}
+
+enum CalendarAppearance {
+  default
+  compact
+  spacious
+}
+
+enum UserRole {
+  gestor
+  client
+}
+
+enum AppointmentStatus {
+  pending
+  confirmed
+  cancelled
+  completed
+  no_show
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  refunded
+  partial
+}
+
+enum AppointmentOrigin {
+  manual
+  online
+  widget
+}
+
+enum BlockStatus {
+  active
+  cancelled
+}
+
+enum BonoType {
+  session_pack
+  time_pack
+  unlimited
+}
+
+enum WorkspaceRole {
+  admin
+  member
+}
+
+enum SaleStatus {
+  open
+  paid
+  refunded
+  voided
+}
+
+enum SaleItemType {
+  service
+  product
+}
+
+enum PaymentMethod {
+  cash
+  card
+  transfer
+  bono
+  mixed
+}
+
+enum StockMovementType {
+  ADJUSTMENT
+  SALE
+  PURCHASE
+  USAGE
+  RETURN
+}
+
+enum ClientNoteType {
+  GENERAL
+  FORMULA
+  ALLERGY
+  TREATMENT
+  VETERINARY_HISTORY
+}
+
+enum EmployeeRole {
+  manager
+  member
+  admin
+}

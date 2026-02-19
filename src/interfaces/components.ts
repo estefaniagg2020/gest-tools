@@ -1,4 +1,4 @@
-import type { Therapist } from "./therapist";
+import type { TeamMember } from "./team";
 
 export interface ChartItem {
   label: string;
@@ -18,7 +18,7 @@ export interface DashboardHeaderProps {
   currentUserPhoto: string;
   currentRole: string;
   currentUserId: string | null;
-  therapists: Therapist[];
+  members: TeamMember[];
 }
 
 export interface MetricCardProps {
@@ -48,6 +48,8 @@ export interface ActivityTimelineProps {
 
 export interface ModalProps {
   isOpen: boolean;
+  variant?: "default" | "modern";
+  title?: string;
 }
 
 export interface BlockEditorModalProps {
@@ -55,4 +57,14 @@ export interface BlockEditorModalProps {
   editBlock?: import("./schedule").ScheduleBlock;
   initialDate?: Date;
   initialHour?: number;
+  members?: import("./team").TeamMember[];
+}
+
+export interface ConfigHubCardProps {
+  to: string;
+  title: string;
+  description: string;
+  icon: string;
+  accent: "teal" | "violet" | "amber" | "sky" | "rose";
+  actionLabel?: string;
 }

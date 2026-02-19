@@ -17,7 +17,7 @@
         :class="collapsed ? 'w-0 opacity-0 hidden' : 'w-auto opacity-100 block'"
       >
         <p class="text-sm font-bold text-gray-700">{{ displayName }}</p>
-        <p class="text-xs text-gray-400 group-hover:text-spa-primary transition-colors">Cambiar Rol ⚡</p>
+        <p class="text-xs text-gray-400 group-hover:text-brand-primary transition-colors">Cambiar Rol ⚡</p>
       </div>
     </button>
 
@@ -39,7 +39,7 @@
                 v-model="form.role"
                 type="radio"
                 value="manager"
-                class="rounded-full border-gray-300 text-spa-teal focus:ring-spa-teal"
+                class="rounded-full border-gray-300 text-brand-accent focus:ring-brand-accent"
               />
               <span class="text-sm font-medium text-gray-700">Manager</span>
             </label>
@@ -48,7 +48,7 @@
                 v-model="form.role"
                 type="radio"
                 value="employee"
-                class="rounded-full border-gray-300 text-spa-teal focus:ring-spa-teal"
+                class="rounded-full border-gray-300 text-brand-accent focus:ring-brand-accent"
               />
               <span class="text-sm font-medium text-gray-700">Empleado</span>
             </label>
@@ -61,7 +61,7 @@
           </label>
           <select
             v-model="form.employeeId"
-            class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-spa-teal/20"
+            class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
             required
           >
             <option
@@ -71,11 +71,11 @@
               Selecciona un empleado
             </option>
             <option
-              v-for="t in therapists"
-              :key="t.id"
-              :value="t.id"
+              v-for="m in members"
+              :key="m.id"
+              :value="m.id"
             >
-              {{ t.name }}
+              {{ m.name }}
             </option>
           </select>
         </div>
@@ -93,7 +93,7 @@
             type="password"
             autocomplete="current-password"
             placeholder="Introduce tu contraseña"
-            class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-spa-teal/20 placeholder:text-gray-400"
+            class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 placeholder:text-gray-400"
           />
           <p
             v-if="passwordError"
@@ -114,7 +114,7 @@
         <button
           type="submit"
           form="role-form"
-          class="px-4 py-2 bg-spa-teal text-white text-sm font-bold rounded-lg hover:bg-[#005a5d] transition-colors cursor-pointer"
+          class="px-4 py-2 bg-brand-accent text-white text-sm font-bold rounded-lg hover:bg-[#005a5d] transition-colors cursor-pointer"
         >
           Confirmar
         </button>
@@ -127,7 +127,7 @@
   import { ref, computed, watch } from "vue";
   import { storeToRefs } from "pinia";
   import { useAuthStore } from "@/stores/auth";
-  import { useTherapistStore } from "@/stores/therapist";
+  import { useTeamStore } from "@/stores/team";
   import { AUTH_CONFIG } from "@/data/authConfig";
   import type { UserRole } from "@/stores/auth";
   import Avatar from "@/components/common/Avatar.vue";
@@ -138,23 +138,23 @@
   }>();
 
   const authStore = useAuthStore();
-  const therapistStore = useTherapistStore();
+  const teamStore = useTeamStore();
   const { currentRole, currentUserId } = storeToRefs(authStore);
-  const { therapists } = storeToRefs(therapistStore);
+  const { members } = storeToRefs(teamStore);
 
   const ROLE_MANAGER = AUTH_CONFIG.ROLE_MANAGER;
   const ROLE_EMPLOYEE = AUTH_CONFIG.ROLE_EMPLOYEE;
 
   const displayName = computed(() => {
     if (currentRole.value === ROLE_MANAGER) return AUTH_CONFIG.MANAGER_DISPLAY_NAME;
-    const therapist = therapists.value.find((t) => t.id === currentUserId.value);
-    return therapist?.name ?? "Empleado";
+    const member = members.value.find((m) => m.id === currentUserId.value);
+    return member?.name ?? "Empleado";
   });
 
   const currentUserPhoto = computed(() => {
     if (currentRole.value === ROLE_MANAGER) return undefined;
-    const therapist = therapists.value.find((t) => t.id === currentUserId.value);
-    return therapist?.photoUrl;
+    const member = members.value.find((m) => m.id === currentUserId.value);
+    return member?.photoUrl;
   });
 
   const isModalOpen = ref(false);
@@ -170,7 +170,7 @@
     if (open) {
       form.value = {
         role: currentRole.value as UserRole,
-        employeeId: currentUserId.value ?? (form.value.role === ROLE_EMPLOYEE ? (therapists.value[0]?.id ?? "") : ""),
+        employeeId: currentUserId.value ?? (form.value.role === ROLE_EMPLOYEE ? (members.value[0]?.id ?? "") : ""),
         password: "",
       };
       passwordError.value = "";
@@ -180,8 +180,8 @@
   watch(
     () => form.value.role,
     (role) => {
-      if (role === ROLE_EMPLOYEE && !form.value.employeeId && therapists.value.length > 0) {
-        form.value.employeeId = therapists.value[0].id;
+      if (role === ROLE_EMPLOYEE && !form.value.employeeId && members.value.length > 0) {
+        form.value.employeeId = members.value[0].id;
       }
       if (role === ROLE_MANAGER) {
         form.value.employeeId = "";
@@ -189,8 +189,8 @@
     },
   );
 
-  const openModal = () => {
-    therapistStore.initialize();
+  const openModal = async () => {
+    await teamStore.initialize();
     isModalOpen.value = true;
   };
 

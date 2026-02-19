@@ -1,55 +1,76 @@
 import { defineStore } from "pinia";
-import { ref, computed } from "vue";
-import type { SchedulerViewSettings, SlotDurationMinutes } from "@/interfaces";
-import { loadSchedulerSettings, saveSchedulerSettings } from "@/infrastructure/schedulerSettingsStorage";
-import { SCHEDULE_VIEW_SETTINGS } from "@/data/constants";
-import { clampHour, clampPixels, clampSlotDuration, MAX_HOUR } from "@/utils/schedulerSettingsValidation";
+import { computed } from "vue";
+import type { DefaultViewType, SchedulerViewSettings, SlotDurationMinutes, WeekStartOption } from "@/interfaces";
+import { useGestorConfigStore } from "./gestorConfig";
+import { useAuthStore } from "./auth";
+import {
+  clampHour,
+  clampPixels,
+  clampSlotDuration,
+  clampWorkDaysPerWeek,
+  clampMaxPeoplePerSlot,
+  MAX_HOUR,
+} from "@/utils/schedulerSettingsValidation";
 
 export const useSchedulerSettingsStore = defineStore("schedulerSettings", () => {
-  const startHour = ref<number>(SCHEDULE_VIEW_SETTINGS.DEFAULT_START_HOUR);
-  const endHour = ref<number>(SCHEDULE_VIEW_SETTINGS.DEFAULT_END_HOUR);
-  const pixelsPerHour = ref<number>(SCHEDULE_VIEW_SETTINGS.DEFAULT_PIXELS_PER_HOUR);
-  const slotDurationMinutes = ref<SlotDurationMinutes>(
-    SCHEDULE_VIEW_SETTINGS.DEFAULT_SLOT_DURATION as SlotDurationMinutes,
-  );
+  const configStore = useGestorConfigStore();
+  const authStore = useAuthStore();
+
+  const startHour = computed(() => configStore.startHour);
+  const endHour = computed(() => configStore.endHour);
+  const pixelsPerHour = computed(() => configStore.pixelsPerHour);
+  const slotDurationMinutes = computed(() => configStore.slotDurationMinutes as SlotDurationMinutes);
+  const workDaysPerWeek = computed(() => configStore.workDaysPerWeek);
+  const maxPeoplePerSlot = computed(() => configStore.maxPeoplePerSlot);
+  const defaultView = computed(() => (configStore.defaultView as DefaultViewType) || "week");
+  const weekStart = computed(() => (configStore.weekStart as WeekStartOption) || "locale");
 
   const settings = computed<SchedulerViewSettings>(() => ({
     startHour: startHour.value,
     endHour: endHour.value,
     pixelsPerHour: pixelsPerHour.value,
     slotDurationMinutes: slotDurationMinutes.value,
+    workDaysPerWeek: workDaysPerWeek.value,
+    maxPeoplePerSlot: maxPeoplePerSlot.value,
+    defaultView: defaultView.value,
+    weekStart: weekStart.value,
   }));
 
   function initialize() {
-    const stored = loadSchedulerSettings();
-    if (stored) {
-      startHour.value = clampHour(stored.startHour);
-      endHour.value = clampHour(stored.endHour);
-      pixelsPerHour.value = clampPixels(stored.pixelsPerHour);
-      slotDurationMinutes.value = clampSlotDuration(
-        stored.slotDurationMinutes ?? SCHEDULE_VIEW_SETTINGS.DEFAULT_SLOT_DURATION,
-      );
-      if (startHour.value >= endHour.value) {
-        endHour.value = Math.min(MAX_HOUR, startHour.value + 1);
-      }
-    } else {
-      startHour.value = SCHEDULE_VIEW_SETTINGS.DEFAULT_START_HOUR;
-      endHour.value = SCHEDULE_VIEW_SETTINGS.DEFAULT_END_HOUR;
-      pixelsPerHour.value = SCHEDULE_VIEW_SETTINGS.DEFAULT_PIXELS_PER_HOUR;
-      slotDurationMinutes.value = SCHEDULE_VIEW_SETTINGS.DEFAULT_SLOT_DURATION as SlotDurationMinutes;
-    }
+    // Rely on gestorConfigStore.initialize() being called by the main App or layout
+    // No specific local logic needed here as it's computed
   }
 
-  function updateSettings(updates: Partial<SchedulerViewSettings>) {
-    if (updates.startHour !== undefined) startHour.value = clampHour(updates.startHour);
-    if (updates.endHour !== undefined) endHour.value = clampHour(updates.endHour);
-    if (updates.pixelsPerHour !== undefined) pixelsPerHour.value = clampPixels(updates.pixelsPerHour);
-    if (updates.slotDurationMinutes !== undefined)
-      slotDurationMinutes.value = clampSlotDuration(updates.slotDurationMinutes);
-    if (startHour.value >= endHour.value) {
-      endHour.value = Math.min(MAX_HOUR, startHour.value + 1);
+  async function updateSettings(updates: Partial<SchedulerViewSettings>) {
+    const current = configStore.getConfig();
+    const newConfig = {
+      ...current,
+      ...(updates.startHour !== undefined && { startHour: clampHour(updates.startHour) }),
+      ...(updates.endHour !== undefined && { endHour: clampHour(updates.endHour) }),
+      ...(updates.pixelsPerHour !== undefined && { pixelsPerHour: clampPixels(updates.pixelsPerHour) }),
+      ...(updates.slotDurationMinutes !== undefined && { 
+        slotDurationMinutes: clampSlotDuration(updates.slotDurationMinutes) 
+      }),
+      ...(updates.workDaysPerWeek !== undefined && { 
+        workDaysPerWeek: clampWorkDaysPerWeek(updates.workDaysPerWeek) 
+      }),
+      ...(updates.maxPeoplePerSlot !== undefined && { 
+        maxPeoplePerSlot: clampMaxPeoplePerSlot(updates.maxPeoplePerSlot) 
+      }),
+      ...(updates.defaultView !== undefined && { defaultView: updates.defaultView }),
+      ...(updates.weekStart !== undefined && { weekStart: updates.weekStart }),
+    };
+
+    // Cross-validation
+    if ((newConfig.startHour ?? 0) >= (newConfig.endHour ?? 0)) {
+      newConfig.endHour = Math.min(MAX_HOUR, (newConfig.startHour ?? 0) + 1);
     }
-    saveSchedulerSettings(settings.value);
+
+    await configStore.setConfig(
+      (authStore.user as any)?.id || authStore.currentUserId || "default",
+      newConfig as any,
+      (authStore.user as any)?.businessId
+    );
   }
 
   return {
@@ -57,6 +78,10 @@ export const useSchedulerSettingsStore = defineStore("schedulerSettings", () => 
     endHour,
     pixelsPerHour,
     slotDurationMinutes,
+    workDaysPerWeek,
+    maxPeoplePerSlot,
+    defaultView,
+    weekStart,
     settings,
     initialize,
     updateSettings,

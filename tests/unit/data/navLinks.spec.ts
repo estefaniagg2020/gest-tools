@@ -6,19 +6,19 @@ describe("navLinks", () => {
     expect(ROUTE_HOME).toBe("/");
   });
 
-  it("should_have_scheduler_therapists_spas_links", () => {
+  it("should_have_scheduler_team_servicios_links", () => {
     expect(NAV_LINKS.length).toBeGreaterThanOrEqual(3);
     const toPaths = NAV_LINKS.map((l) => l.to);
     expect(toPaths).toContain("/scheduler");
-    expect(toPaths).toContain("/therapists");
-    expect(toPaths).toContain("/spas");
+    expect(toPaths).toContain("/team");
+    expect(toPaths).toContain("/services");
   });
 
-  it("should_have_icon_and_label_per_link", () => {
+  it("should_have_icon_and_labelKey_per_link", () => {
     for (const link of NAV_LINKS) {
       expect(link).toHaveProperty("to");
       expect(link).toHaveProperty("icon");
-      expect(link).toHaveProperty("label");
+      expect(link).toHaveProperty("labelKey");
     }
   });
 });

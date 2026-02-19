@@ -10,6 +10,7 @@ export const DEFAULT_SERVICES: Service[] = [
     description: "Masaje suave para eliminar estrés.",
     requiresTherapist: true,
     requiresCabin: true,
+    employeesCount: 1,
   },
   {
     id: "manual-2",
@@ -20,6 +21,7 @@ export const DEFAULT_SERVICES: Service[] = [
     description: "Masaje intenso para zonas doloridas.",
     requiresTherapist: true,
     requiresCabin: true,
+    employeesCount: 1,
   },
   {
     id: "manual-3",
@@ -30,6 +32,7 @@ export const DEFAULT_SERVICES: Service[] = [
     description: "Rejuvenecimiento facial completo.",
     requiresTherapist: true,
     requiresCabin: true,
+    employeesCount: 1,
   },
   {
     id: "hydro-1",
@@ -59,6 +62,7 @@ export const DEFAULT_SERVICES: Service[] = [
     price: 40,
     requiresTherapist: true,
     requiresCabin: false,
+    employeesCount: 1,
   },
   {
     id: "wellness-1",
@@ -68,5 +72,6 @@ export const DEFAULT_SERVICES: Service[] = [
     price: 50,
     requiresTherapist: true,
     requiresCabin: true,
+    employeesCount: 1,
   },
 ];

@@ -64,6 +64,13 @@
           title: "Advertencia",
           titleClass: "text-yellow-800",
         };
+      case "charge":
+        return {
+          classes: "bg-emerald-50/95 border-emerald-200",
+          icon: "💰",
+          title: "Cobro",
+          titleClass: "text-emerald-800",
+        };
       case "info":
       default:
         return {

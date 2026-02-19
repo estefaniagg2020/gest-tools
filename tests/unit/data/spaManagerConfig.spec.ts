@@ -44,7 +44,7 @@ describe("spaManagerConfig", () => {
 
   describe("getThemeClasses", () => {
     it("should_return_teal_classes_for_teal", () => {
-      expect(getThemeClasses("teal")).toContain("bg-spa-teal");
+      expect(getThemeClasses("teal")).toContain("bg-brand-accent");
     });
 
     it("should_return_purple_classes_for_purple", () => {

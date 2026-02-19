@@ -29,7 +29,7 @@ export const DASHBOARD_CHART_DATA: ChartDataItem[] = [
 /** Actividad reciente mostrada en el dashboard (datos de ejemplo) */
 export const DASHBOARD_RECENT_ACTIVITY: RecentActivityItem[] = [
   { title: "Nueva cita: Masaje Relajante", time: "Hace 10 min", dotClass: "bg-green-500" },
-  { title: "Antonio actualizó su horario", time: "Hace 45 min", dotClass: "bg-blue-500" },
+  { title: "Se actualizó un horario", time: "Hace 45 min", dotClass: "bg-blue-500" },
   { title: "Cancelación: Sala 3", time: "Hace 2 horas", dotClass: "bg-red-400" },
   { title: "Nuevo cliente registrado", time: "Hace 3 horas", dotClass: "bg-orange-400" },
   { title: "Cierre de caja diario", time: "Ayer, 21:00", dotClass: "bg-gray-400" },

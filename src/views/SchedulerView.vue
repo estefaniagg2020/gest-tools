@@ -1,6 +1,6 @@
 <template>
-  <div class="h-full flex flex-col md:flex-row gap-6 p-4">
-    <div class="flex-1 flex flex-col h-full min-w-0 gap-4">
+  <div class="h-full flex flex-col md:flex-row gap-4 sm:gap-5 md:gap-4 lg:gap-6 p-4 sm:p-5 md:p-5 lg:p-6">
+    <div class="flex-1 flex flex-col h-full min-w-0 gap-4 sm:gap-5 min-h-0 overflow-x-hidden">
       <PendingChangesBanner
         v-if="authStore.currentRole === ROLE_MANAGER && pendingBlocksCount > 0"
         :pending-blocks="pendingBlocks"
@@ -8,131 +8,173 @@
       <RejectionNoticeModal v-if="authStore.currentRole === ROLE_EMPLOYEE" />
 
       <div
-        class="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 md:p-4 flex flex-col md:flex-row md:items-center justify-between gap-3"
+        :class="[
+          'scheduler-header-card app-card p-4 sm:p-4 flex flex-col gap-3 sm:gap-4 min-w-0 overflow-visible max-w-full shrink-0',
+          isThemeSelected ? 'bg-brand-accent/12 border-brand-accent/35' : '',
+        ]"
       >
-        <div>
-          <h2 class="text-lg md:text-xl font-bold text-gray-800 flex items-center gap-2">
-            <span class="text-xl md:text-2xl">🗓️</span>
-            {{ currentTherapist ? `Agenda de ${currentTherapist.name}` : "Mi Horario" }}
-          </h2>
-          <p class="text-gray-400 text-[10px] md:text-xs mt-0.5 pl-1">
-            {{ currentDate.getFullYear() }}
-          </p>
-        </div>
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4 min-w-0 w-full">
+          <div class="min-w-0 shrink-0">
+            <h2 class="text-xl md:text-2xl font-bold text-app-title truncate">
+              {{ currentAgendaName }}
+            </h2>
+            <p class="text-app-text/80 text-xs md:text-sm mt-0.5">
+              {{ currentDayAndDate }}
+            </p>
+          </div>
 
-        <CalendarHeader
-          :current-date="currentDate"
-          :current-view="view"
-          @prev="prev"
-          @next="next"
-          @today="setToday"
-          @changeView="view = $event"
-          class="!p-0 !bg-transparent !border-0 !shadow-none w-full md:w-auto overflow-x-auto"
-        />
+          <div class="min-w-0 w-full max-w-full overflow-visible">
+            <CalendarHeader
+              :current-date="currentDate"
+              :current-view="view"
+              @prev="prev"
+              @next="next"
+              @today="setToday"
+              @changeView="view = $event"
+              class="p-0! bg-transparent! border-0! shadow-none! w-full max-w-full"
+            />
+          </div>
 
-        <button
+          <button
           type="button"
-          class="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700 text-sm font-medium transition-colors cursor-pointer shrink-0"
-          :title="isRightPanelVisible ? 'Ocultar panel' : 'Mostrar panel'"
+          class="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-app-border bg-app-surface hover:bg-app-bg text-app-text text-sm font-medium transition-colors cursor-pointer shrink-0 shadow-sm"
+          :title="isRightPanelVisible ? $t('scheduler.hidePanel') : $t('scheduler.showPanel')"
           @click="isRightPanelVisible = !isRightPanelVisible"
         >
-          <span aria-hidden="true">{{ isRightPanelVisible ? "◀ Panel" : "Panel ▶" }}</span>
+          <span aria-hidden="true">{{ isRightPanelVisible ? `◀ ${$t('scheduler.panel')}` : `${$t('scheduler.panel')} ▶` }}</span>
         </button>
+        </div>
       </div>
 
       <div
-        class="flex-1 min-h-0 relative bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col"
+        class="scheduler-agenda-card flex-none lg:flex-1 min-h-0 relative app-card flex flex-col overflow-x-hidden lg:overflow-hidden"
       >
         <div
           v-if="view === 'week'"
-          class="flex-1 min-h-0 overflow-y-auto md:hidden p-4"
+          class="flex-none lg:flex-1 lg:min-h-0 overflow-y-auto overflow-x-visible lg:hidden p-4 sm:p-5 pb-24 sm:pb-24"
         >
           <WeekAgendaMobile
             :week-days="weekDays"
-            :blocks="filteredBlocks"
-            :therapists="filteredTherapists"
+            :items="agendaItemsWeek"
+            :members="filteredMembers"
             @block-click="handleEditBlock"
+            @item-click="handleItemClick"
           />
         </div>
         <div
           v-if="view === 'week'"
-          class="flex-1 min-h-0 overflow-hidden hidden md:block"
+          class="flex-1 min-h-0 overflow-hidden hidden lg:block"
         >
           <WeekView
             :week-days="weekDays"
-            :blocks="filteredBlocks"
+            :items="agendaItemsWeek"
             v-bind="gridSettings"
-            @block-click="handleEditBlock"
+            @item-click="handleItemClick"
             @grid-click="handleGridClick"
+            @appointment-move="handleAppointmentMove"
+            @block-move="handleBlockMove"
           />
         </div>
         <DayView
           v-else-if="view === 'day'"
           :date="currentDate"
-          :blocks="filteredBlocks"
-          :therapists="filteredTherapists"
+          :items="agendaItemsDay"
+          :members="filteredMembers"
           v-bind="gridSettings"
-          @block-click="handleEditBlock"
+          @item-click="handleItemClick"
           @grid-click="handleGridClick"
+          @appointment-move="handleAppointmentMoveDay"
+          @block-move="handleBlockMoveDay"
         />
         <MonthView
           v-else-if="view === 'month'"
           :current-date="currentDate"
           :blocks="filteredBlocks"
+          :appointments="visibleAppointments"
           @block-click="handleEditBlock"
+          @item-click="handleItemClick"
           @grid-click="handleGridClick"
         />
 
-        <button
-          @click="openAddModal"
-          class="absolute bottom-6 right-6 w-12 h-12 bg-spa-teal text-white rounded-xl shadow-lg shadow-spa-teal/20 flex items-center justify-center text-2xl hover:scale-105 transition-transform hover:bg-[#005a5d]"
-        >
-          +
-        </button>
+        <div class="absolute bottom-6 right-6 flex flex-col items-end">
+          <div class="relative" ref="addButtonRef">
+            <button
+              type="button"
+              class="w-14 h-14 bg-brand-primary text-white rounded-xl shadow-md flex items-center justify-center text-2xl hover:opacity-90 transition-opacity"
+              :title="$t('scheduler.whatToAdd')"
+              @click="showAddMenu = !showAddMenu"
+            >
+              +
+            </button>
+            <div
+              v-if="showAddMenu"
+              class="absolute bottom-full right-0 mb-2 w-56 rounded-xl bg-app-surface border border-app-border shadow-lg py-2 z-30"
+            >
+              <p class="px-4 py-2 text-sm font-medium text-app-text border-b border-app-border-subtle">
+                {{ $t('scheduler.whatToAdd') }}
+              </p>
+              <button
+                type="button"
+                class="w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-app-text hover:bg-app-bg transition-colors"
+                @click="onAddOption('block')"
+              >
+                <span class="w-8 h-8 rounded-lg bg-brand-accent/20 flex items-center justify-center text-lg">+</span>
+                {{ $t('scheduler.internalBlock') }}
+              </button>
+              <button
+                type="button"
+                class="w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-app-text hover:bg-app-bg transition-colors"
+                @click="onAddOption('appointment')"
+              >
+                <span class="w-8 h-8 rounded-lg bg-brand-primary/20 flex items-center justify-center text-lg">📅</span>
+                {{ $t('scheduler.newAppointment') }}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
     <div
       v-show="isRightPanelVisible"
-      class="w-full md:w-72 hidden md:flex flex-col h-full gap-4 shrink-0"
+      class="w-full md:w-72 flex flex-col h-full gap-4 shrink-0 min-w-0 overflow-y-auto"
     >
-      <ScheduleViewSettings />
-
-      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-        <label class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Spa / Centro</label>
+      <div class="app-card p-4">
+        <label class="text-sm font-medium text-app-text mb-2 block">{{ $t('scheduler.agendaLabel') }}</label>
         <select
-          v-model="spaStore.currentSpaId"
-          class="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-spa-teal/20"
+          v-model="selectedAgendaIndex"
+          class="w-full p-2 bg-app-bg border border-app-border rounded-lg text-sm font-medium text-app-text focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
         >
           <option
-            v-for="spa in spaStore.spas"
-            :key="spa.id"
-            :value="spa.id"
+            v-for="(agenda, index) in agendaListStore.agendas"
+            :key="index"
+            :value="index"
           >
-            {{ spa.name }}
+            {{ agenda.name }}
           </option>
         </select>
       </div>
 
-      <TherapistRightPanel
-        :therapists="filteredTherapists"
-        :selected-id="selectedTherapistId"
-        @select="handleTherapistSelect"
+      <WaitlistPanel
+        :is-dragging-confirmed="isDraggingConfirmedAppointment"
+        :waitlist-entries="waitlistEntries"
+        :clients="clientStore.clients"
+        :services="serviceStore.services"
+        @cancel-appointment="cancelAppointmentById"
+        @added="loadWaitlistByBusiness"
       />
 
-      <div class="bg-gradient-to-br from-spa-primary/5 to-spa-peach/10 rounded-2xl p-4 border border-spa-peach/20">
-        <h4 class="font-bold text-spa-primary text-sm mb-2">{{ SCHEDULER_CONSTANTS.QUICK_ACTIONS_TITLE }}</h4>
-        <button
-          v-if="blocks.length === 0"
-          @click="regenerate"
-          class="text-xs text-spa-primary hover:underline flex items-center gap-1 cursor-pointer"
-        >
-          {{ SCHEDULER_CONSTANTS.GENERATE_TEST_DATA }}
-        </button>
-        <div class="text-[10px] text-gray-400 mt-2">
-          {{ SCHEDULER_CONSTANTS.QUICK_ADD_HINT }}
-        </div>
-      </div>
+      <SlotFinderCard
+        :members="filteredMembers"
+        :blocks="activeBlocks"
+        :appointments="activeAppointments"
+        :min-hour="slotFinderMinHour"
+        :max-hour="slotFinderMaxHour"
+        :slot-duration-minutes="schedulerSettings.slotDurationMinutes.value"
+        :initial-date="currentDate"
+        :business-id="authStore.user?.businessId ?? null"
+        @slot-select="onSlotSelect"
+      />
     </div>
 
     <BlockEditorModal
@@ -141,30 +183,45 @@
       :edit-block="editingBlock"
       :initial-date="selectedDate"
       :initial-hour="initialBlockHour"
+      :members="filteredMembers"
       @close="closeModal"
       @save="saveBlock"
       @delete="deleteBlock"
+      @cancel="cancelBlockSoft"
       @update:date="selectedDate = $event"
+    />
+
+    <AppointmentEditorModal
+      :key="'apt-' + appointmentModalKey"
+      :is-open="isAppointmentModalOpen"
+      :edit-appointment="editingAppointment"
+      :initial-date="selectedDate"
+      :initial-hour="initialBlockHour"
+      :initial-member-id="initialAppointmentMemberId ?? (selectedMemberId !== ALL_MEMBERS_ID ? selectedMemberId : undefined)"
+      :slot-duration-minutes="schedulerSettings.slotDurationMinutes.value"
+      @close="closeAppointmentModal"
+      @save="onAppointmentSaved"
+      @delete="deleteAppointment"
+      @cancel="cancelAppointment"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted } from "vue";
+  import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import { storeToRefs } from "pinia";
-  import { useTherapistStore } from "@/stores/therapist";
+  import { useTeamStore } from "@/stores/team";
   import { useScheduleStore } from "@/stores/schedule";
   import { useAuthStore } from "@/stores/auth";
-  import { useSpaStore } from "@/stores/spa";
   import { useSchedulerSettingsStore } from "@/stores/schedulerSettings";
+  import { useAgendaListStore } from "@/stores/agendaList";
   import { useRejectedRequestsStore } from "@/stores/rejectedRequests";
   import { useCalendar } from "@/composables/useCalendar";
   import { useScheduleActions } from "@/composables/useScheduleActions";
-  import { SCHEDULER_CONSTANTS } from "@/data/constants";
   import { AUTH_CONFIG } from "@/data/authConfig";
-  import { generateAllSchedules } from "@/utils/scheduleGenerator";
-  import ScheduleViewSettings from "@/components/scheduler/ScheduleViewSettings.vue";
-  import TherapistRightPanel from "@/components/scheduler/TherapistRightPanel.vue";
+  import { DEFAULT_THEME_ID } from "@/data/themes";
+  import { slotOverlapsExisting } from "@/composables/useScheduleOverlap";
   import CalendarHeader from "@/components/scheduler/CalendarHeader.vue";
   import WeekView from "@/components/scheduler/WeekView.vue";
   import DayView from "@/components/scheduler/DayView.vue";
@@ -173,13 +230,31 @@
   import PendingChangesBanner from "@/components/scheduler/PendingChangesBanner.vue";
   import RejectionNoticeModal from "@/components/scheduler/RejectionNoticeModal.vue";
   import WeekAgendaMobile from "@/components/scheduler/WeekAgendaMobile.vue";
-  import type { ScheduleBlock } from "@/interfaces";
+  import AppointmentEditorModal from "@/components/scheduler/AppointmentEditorModal.vue";
+  import SlotFinderCard from "@/components/scheduler/SlotFinderCard.vue";
+  import WaitlistPanel from "@/components/scheduler/WaitlistPanel.vue";
+  import type { ScheduleBlock, AgendaItem } from "@/interfaces";
+  import { isAppointment } from "@/interfaces";
+  import { useClientStore } from "@/stores/client";
+  import { useAppointmentStore } from "@/stores/appointment";
+  import { useServiceStore } from "@/stores/service";
+  import { useThemeStore } from "@/stores/theme";
+  import { useScheduleDrag } from "@/composables/useScheduleDrag";
+  import { getIntlLocale } from "@/utils/intlLocale";
+  import { useConfirmDialog } from "@/composables/useConfirmDialog";
+  import { bookingApi, type WaitlistEntryByBusiness } from "@/infrastructure/bookingApi";
 
-  const therapistStore = useTherapistStore();
+  const { t } = useI18n();
+  const { show: showConfirm } = useConfirmDialog();
+  const teamStore = useTeamStore();
   const scheduleStore = useScheduleStore();
+  const clientStore = useClientStore();
+  const appointmentStore = useAppointmentStore();
+  const serviceStore = useServiceStore();
   const authStore = useAuthStore();
-  const spaStore = useSpaStore();
+  const themeStore = useThemeStore();
   const schedulerSettingsStore = useSchedulerSettingsStore();
+  const agendaListStore = useAgendaListStore();
   const rejectedRequestsStore = useRejectedRequestsStore();
   const schedulerSettings = storeToRefs(schedulerSettingsStore);
   const ROLE_MANAGER = AUTH_CONFIG.ROLE_MANAGER;
@@ -189,71 +264,158 @@
 
   const { currentDate, view, weekDays, next, prev, setToday } = useCalendar();
 
-  const userSelectedTherapistId = ref<string>("");
+  const ALL_MEMBERS_ID = "__all__";
+  const selectedAgendaIndex = ref(0);
+  const scheduleDrag = useScheduleDrag();
   const isModalOpen = ref(false);
   const modalOpenKey = ref(0);
   const editingBlock = ref<ScheduleBlock | undefined>(undefined);
   const initialBlockHour = ref<number | undefined>(undefined);
   const selectedDate = ref<Date | undefined>(undefined);
   const isRightPanelVisible = ref(true);
+  const isAppointmentModalOpen = ref(false);
+  const showAddMenu = ref(false);
+  const addButtonRef = ref<HTMLElement | null>(null);
+  const appointmentModalKey = ref(0);
+  const editingAppointment = ref<import("@/interfaces").Appointment | null>(null);
+  const initialAppointmentMemberId = ref<string | undefined>(undefined);
+  const waitlistByBusiness = ref<WaitlistEntryByBusiness[]>([]);
+
+  const loadWaitlistByBusiness = async () => {
+    if (authStore.user?.role !== "gestor" || !authStore.user?.businessId) return;
+    try {
+      waitlistByBusiness.value = await bookingApi.getWaitlistByBusiness();
+    } catch {
+      waitlistByBusiness.value = [];
+    }
+  };
+
+  const handleClickOutsideAddMenu = (e: MouseEvent) => {
+    if (addButtonRef.value && !addButtonRef.value.contains(e.target as Node)) {
+      showAddMenu.value = false;
+    }
+  };
+
+  const handleResize = () => {
+    if (window.innerWidth < 768) isRightPanelVisible.value = false;
+  };
 
   onMounted(() => {
-    therapistStore.initialize();
+    document.addEventListener("click", handleClickOutsideAddMenu);
+    window.addEventListener("resize", handleResize);
+    if (window.innerWidth < 768) isRightPanelVisible.value = false;
+    void teamStore.initialize();
     scheduleStore.initialize();
-    spaStore.initialize();
+    clientStore.initialize();
+    appointmentStore.initialize();
+    serviceStore.initialize();
     schedulerSettingsStore.initialize();
+    agendaListStore.initialize();
     rejectedRequestsStore.initialize();
+    view.value = schedulerSettingsStore.defaultView;
+    void loadWaitlistByBusiness();
 
-    if (scheduleStore.blocks.length === 0 && therapistStore.therapists.length > 0) {
-      generateAllSchedules(therapistStore.therapists, currentDate.value);
+    const agendaCount = agendaListStore.agendas.length;
+    if (agendaCount > 0 && selectedAgendaIndex.value >= agendaCount) {
+      selectedAgendaIndex.value = agendaCount - 1;
     }
+
   });
 
+  onUnmounted(() => {
+    document.removeEventListener("click", handleClickOutsideAddMenu);
+    window.removeEventListener("resize", handleResize);
+  });
+
+  const PIXELS_PER_HOUR_FIXED = 70;
   const gridSettings = computed(() => ({
     startHour: schedulerSettings.startHour.value,
     endHour: schedulerSettings.endHour.value,
-    pixelsPerHour: schedulerSettings.pixelsPerHour.value,
-    slotDurationMinutes: schedulerSettings.slotDurationMinutes.value,
+    pixelsPerHour: PIXELS_PER_HOUR_FIXED,
+    slotDurationMinutes: 60 as const,
   }));
 
-  const filteredTherapists = computed(() => {
-    return therapistStore.therapists.filter(
-      (therapist) =>
-        therapist.spaId === spaStore.currentSpaId || (!therapist.spaId && spaStore.currentSpaId === "spa-1"),
-    );
+  watch(
+    () => agendaListStore.agendas.length,
+    (len) => {
+      if (len > 0 && selectedAgendaIndex.value >= len) {
+        selectedAgendaIndex.value = Math.max(0, len - 1);
+      }
+    },
+  );
+
+  const filteredMembers = computed(() => teamStore.members);
+
+  const currentAgendaName = computed(() => {
+    const agenda = agendaListStore.getAgenda(selectedAgendaIndex.value);
+    return agenda?.name ?? t("scheduler.mySchedule");
   });
 
-  const selectedTherapistId = computed({
-    get() {
-      const id = userSelectedTherapistId.value;
-      const available = filteredTherapists.value;
-      return available.some((t) => t.id === id) ? id : (available[0]?.id ?? "");
-    },
-    set(id: string) {
-      userSelectedTherapistId.value = id;
-    },
+  const currentDayAndDate = computed(() => {
+    const displayDate = currentDate.value;
+    const today = new Date();
+    const isToday = displayDate.getDate() === today.getDate() && displayDate.getMonth() === today.getMonth() && displayDate.getFullYear() === today.getFullYear();
+    const locale = getIntlLocale();
+    const datePart = new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric" }).format(displayDate);
+    return isToday ? `${t("scheduler.today")}, ${datePart}` : new Intl.DateTimeFormat(locale, { weekday: "long", day: "numeric", month: "long" }).format(displayDate);
   });
 
-  const currentTherapist = computed(() =>
-    therapistStore.therapists.find((therapist) => therapist.id === selectedTherapistId.value),
+  const selectedMemberId = computed(() => ALL_MEMBERS_ID);
+
+  const memberIdForBlock = computed(() => filteredMembers.value[0]?.id ?? "");
+
+  const activeBlocks = computed(() =>
+    blocks.value.filter((block) => block.status !== "cancelled"),
   );
 
   const filteredBlocks = computed(() => {
     if (view.value === "day") {
-      const therapistIds = filteredTherapists.value.map((therapist) => therapist.id);
-      return blocks.value.filter((block) => therapistIds.includes(block.therapistId));
+      const memberIds = filteredMembers.value.map((member) => member.id);
+      return activeBlocks.value.filter((block) => memberIds.includes(block.memberId));
     }
-
-    if (!selectedTherapistId.value) return [];
-    return blocks.value.filter((block) => block.therapistId === selectedTherapistId.value);
+    if (selectedMemberId.value === ALL_MEMBERS_ID) {
+      return activeBlocks.value;
+    }
+    return activeBlocks.value.filter((block) => block.memberId === selectedMemberId.value);
   });
+
+  const activeAppointments = computed(() =>
+    appointmentStore.appointments.filter((a) => a.status !== "cancelled"),
+  );
+
+  const visibleAppointments = computed(() => appointmentStore.appointments);
+
+  const filteredAppointmentsWeek = computed(() => {
+    if (selectedMemberId.value === ALL_MEMBERS_ID) return visibleAppointments.value;
+    return visibleAppointments.value.filter((apt) =>
+      !apt.memberId || apt.memberId === selectedMemberId.value,
+    );
+  });
+
+  const filteredAppointmentsDay = computed(() => visibleAppointments.value);
+
+  const agendaItemsWeek = computed<AgendaItem[]>(() => [
+    ...filteredBlocks.value,
+    ...filteredAppointmentsWeek.value,
+  ]);
+
+  const agendaItemsDay = computed<AgendaItem[]>(() => [
+    ...filteredBlocks.value,
+    ...filteredAppointmentsDay.value,
+  ]);
 
   const pendingBlocks = computed(() => blocks.value.filter((block) => block.status === "pending"));
   const pendingBlocksCount = computed(() => pendingBlocks.value.length);
+  const isThemeSelected = computed(() => themeStore.themeId !== DEFAULT_THEME_ID);
 
-  const handleTherapistSelect = (id: string) => {
-    selectedTherapistId.value = id;
-  };
+  const slotFinderMinHour = computed(() => {
+    const agenda = agendaListStore.getAgenda(selectedAgendaIndex.value);
+    return agenda?.startHour ?? schedulerSettings.startHour.value;
+  });
+  const slotFinderMaxHour = computed(() => {
+    const agenda = agendaListStore.getAgenda(selectedAgendaIndex.value);
+    return agenda?.endHour ?? schedulerSettings.endHour.value;
+  });
 
   const openAddModal = () => {
     editingBlock.value = undefined;
@@ -263,17 +425,25 @@
     isModalOpen.value = true;
   };
 
-  const handleGridClick = (data: { date: Date; hour: number; therapistId?: string }) => {
-    editingBlock.value = undefined;
+  const handleGridClick = (data: { date: Date; hour: number; memberId?: string }) => {
     initialBlockHour.value = data.hour;
     selectedDate.value = data.date;
+    initialAppointmentMemberId.value = data.memberId;
+    editingAppointment.value = null;
+    appointmentModalKey.value += 1;
+    isAppointmentModalOpen.value = true;
+  };
 
-    if (data.therapistId) {
-      selectedTherapistId.value = data.therapistId;
+  const handleItemClick = (item: AgendaItem) => {
+    if (isAppointment(item)) {
+      editingAppointment.value = item;
+      appointmentModalKey.value += 1;
+      isAppointmentModalOpen.value = true;
+    } else {
+      editingBlock.value = item;
+      modalOpenKey.value += 1;
+      isModalOpen.value = true;
     }
-
-    modalOpenKey.value += 1;
-    isModalOpen.value = true;
   };
 
   const handleEditBlock = (block: ScheduleBlock) => {
@@ -282,15 +452,73 @@
     isModalOpen.value = true;
   };
 
+  const onAddOption = (type: "block" | "appointment") => {
+    showAddMenu.value = false;
+    if (type === "block") openAddModal();
+    else openAppointmentModal();
+  };
+
+  const openAppointmentModal = () => {
+    editingAppointment.value = null;
+    selectedDate.value = new Date(currentDate.value);
+    initialBlockHour.value = 9;
+    initialAppointmentMemberId.value = undefined;
+    appointmentModalKey.value += 1;
+    isAppointmentModalOpen.value = true;
+  };
+
+  const onSlotSelect = (slot: { date: Date; startHour: number; memberId: string }) => {
+    selectedDate.value = new Date(slot.date);
+    initialBlockHour.value = slot.startHour;
+    initialAppointmentMemberId.value = slot.memberId;
+    editingAppointment.value = null;
+    appointmentModalKey.value += 1;
+    isAppointmentModalOpen.value = true;
+  };
+
+  const closeAppointmentModal = () => {
+    isAppointmentModalOpen.value = false;
+    editingAppointment.value = null;
+    initialAppointmentMemberId.value = undefined;
+  };
+
+  const onAppointmentSaved = () => {
+    closeAppointmentModal();
+  };
+
+  const deleteAppointment = () => {
+    closeAppointmentModal();
+  };
+
   const closeModal = () => {
     isModalOpen.value = false;
     editingBlock.value = undefined;
   };
 
-  const saveBlock = (data: Partial<ScheduleBlock>) => {
+  const saveBlock = async (data: Partial<ScheduleBlock>) => {
+    const mid = data.memberId ?? memberIdForBlock.value;
+    if (!editingBlock.value && mid !== ALL_MEMBERS_ID && data.start != null && data.end != null && selectedDate.value) {
+      const occupied = slotOverlapsExisting({
+        blocks: activeBlocks.value,
+        appointments: activeAppointments.value,
+        memberId: mid,
+        date: selectedDate.value,
+        startTime: data.start,
+        endTime: data.end,
+      });
+      if (occupied) {
+        const proceed = await showConfirm({
+          title: "Horario ocupado",
+          message: t("scheduler.slotOccupiedConfirm"),
+          confirmLabel: "Guardar de todos modos",
+          variant: "primary",
+        });
+        if (!proceed) return;
+      }
+    }
     saveScheduleBlock({
       data,
-      therapistId: selectedTherapistId.value,
+      memberId: mid,
       currentDate: currentDate.value,
       selectedDate: selectedDate.value,
       editingBlock: editingBlock.value,
@@ -299,15 +527,118 @@
   };
 
   const deleteBlock = () => {
-    if (editingBlock.value) {
-      scheduleStore.deleteBlock(editingBlock.value.id);
-      closeModal();
-    }
+    closeModal();
   };
 
-  const regenerate = () => {
-    if (confirm(SCHEDULER_CONSTANTS.REGENERATE_CONFIRM)) {
-      generateAllSchedules(therapistStore.therapists, currentDate.value);
+  const cancelBlockSoft = () => {
+    closeModal();
+  };
+
+  const cancelAppointment = () => {
+    closeAppointmentModal();
+  };
+
+  const moveAppointmentToSlot = (
+    appointmentId: string,
+    date: Date,
+    hour: number,
+    memberId?: string,
+  ) => {
+    const apt = appointmentStore.getById(appointmentId);
+    if (!apt) return;
+    const start = new Date(apt.start);
+    const end = new Date(apt.end);
+    const durationMs = end.getTime() - start.getTime();
+    const newStart = new Date(date);
+    newStart.setHours(Math.floor(hour), Math.round((hour % 1) * 60), 0, 0);
+    const newEnd = new Date(newStart.getTime() + durationMs);
+    appointmentStore.update(appointmentId, {
+      start: newStart.toISOString(),
+      end: newEnd.toISOString(),
+      ...(memberId ? { memberId } : {}),
+    });
+  };
+
+  const handleAppointmentMove = (data: {
+    appointmentId: string;
+    date: Date;
+    hour: number;
+  }) => {
+    const apt = appointmentStore.getById(data.appointmentId);
+    moveAppointmentToSlot(
+      data.appointmentId,
+      data.date,
+      data.hour,
+      apt?.memberId,
+    );
+  };
+
+  const handleAppointmentMoveDay = (data: {
+    appointmentId: string;
+    date: Date;
+    hour: number;
+    memberId: string;
+  }) => {
+    moveAppointmentToSlot(
+      data.appointmentId,
+      data.date,
+      data.hour,
+      data.memberId,
+    );
+  };
+
+  const moveBlockToSlot = (blockId: string, date: Date, hour: number, memberId?: string) => {
+    const block = scheduleStore.blocks.find((b) => b.id === blockId);
+    if (!block) return;
+    const start = new Date(block.start);
+    const end = new Date(block.end);
+    const durationMs = end.getTime() - start.getTime();
+    const newStart = new Date(date);
+    newStart.setHours(Math.floor(hour), Math.round((hour % 1) * 60), 0, 0);
+    const newEnd = new Date(newStart.getTime() + durationMs);
+    scheduleStore.updateBlock(blockId, {
+      start: newStart.toISOString(),
+      end: newEnd.toISOString(),
+      ...(memberId ? { memberId } : {}),
+    });
+  };
+
+  const handleBlockMove = (data: { blockId: string; date: Date; hour: number }) => {
+    const block = scheduleStore.blocks.find((b) => b.id === data.blockId);
+    moveBlockToSlot(data.blockId, data.date, data.hour, block?.memberId);
+  };
+
+  const handleBlockMoveDay = (data: { blockId: string; date: Date; hour: number; memberId: string }) => {
+    moveBlockToSlot(data.blockId, data.date, data.hour, data.memberId);
+  };
+
+  const isDraggingConfirmedAppointment = computed(() => {
+    const item = scheduleDrag.item.value as AgendaItem | null;
+    if (!item || !scheduleDrag.moving.value) return false;
+    if (isAppointment(item)) return item.status === "confirmed";
+    return false;
+  });
+
+  const waitlistEntries = computed(() => {
+    const list = waitlistByBusiness.value;
+    const byService = new Map<string, { serviceName: string; count: number }>();
+    for (const e of list) {
+      const cur = byService.get(e.serviceId);
+      if (cur) {
+        cur.count += 1;
+      } else {
+        byService.set(e.serviceId, { serviceName: e.service.name, count: 1 });
+      }
     }
+    return Array.from(byService.entries()).map(([id, { serviceName, count }]) => ({
+      id,
+      serviceName,
+      count,
+    }));
+  });
+
+  const cancelAppointmentById = (appointmentId: string) => {
+    appointmentStore.cancel(appointmentId);
+    scheduleDrag.end();
   };
 </script>

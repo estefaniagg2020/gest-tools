@@ -21,7 +21,7 @@ export const AUTH_CONFIG = {
   /** User IDs que se consideran manager (p. ej. alias legacy) para nombre/foto en dashboard */
   MANAGER_USER_IDS: ["5", "admin"] as const,
   /** Nombre mostrado para el usuario manager cuando no se resuelve desde datos */
-  MANAGER_DISPLAY_NAME: "Antonio",
+  MANAGER_DISPLAY_NAME: "Usuario",
   /** Contraseña de demostración para el popup de cambio de rol (sin backend) */
   DEMO_PASSWORD: "demo",
 } as const;

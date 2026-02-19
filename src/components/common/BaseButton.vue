@@ -17,15 +17,17 @@
   import { computed } from "vue";
 
   const props = defineProps<{
-    variant?: "primary" | "secondary" | "danger" | "outline" | "ghost";
+    variant?: "primary" | "secondary" | "danger" | "outline" | "ghost" | "accent";
     disabled?: boolean;
   }>();
 
   const variants = {
-    primary: "bg-spa-teal text-white hover:bg-[#015a5e] shadow-md shadow-spa-teal/20",
-    secondary: "bg-spa-peach text-spa-primary hover:bg-[#edb595]",
+    primary: "bg-brand-accent text-white hover:bg-brand-secondary shadow-md shadow-brand-accent/20",
+    secondary: "bg-brand-soft text-brand-primary hover:bg-[#edb595]",
+    accent:
+      "bg-linear-to-r from-brand-accent to-brand-secondary text-white hover:brightness-[1.03] shadow-lg shadow-brand-accent/25 hover:shadow-xl hover:shadow-brand-accent/30 hover:scale-[1.02] active:scale-[0.98]",
     danger: "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200",
-    outline: "border border-gray-300 text-gray-700 hover:bg-gray-50 bg-white",
+    outline: "border border-brand-accent/30 text-brand-accent bg-app-surface hover:bg-brand-accent/10",
     ghost: "text-gray-600 hover:bg-gray-100",
   };
 

@@ -3,9 +3,9 @@
     :is-open="rejections.length > 0"
     @close="dismissCurrent"
   >
-    <template #title>{{ SCHEDULER_CONSTANTS.REJECTION_NOTICE_MODAL_TITLE }}</template>
+    <template #title>{{ $t('scheduler.rejectionTitle') }}</template>
     <div class="space-y-4">
-      <p class="text-sm text-gray-700">{{ SCHEDULER_CONSTANTS.REJECTION_NOTICE_INTRO }}</p>
+      <p class="text-sm text-gray-700">{{ $t('scheduler.rejectionIntro') }}</p>
       <div
         v-for="r in rejections"
         :key="r.id"
@@ -28,10 +28,10 @@
     <template #footer>
       <button
         type="button"
-        class="px-4 py-2 bg-spa-teal text-white text-sm font-bold rounded-lg hover:bg-[#005a5d] transition-colors cursor-pointer"
+        class="px-4 py-2 bg-brand-accent text-white text-sm font-bold rounded-lg hover:bg-[#005a5d] transition-colors cursor-pointer"
         @click="dismissCurrent"
       >
-        {{ SCHEDULER_CONSTANTS.REJECTION_NOTICE_BTN }}
+        {{ $t('scheduler.rejectionBtn') }}
       </button>
     </template>
   </Modal>
@@ -40,7 +40,6 @@
 <script setup lang="ts">
   import { storeToRefs } from "pinia";
   import { useRejectedRequestsStore } from "@/stores/rejectedRequests";
-  import { SCHEDULER_CONSTANTS } from "@/data/constants";
   import { BLOCK_EDITOR_TYPE_OPTIONS } from "@/data/blockEditorConfig";
   import { formatTime } from "@/composables/useScheduleDates";
   import type { ScheduleBlockType } from "@/interfaces";

@@ -7,6 +7,11 @@ import { useAuthStore } from "@/stores/auth";
 export const useRejectedRequestsStore = defineStore("rejectedRequests", () => {
   const rejections = ref<RejectedRequest[]>([]);
 
+  const normalizeRejection = (rejectedRequest: RejectedRequest & { therapistId?: string }): RejectedRequest => ({
+    ...rejectedRequest,
+    memberId: rejectedRequest.memberId ?? rejectedRequest.therapistId ?? "",
+  });
+
   const initialize = () => {
     const authStore = useAuthStore();
     const userId = authStore.currentUserId;
@@ -14,14 +19,15 @@ export const useRejectedRequestsStore = defineStore("rejectedRequests", () => {
       rejections.value = [];
       return;
     }
-    const all = loadRejectedRequests();
-    rejections.value = all.filter((r) => r.therapistId === userId);
+    const all = loadRejectedRequests() as (RejectedRequest & { therapistId?: string })[];
+    const normalized = all.map(normalizeRejection);
+    rejections.value = normalized.filter((r) => r.memberId === userId);
   };
 
-  const addRejection = (therapistId: string, blockSnapshot: RejectedRequestSnapshot) => {
+  const addRejection = (memberId: string, blockSnapshot: RejectedRequestSnapshot) => {
     const request: RejectedRequest = {
       id: crypto.randomUUID(),
-      therapistId,
+      memberId,
       blockSnapshot,
       rejectedAt: new Date().toISOString(),
     };
@@ -29,7 +35,7 @@ export const useRejectedRequestsStore = defineStore("rejectedRequests", () => {
     all.push(request);
     saveRejectedRequests(all);
     const authStore = useAuthStore();
-    if (authStore.currentUserId === therapistId) {
+    if (authStore.currentUserId === memberId) {
       rejections.value = [...rejections.value, request];
     }
   };

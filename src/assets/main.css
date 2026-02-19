@@ -1,9 +1,380 @@
 @import "tailwindcss";
 
+html {
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 @theme {
-  --color-spa-primary: #db7f50;
-  --color-spa-olive: #7f8563;
-  --color-spa-peach: #f6c8ae;
-  --color-spa-teal: #017074;
-  --color-spa-white: #ffffff;
+  --color-brand-primary: #008080;
+  --color-brand-secondary: #006d6d;
+  --color-brand-soft: #e9f2fb;
+  --color-brand-accent: #008080;
+  --color-brand-white: #ffffff;
+  --color-app-bg: #f5f7fa;
+  --color-app-surface: #ffffff;
+  --color-app-title: #2c3e50;
+  --color-app-text: #333333;
+  --color-app-border: #e0e0e0;
+  --color-app-border-subtle: #f0f2f5;
+  --agenda-bg: #ffffff;
+  --agenda-marked-days: #008080;
+  --agenda-vacation: #006d6d;
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+  --shadow-card-hover: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+}
+
+:root {
+  --chrome-bg: var(--color-app-surface);
+  --chrome-surface: var(--color-app-surface);
+  --chrome-title: var(--color-app-title);
+  --chrome-text: var(--color-app-text);
+  --chrome-border: var(--color-app-border-subtle);
+  --footer-bg: #1e293b;
+  --footer-text: #f1f5f9;
+  --footer-check: #e8dcc8;
+}
+
+.sidebar-column {
+  background: transparent;
+}
+
+.color-mode-mixed .sidebar-column {
+  background: transparent;
+}
+
+html.dark .sidebar-column {
+  background: transparent;
+  --chrome-surface: var(--footer-bg);
+  --chrome-border: #334155;
+  --chrome-title: #f0f1f3;
+  --chrome-text: #d1d3d6;
+}
+
+.color-mode-mixed .sidebar-column .sidebar-inner {
+  background: var(--chrome-surface);
+  border-color: var(--chrome-border);
+  --color-app-title: #f0f1f3;
+  --color-app-text: #d1d3d6;
+  --color-app-border-subtle: var(--chrome-border);
+  --color-app-border: var(--chrome-border);
+}
+
+.dark .sidebar-column .sidebar-inner {
+  background: var(--footer-bg);
+  border-color: #334155;
+  --color-app-title: var(--chrome-title);
+  --color-app-text: var(--chrome-text);
+  --color-app-border-subtle: var(--chrome-border);
+  --color-app-border: var(--chrome-border);
+}
+
+.app-card {
+  background: var(--color-app-surface);
+  border: 1px solid var(--color-app-border-subtle);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-card);
+}
+
+/* Paleta pastel agenda - tonos suaves que no cansan la vista */
+:root {
+  --apt-normal-bg: #C5CAE9;
+  --apt-normal-border: #7986CB;
+  --apt-normal-text: #333333;
+  --apt-vip-bg: #F3E5F5;
+  --apt-vip-border: #CE93D8;
+  --apt-vip-text: #474747;
+  --apt-cancelled-bg: #FFEBEE;
+  --apt-cancelled-border: #EF9A9A;
+  --apt-cancelled-text: #8D6E63;
+  --apt-athome-bg: #FFF8E1;
+  --apt-athome-border: #FFCA28;
+  --apt-athome-text: #333333;
+  --block-internal-bg: #F5F5F5;
+  --block-internal-border: #BDBDBD;
+  --block-internal-text: #616161;
+}
+
+.agenda-block-card {
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-weight: 500;
+}
+
+.agenda-block-stripes {
+  background: repeating-linear-gradient(
+    -45deg,
+    #F5F5F5,
+    #F5F5F5 4px,
+    #EEEEEE 4px,
+    #EEEEEE 8px
+  );
+}
+
+[data-theme="minimal-premium"] {
+  --color-brand-primary: #7c3aed;
+  --color-brand-accent: #6d28d9;
+  --color-brand-secondary: #6d28d9;
+  --color-brand-soft: #ede9fe;
+}
+
+[data-theme="amarillo"] {
+  --color-brand-primary: #ca8a04;
+  --color-brand-accent: #a16207;
+  --color-brand-secondary: #a16207;
+  --color-brand-soft: #fef9c3;
+}
+
+[data-theme="verde"] {
+  --color-brand-primary: #15803d;
+  --color-brand-accent: #166534;
+  --color-brand-secondary: #166534;
+  --color-brand-soft: #dcfce7;
+}
+
+[data-theme="azul"] {
+  --color-brand-primary: #187bcd;
+  --color-brand-accent: #0a6fb4;
+  --color-brand-secondary: #0a6fb4;
+  --color-brand-soft: #e8f4fc;
+}
+
+[data-theme="azul-oscuro"] {
+  --color-brand-primary: #0ea5e9;
+  --color-brand-accent: #0284c7;
+  --color-brand-secondary: #0284c7;
+  --color-brand-soft: #e0f2fe;
+}
+
+[data-theme="rojo"] {
+  --color-brand-primary: #dc2626;
+  --color-brand-accent: #b91c1c;
+  --color-brand-secondary: #b91c1c;
+  --color-brand-soft: #fee2e2;
+}
+
+[data-theme="calido"] {
+  --color-brand-primary: #b45309;
+  --color-brand-accent: #a16207;
+  --color-brand-secondary: #a16207;
+  --color-brand-soft: #fef3c7;
+}
+
+[data-theme="teal"] {
+  --color-brand-primary: #0d9488;
+  --color-brand-accent: #017074;
+  --color-brand-secondary: #017074;
+  --color-brand-soft: #ccfbf1;
+}
+
+[data-theme="claro"] {
+  --color-brand-primary: #4f46e5;
+  --color-brand-accent: #0d9488;
+  --color-brand-secondary: #0d9488;
+  --color-brand-soft: #e0e7ff;
+}
+
+[data-theme="oscuro"] {
+  --color-brand-primary: #f59e0b;
+  --color-brand-accent: #2dd4bf;
+  --color-brand-secondary: #2dd4bf;
+  --color-brand-soft: #1f2937;
+}
+
+[data-theme="oceano"] {
+  --color-brand-primary: #0ea5e9;
+  --color-brand-accent: #0369a1;
+  --color-brand-secondary: #0369a1;
+  --color-brand-soft: #e0f2fe;
+}
+
+[data-theme="bosque"] {
+  --color-brand-primary: #65a30d;
+  --color-brand-accent: #15803d;
+  --color-brand-secondary: #15803d;
+  --color-brand-soft: #ecfccb;
+}
+
+[data-theme="atardecer"] {
+  --color-brand-primary: #ea580c;
+  --color-brand-accent: #c2410c;
+  --color-brand-secondary: #c2410c;
+  --color-brand-soft: #ffedd5;
+}
+
+[data-theme="lavanda"] {
+  --color-brand-primary: #7c3aed;
+  --color-brand-accent: #6d28d9;
+  --color-brand-secondary: #6d28d9;
+  --color-brand-soft: #ede9fe;
+}
+
+[data-theme="coral"] {
+  --color-brand-primary: #e11d48;
+  --color-brand-accent: #be123c;
+  --color-brand-secondary: #be123c;
+  --color-brand-soft: #ffe4e6;
+}
+
+[data-theme="indigo"] {
+  --color-brand-primary: #4f46e5;
+  --color-brand-accent: #3730a3;
+  --color-brand-secondary: #3730a3;
+  --color-brand-soft: #e0e7ff;
+}
+
+[data-theme="rosa"] {
+  --color-brand-primary: #db2777;
+  --color-brand-accent: #be185d;
+  --color-brand-secondary: #be185d;
+  --color-brand-soft: #fce7f3;
+}
+
+[data-theme="minimal"] {
+  --color-brand-primary: #525252;
+  --color-brand-accent: #404040;
+  --color-brand-secondary: #404040;
+  --color-brand-soft: #f5f5f5;
+}
+
+[data-theme="arena"] {
+  --color-brand-primary: #b45309;
+  --color-brand-accent: #a16207;
+  --color-brand-secondary: #a16207;
+  --color-brand-soft: #fef9c3;
+}
+
+[data-theme="esmeralda"] {
+  --color-brand-primary: #059669;
+  --color-brand-accent: #047857;
+  --color-brand-secondary: #047857;
+  --color-brand-soft: #d1fae5;
+}
+
+.agenda-block-work {
+  background: color-mix(in srgb, var(--agenda-marked-days) 8%, transparent);
+  border-left-color: color-mix(in srgb, var(--agenda-marked-days) 70%, var(--color-app-border));
+  color: var(--color-app-title);
+}
+
+.agenda-block-vacation {
+  background: color-mix(in srgb, var(--agenda-vacation) 12%, transparent);
+  border-left-color: var(--agenda-vacation);
+  color: var(--agenda-vacation);
+}
+
+.agenda-month-work {
+  background: var(--agenda-marked-days);
+  color: white;
+}
+
+.agenda-month-vacation {
+  background: var(--agenda-vacation);
+  color: white;
+}
+
+.agenda-grid-bg {
+  background-color: var(--agenda-bg);
+}
+
+html.dark {
+  --color-app-bg: #0f172a;
+  --color-app-surface: var(--footer-bg);
+  --chrome-surface: var(--footer-bg);
+  --chrome-bg: #0f172a;
+  --color-app-title: #f0f1f3;
+  --color-app-text: #d1d3d6;
+  --chrome-title: #f0f1f3;
+  --chrome-text: #d1d3d6;
+  --color-app-border: #3d4248;
+  --color-app-border-subtle: #334155;
+  --chrome-border: #334155;
+  --color-brand-soft: #1e3a5f;
+  --agenda-bg: var(--color-app-surface);
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.2), 0 1px 2px -1px rgb(0 0 0 / 0.15);
+  --shadow-card-hover: 0 4px 6px -1px rgb(0 0 0 / 0.25), 0 2px 4px -2px rgb(0 0 0 / 0.2);
+}
+
+html.dark .config-temas-page {
+  --config-bg: #1a1d21;
+  --config-muted: #9ca3af;
+  --config-title: #f0f1f3;
+  --config-border: #3d4248;
+  --config-subtle: #25282c;
+  --config-accent: var(--color-brand-accent);
+}
+
+html.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+html.dark [data-app-brand-logo-box] {
+  background: #1e3a5f !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.color-mode-mixed .sidebar-column [data-app-brand-logo-box] {
+  background: #1e3a5f !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.color-mode-mixed {
+  --chrome-bg: var(--footer-bg);
+  --chrome-surface: var(--footer-bg);
+  --chrome-title: #f0f1f3;
+  --chrome-text: #d1d3d6;
+  --chrome-border: #334155;
+}
+
+.color-mode-mixed .layout-header {
+  --color-app-title: var(--chrome-title);
+  --color-app-text: var(--chrome-text);
+  border-color: var(--chrome-border);
+}
+
+.layout-header.header-themed {
+  position: relative;
+  background: var(--chrome-surface);
+  border-bottom: 1px solid var(--chrome-border);
+  overflow: hidden;
+}
+
+.layout-header.header-themed::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-brand-primary), var(--color-brand-accent));
+}
+
+.color-mode-mixed .scheduler-header-card {
+  background: var(--chrome-surface);
+  border-color: var(--chrome-border);
+  --color-app-title: var(--chrome-title);
+  --color-app-text: var(--chrome-text);
+  --color-app-border: var(--chrome-border);
+  --color-app-border-subtle: var(--chrome-border);
+}
+
+.color-mode-mixed .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
+}
+.color-mode-mixed .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
 }

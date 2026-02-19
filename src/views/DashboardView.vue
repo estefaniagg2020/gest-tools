@@ -1,113 +1,258 @@
 <template>
-  <div class="h-full flex flex-col p-5 overflow-hidden">
-    <DashboardHeader
-      :current-date="currentDate"
-      :current-user-name="currentUserName"
-      :current-user-photo="currentUserPhoto"
-      :current-role="authStore.currentRole"
-      :current-user-id="authStore.currentUserId"
-      :therapists="therapistStore.therapists"
-      @update:user="currentUserSelection = $event"
-    />
-
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-5 shrink-0">
-      <MetricCard
-        v-for="metric in dashboardMetrics"
-        :key="metric.title"
-        :title="metric.title"
-        :value="metric.value"
-        :trend="metric.trend"
-        :icon="metric.icon"
-        :icon-bg-class="metric.iconBgClass"
-        :decorator-class="metric.decoratorClass"
-      />
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 flex-1 min-h-0">
-      <div class="lg:col-span-2 flex flex-col gap-5 h-full min-h-0">
-        <RevenueChart :data="chartData" />
-
-        <div class="grid grid-cols-2 gap-4 shrink-0 h-24">
-          <QuickActionCard
-            v-for="action in quickActions"
-            :key="action.to"
-            :title="action.title"
-            :subtitle="action.subtitle"
-            :icon="action.icon"
-            :variant="action.variant"
-            @click="$router.push(action.to)"
-          />
-        </div>
+  <div class="h-full flex flex-col min-h-0">
+    <header class="shrink-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 md:p-5 lg:p-6 border-b border-app-border-subtle bg-app-surface">
+      <div>
+        <h1 class="text-lg font-semibold text-app-title">{{ $t('dashboard.title') }}</h1>
+        <p class="text-sm text-app-text/60 mt-0.5">{{ currentDate }}</p>
       </div>
+      <RouterLink
+        v-if="!showSidebar"
+        :to="{ name: 'config' }"
+        class="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-brand-accent text-white shadow-sm hover:opacity-95 active:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2"
+      >
+        <span aria-hidden="true">⚙️</span>
+        {{ $t('nav.config') }}
+      </RouterLink>
+    </header>
 
-      <ActivityTimeline
-        :activities="recentActivity"
-        :tip="DASHBOARD_CONSTANTS.TIP_OF_THE_DAY"
-      />
+    <div class="flex-1 min-h-0 overflow-auto">
+      <div class="p-4 md:p-5 lg:p-6 space-y-6 md:space-y-8">
+        <section class="rounded-2xl bg-app-surface border border-app-border-subtle shadow-card p-5 md:p-6">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h2 class="text-base font-semibold text-app-title">{{ $t('dashboard.tomorrow') }}</h2>
+            <RouterLink
+              :to="{ name: 'scheduler' }"
+              class="text-sm font-medium text-brand-accent hover:underline"
+            >
+              {{ $t('dashboard.seeAgenda') }} →
+            </RouterLink>
+          </div>
+          <p class="text-sm text-app-text/70 mb-4">
+            {{ agendaStats.tomorrowLabel }}
+          </p>
+          <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="rounded-xl bg-app-bg/60 border border-app-border-subtle p-4">
+              <p class="text-[11px] font-medium text-brand-accent uppercase tracking-wider">{{ $t('dashboard.occupation') }}</p>
+              <p class="mt-1 text-xl font-bold text-brand-accent tabular-nums">{{ agendaStats.occupancyPercent }}%</p>
+            </div>
+            <div class="rounded-xl bg-app-bg/60 border border-app-border-subtle p-4">
+              <p class="text-[11px] font-medium text-app-text/60 uppercase tracking-wider">{{ $t('dashboard.hours') }}</p>
+              <p class="mt-1 text-lg font-bold text-app-title tabular-nums">
+                {{ agendaStats.occupiedHoursFormatted }}
+                <span class="text-xs font-normal text-app-text/60">/ {{ agendaStats.totalHoursFormatted }}</span>
+              </p>
+            </div>
+            <div class="rounded-xl bg-app-bg/60 border border-app-border-subtle p-4">
+              <p class="text-[11px] font-medium text-app-text/60 uppercase tracking-wider">{{ $t('dashboard.blocks') }}</p>
+              <p class="mt-1 text-xl font-bold text-app-title tabular-nums">{{ agendaStats.workBlocksCount }}</p>
+            </div>
+            <div class="rounded-xl bg-app-bg/60 border border-app-border-subtle p-4">
+              <p class="text-[11px] font-medium text-app-text/60 uppercase tracking-wider">{{ $t('dashboard.team') }}</p>
+              <p class="mt-1 text-xl font-bold text-app-title tabular-nums">{{ agendaStats.memberCount }}</p>
+            </div>
+          </div>
+          <div v-if="slotsByHour.length > 0" class="mt-4 pt-4 border-t border-app-border-subtle">
+            <p class="text-xs font-medium text-app-text/70 mb-2">{{ $t('dashboard.perHour') }}</p>
+            <div class="flex gap-1 h-2 rounded-full overflow-hidden bg-app-border-subtle">
+              <div
+                v-for="row in slotsByHour"
+                :key="row.hour"
+                class="flex-1 rounded-full bg-brand-accent/80 transition-all"
+                :style="{ opacity: 0.3 + (row.percent / 100) * 0.7 }"
+                :title="`${row.label}: ${row.count}/${memberCount}`"
+              />
+            </div>
+          </div>
+        </section>
+
+        <!-- Metric widgets (small + medium) -->
+        <section v-if="metricWidgets.length > 0" class="rounded-2xl bg-app-surface border border-app-border-subtle shadow-card p-5 md:p-6">
+          <h2 class="text-base font-semibold text-app-title mb-4">{{ $t('dashboard.bookings') }}</h2>
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            <div
+              v-for="widget in metricWidgets"
+              :key="widget.id"
+              :class="widget.size === 'medium' ? 'col-span-2 sm:col-span-2' : 'col-span-1'"
+            >
+              <DashboardWidgetMonthlyBookings
+                v-if="widget.id === 'reservas-mes'"
+                :count="bookingStats.stats.value?.reservasMes ?? 0"
+              />
+              <DashboardWidgetWeeklyBookings
+                v-else-if="widget.id === 'reservas-semana'"
+                :count="bookingStats.stats.value?.reservasSemana ?? 0"
+              />
+              <DashboardWidgetDailyProfit
+                v-else-if="widget.id === 'beneficio-diario'"
+                :amount="bookingStats.stats.value?.beneficioHoy ?? 0"
+              />
+              <DashboardWidgetMonthlyIncome
+                v-else-if="widget.id === 'ingresos-mes'"
+                :amount="bookingStats.stats.value?.ingresosMes ?? 0"
+              />
+              <DashboardWidgetCancelledBookings
+                v-else-if="widget.id === 'reservas-canceladas'"
+                :count="bookingStats.stats.value?.reservasCanceladas ?? 0"
+              />
+              <DashboardWidgetCancellationRate
+                v-else-if="widget.id === 'tasa-cancelacion'"
+                :rate="bookingStats.stats.value?.tasaCancelacion ?? 0"
+              />
+              <DashboardWidgetNewClients
+                v-else-if="widget.id === 'clientes-nuevos'"
+                :count="bookingStats.stats.value?.clientesNuevos ?? 0"
+              />
+              <DashboardWidgetWeeklyOccupancy
+                v-else-if="widget.id === 'ocupacion-semanal'"
+                :rate="bookingStats.stats.value?.ocupacionSemanal ?? 0"
+              />
+              <DashboardWidgetHoursWorked
+                v-else-if="widget.id === 'horas-trabajadas'"
+                :hours="bookingStats.stats.value?.horasTrabajadasSemana ?? 0"
+              />
+              <DashboardWidgetTopBookingsEmployee
+                v-else-if="widget.id === 'empleado-mas-reservas'"
+                :data="bookingStats.stats.value?.empleadoMasReservas ?? null"
+              />
+              <DashboardWidgetTodayAppointments
+                v-else-if="widget.id === 'proximas-citas-hoy'"
+                :data="bookingStats.stats.value?.proximasCitasHoy ?? []"
+              />
+              <DashboardWidgetLowStockProducts
+                v-else-if="widget.id === 'productos-bajo-stock'"
+                :data="bookingStats.stats.value?.productosBajoStock ?? []"
+              />
+              <DashboardWidgetListaEspera
+                v-else-if="widget.id === 'lista-espera'"
+                :data="bookingStats.stats.value?.listaEspera ?? []"
+              />
+            </div>
+          </div>
+        </section>
+
+        <!-- Chart widgets (large) — own prominent section -->
+        <section v-if="chartWidgets.length > 0" class="rounded-2xl bg-app-surface border border-app-border-subtle shadow-card p-5 md:p-6">
+          <h2 class="text-base font-semibold text-app-title mb-4">📊 Analytics</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <DashboardWidgetBookingsPerPerson
+              v-if="chartWidgets.some((w) => w.id === 'grafica-reservas-persona')"
+              :data="graficaReservasPersonaData"
+            />
+            <DashboardWidgetSalesPerEmployee
+              v-if="chartWidgets.some((w) => w.id === 'ventas-por-empleado')"
+              :data="bookingStats.stats.value?.ventasPorEmpleado ?? []"
+            />
+            <DashboardWidgetPopularServices
+              v-if="chartWidgets.some((w) => w.id === 'servicios-populares')"
+              :data="bookingStats.stats.value?.serviciosPopulares ?? []"
+            />
+          </div>
+        </section>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { computed } from "vue";
-  import { useRouter } from "vue-router";
-  import { useDashboard } from "@/composables/useDashboard";
-  import { DASHBOARD_CONSTANTS } from "@/data/constants";
-  import type { MetricCardProps } from "@/interfaces/components";
-  import DashboardHeader from "@/components/dashboard/DashboardHeader.vue";
-  import MetricCard from "@/components/dashboard/MetricCard.vue";
-  import RevenueChart from "@/components/dashboard/RevenueChart.vue";
-  import ActivityTimeline from "@/components/dashboard/ActivityTimeline.vue";
-  import QuickActionCard from "@/components/dashboard/QuickActionCard.vue";
+  import { computed, onMounted, watch } from "vue";
+  import { useI18n } from "vue-i18n";
+  import { storeToRefs } from "pinia";
+  import { RouterLink, useRoute } from "vue-router";
+  import { orderDashboardWidgetsByIds } from "@/data/dashboardWidgetModules";
+  import { DEFAULT_DASHBOARD_MODULE_IDS } from "@/interfaces/layoutConfig";
+  import { useDashboardAgendaStats } from "@/composables/useDashboardAgendaStats";
+  import { useDashboardBookingStats } from "@/composables/useDashboardBookingStats";
+  import { useAuthStore } from "@/stores/auth";
+  import { useLayoutStore } from "@/stores/layout";
+  import { useScheduleStore } from "@/stores/schedule";
+  import { useTeamStore } from "@/stores/team";
+  import { useSchedulerSettingsStore } from "@/stores/schedulerSettings";
+  import DashboardWidgetMonthlyBookings from "@/components/dashboard/DashboardWidgetMonthlyBookings.vue";
+  import DashboardWidgetWeeklyBookings from "@/components/dashboard/DashboardWidgetWeeklyBookings.vue";
+  import DashboardWidgetDailyProfit from "@/components/dashboard/DashboardWidgetDailyProfit.vue";
+  import DashboardWidgetMonthlyIncome from "@/components/dashboard/DashboardWidgetMonthlyIncome.vue";
+  import DashboardWidgetCancelledBookings from "@/components/dashboard/DashboardWidgetCancelledBookings.vue";
+  import DashboardWidgetCancellationRate from "@/components/dashboard/DashboardWidgetCancellationRate.vue";
+  import DashboardWidgetBookingsPerPerson from "@/components/dashboard/DashboardWidgetBookingsPerPerson.vue";
+  import DashboardWidgetTopBookingsEmployee from "@/components/dashboard/DashboardWidgetTopBookingsEmployee.vue";
+  import DashboardWidgetSalesPerEmployee from "@/components/dashboard/DashboardWidgetSalesPerEmployee.vue";
+  import DashboardWidgetPopularServices from "@/components/dashboard/DashboardWidgetPopularServices.vue";
+  import DashboardWidgetNewClients from "@/components/dashboard/DashboardWidgetNewClients.vue";
+  import DashboardWidgetTodayAppointments from "@/components/dashboard/DashboardWidgetTodayAppointments.vue";
+  import DashboardWidgetWeeklyOccupancy from "@/components/dashboard/DashboardWidgetWeeklyOccupancy.vue";
+  import DashboardWidgetHoursWorked from "@/components/dashboard/DashboardWidgetHoursWorked.vue";
+  import DashboardWidgetLowStockProducts from "@/components/dashboard/DashboardWidgetLowStockProducts.vue";
+  import DashboardWidgetListaEspera from "@/components/dashboard/DashboardWidgetListaEspera.vue";
 
-  const $router = useRouter();
-  const {
-    authStore,
-    therapistStore,
-    currentUserName,
-    currentUserPhoto,
-    currentUserSelection,
-    currentDate,
-    chartData,
-    recentActivity,
-  } = useDashboard();
+  const { locale } = useI18n();
+  const LOCALE_MAP: Record<string, string> = {
+    es: "es-ES",
+    ca: "ca-ES",
+    en: "en-GB",
+    de: "de-DE",
+  };
+  const currentDate = computed(() => {
+    const localeTag = LOCALE_MAP[locale.value] ?? "es-ES";
+    return new Date().toLocaleDateString(localeTag, { weekday: "long", day: "numeric", month: "long" });
+  });
 
-  const quickActions = [
-    { title: "Centros", subtitle: "Salas y servicios", icon: "🏢", variant: "blue" as const, to: "/spas" },
-    { title: "Equipo", subtitle: "Rendimiento", icon: "👥", variant: "purple" as const, to: "/therapists" },
-  ];
+  const route = useRoute();
+  const layoutStore = useLayoutStore();
+  const authStore = useAuthStore();
+  const { dashboardModuleIds, showSidebar } = storeToRefs(layoutStore);
+  const { user } = storeToRefs(authStore);
 
-  const dashboardMetrics = computed<MetricCardProps[]>(() => [
-    {
-      title: "Citas Hoy",
-      value: 12,
-      trend: 15,
-      icon: "📅",
-      iconBgClass: "bg-orange-100 text-orange-600",
-      decoratorClass: "bg-orange-500",
+  const widgetIdsForDisplay = computed(() => {
+    const ids = dashboardModuleIds.value;
+    return ids.length > 0 ? ids : [...DEFAULT_DASHBOARD_MODULE_IDS];
+  });
+
+  const orderedReservaWidgets = computed(() =>
+    orderDashboardWidgetsByIds(widgetIdsForDisplay.value),
+  );
+
+  const metricWidgets = computed(() =>
+    orderedReservaWidgets.value.filter((w) => (w.size ?? "small") !== "large"),
+  );
+
+  const chartWidgets = computed(() =>
+    orderedReservaWidgets.value.filter((w) => w.size === "large"),
+  );
+
+  const syncLayoutFromStorage = () => {
+    const uid = user.value?.id;
+    if (uid) layoutStore.initialize(uid);
+  };
+
+  watch(
+    () => route.name,
+    (name) => {
+      if (name === "dashboard") syncLayoutFromStorage();
     },
-    {
-      title: "Ingresos (Est.)",
-      value: "1.250€",
-      trend: 8,
-      icon: "💶",
-      iconBgClass: "bg-green-100 text-green-600",
-      decoratorClass: "bg-green-500",
-    },
-    {
-      title: "Terapeutas Activos",
-      value: therapistStore.therapists.length,
-      icon: "👥",
-      iconBgClass: "bg-blue-100 text-blue-600",
-      decoratorClass: "bg-blue-500",
-    },
-    {
-      title: "Ocupación",
-      value: "85%",
-      trend: -2,
-      icon: "📊",
-      iconBgClass: "bg-purple-100 text-purple-600",
-      decoratorClass: "bg-purple-500",
-    },
-  ]);
+    { immediate: true },
+  );
+
+  watch(user, (u) => {
+    if (u?.id && route.name === "dashboard") syncLayoutFromStorage();
+  }, { immediate: true });
+
+  const bookingStats = useDashboardBookingStats();
+  const graficaReservasPersonaData = computed(() => {
+    const list = bookingStats.stats.value?.reservasPorPersona ?? [];
+    return list.map((item) => ({
+      label: item.employeeName ?? "Sin asignar",
+      count: item.count,
+    }));
+  });
+
+  const agendaStats = useDashboardAgendaStats();
+  const slotsByHour = computed(() => agendaStats.slotsByHour.value);
+  const memberCount = computed(() => agendaStats.memberCount.value);
+
+  onMounted(() => {
+    syncLayoutFromStorage();
+    useScheduleStore().initialize();
+    useTeamStore().initialize();
+    useSchedulerSettingsStore().initialize();
+  });
 </script>

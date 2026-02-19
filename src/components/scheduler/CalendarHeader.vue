@@ -1,40 +1,40 @@
 <template>
   <div
-    class="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm"
+    class="flex flex-wrap items-center gap-2 sm:gap-3 bg-transparent p-0 min-w-0 max-w-full"
   >
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-1.5 sm:gap-2 min-w-0 shrink-0">
       <button
         @click="$emit('today')"
-        class="px-3 py-1.5 text-sm font-medium text-spa-teal bg-spa-teal/10 rounded-lg hover:bg-spa-teal/20 transition-colors"
+        class="shrink-0 px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium text-brand-primary bg-brand-primary/10 rounded-lg hover:bg-brand-primary/20 transition-colors"
       >
-        Hoy
+        {{ t("scheduler.today") }}
       </button>
-      <div class="flex items-center bg-gray-50 rounded-lg border border-gray-200">
+      <div class="flex items-center bg-app-bg rounded-lg border border-app-border shrink-0">
         <button
           @click="$emit('prev')"
-          class="p-1.5 hover:bg-gray-200 rounded-l-lg text-gray-500"
+          class="p-1.5 hover:bg-app-border-subtle rounded-l-lg text-app-text"
         >
           &lt;
         </button>
         <button
           @click="$emit('next')"
-          class="p-1.5 hover:bg-gray-200 rounded-r-lg text-gray-500"
+          class="p-1.5 hover:bg-app-border-subtle rounded-r-lg text-app-text"
         >
           &gt;
         </button>
       </div>
-      <span class="text-gray-700 font-semibold capitalize ml-2 min-w-[150px]">
+      <span class="text-app-title font-semibold capitalize ml-1 sm:ml-2 min-w-0 truncate text-sm sm:text-base" :title="formattedDate">
         {{ formattedDate }}
       </span>
     </div>
 
-    <div class="flex items-center bg-gray-100 p-1 rounded-lg">
+    <div class="flex items-center bg-app-bg p-1 rounded-lg border border-app-border shrink-0">
       <button
         v-for="option in viewOptions"
         :key="option.value"
         @click="$emit('changeView', option.value)"
-        class="px-3 py-1 text-sm font-medium rounded-md transition-all"
-        :class="currentView === option.value ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+        class="px-2 sm:px-2.5 md:px-3 py-1 text-xs font-medium rounded-md transition-all whitespace-nowrap"
+        :class="currentView === option.value ? 'bg-app-surface text-app-title shadow-sm' : 'text-app-text/80 hover:text-app-title'"
       >
         {{ option.label }}
       </button>
@@ -44,6 +44,8 @@
 
 <script setup lang="ts">
   import { computed } from "vue";
+  import { useI18n } from "vue-i18n";
+  import { getIntlLocale } from "@/utils/intlLocale";
   import type { ViewOption } from "@/interfaces";
 
   const props = defineProps<{
@@ -53,14 +55,16 @@
 
   defineEmits(["prev", "next", "today", "changeView"]);
 
-  const viewOptions: ViewOption[] = [
-    { value: "day", label: "Día" },
-    { value: "week", label: "Semana" },
-    { value: "month", label: "Mes" },
-  ];
+  const { t } = useI18n();
+
+  const viewOptions = computed<ViewOption[]>(() => [
+    { value: "day", label: t("configAgenda.viewDay") },
+    { value: "week", label: t("configAgenda.viewWeek") },
+    { value: "month", label: t("configAgenda.viewMonth") },
+  ]);
 
   const formattedDate = computed(() => {
-    return new Intl.DateTimeFormat("es-ES", {
+    return new Intl.DateTimeFormat(getIntlLocale(), {
       month: "long",
       year: "numeric",
       day: props.currentView === "day" ? "numeric" : undefined,

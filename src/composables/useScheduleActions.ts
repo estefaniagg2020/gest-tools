@@ -1,13 +1,14 @@
+import { useI18n } from "vue-i18n";
 import { useAuthStore } from "@/stores/auth";
 import { useScheduleStore } from "@/stores/schedule";
 import { useToast } from "@/composables/useToast";
-import { SCHEDULER_CONSTANTS } from "@/data/constants";
 import { AUTH_CONFIG } from "@/data/authConfig";
 import type { ScheduleBlock, ScheduleBlockType } from "@/interfaces";
 
 type BlockStatus = NonNullable<ScheduleBlock["status"]>;
 
 export const useScheduleActions = () => {
+  const { t } = useI18n();
   const authStore = useAuthStore();
   const scheduleStore = useScheduleStore();
   const { addToast } = useToast();
@@ -21,13 +22,18 @@ export const useScheduleActions = () => {
 
   const notify = () => {
     const isManager = authStore.currentRole === AUTH_CONFIG.ROLE_MANAGER;
-    const message = isManager ? SCHEDULER_CONSTANTS.SAVE_SUCCESS_MSG : SCHEDULER_CONSTANTS.SAVE_PENDING_MSG;
+    const message = isManager ? t("scheduler.saveSuccess") : t("scheduler.savePending");
     const type = isManager ? "success" : "info";
     addToast(message, type);
   };
 
-  const updateExistingBlock = (editingBlock: ScheduleBlock, data: Partial<ScheduleBlock>, status: BlockStatus) => {
-    const baseDate = new Date(editingBlock.start);
+  const updateExistingBlock = (
+    editingBlock: ScheduleBlock,
+    data: Partial<ScheduleBlock>,
+    status: BlockStatus,
+    selectedDate?: Date,
+  ) => {
+    const baseDate = selectedDate ?? new Date(editingBlock.start);
     const start = createDateAtTime(baseDate, data.start as string);
     const end = createDateAtTime(baseDate, data.end as string);
 
@@ -36,49 +42,51 @@ export const useScheduleActions = () => {
       start: start.toISOString(),
       end: end.toISOString(),
       status,
+      serviceId: data.serviceId,
     });
   };
 
-  const createNewBlock = (therapistId: string, baseDate: Date, data: Partial<ScheduleBlock>, status: BlockStatus) => {
+  const createNewBlock = (memberId: string, baseDate: Date, data: Partial<ScheduleBlock>, status: BlockStatus) => {
     const start = createDateAtTime(baseDate, data.start as string);
     const end = createDateAtTime(baseDate, data.end as string);
 
     const blockType: ScheduleBlockType = data.type ?? "work";
 
     scheduleStore.addBlock({
-      therapistId,
+      memberId,
       type: blockType,
-      title: data.title ?? SCHEDULER_CONSTANTS.DEFAULT_EVENT_TITLE,
+      title: data.title ?? t("scheduler.defaultEventTitle"),
       description: data.description,
       start: start.toISOString(),
       end: end.toISOString(),
       status,
+      serviceId: data.serviceId,
     });
   };
 
   const saveBlock = (params: {
     data: Partial<ScheduleBlock>;
-    therapistId: string;
+    memberId: string;
     currentDate: Date;
     selectedDate?: Date;
     editingBlock?: ScheduleBlock;
     onSuccess: () => void;
   }) => {
-    const { data, therapistId, currentDate, selectedDate, editingBlock, onSuccess } = params;
+    const { data, memberId, currentDate, selectedDate, editingBlock, onSuccess } = params;
 
-    if (!therapistId) return;
+    if (!memberId) return;
 
     const newStatus: BlockStatus =
       authStore.currentRole === AUTH_CONFIG.ROLE_MANAGER
-        ? SCHEDULER_CONSTANTS.STATUS_CONFIRMED
-        : SCHEDULER_CONSTANTS.STATUS_PENDING;
+        ? ("confirmed" as const)
+        : ("pending" as const);
     notify();
 
     if (editingBlock) {
-      updateExistingBlock(editingBlock, data, newStatus);
+      updateExistingBlock(editingBlock, data, newStatus, selectedDate);
     } else {
       const baseDate = selectedDate ? new Date(selectedDate) : new Date(currentDate);
-      createNewBlock(therapistId, baseDate, data, newStatus);
+      createNewBlock(memberId, baseDate, data, newStatus);
     }
 
     onSuccess();
