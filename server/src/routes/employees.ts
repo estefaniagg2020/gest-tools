@@ -2,32 +2,34 @@ import { Router, Request, Response } from "express";
 import type { PrismaClient } from "@prisma/client";
 import { requireAuth, requireGestor } from "../middleware/auth.js";
 
-const roleToDb = (role: string): "manager" | "member" | "admin" =>
-  role === "manager" ? "manager" : role === "admin" ? "admin" : "member";
+const roleToDb = (role: string): "admin" | "member" =>
+  role === "admin" ? "admin" : "member";
 
 export const employeeRouter = (prisma: PrismaClient) => {
   const router = Router();
   const auth = requireAuth(prisma);
 
   router.get("/", auth, requireGestor, async (req: Request, res: Response) => {
-    if (!req.user?.businessId) {
-      res.status(403).json({ error: "Negocio no asociado" });
+    const businessId = req.user!.businessId;
+    if (!businessId) {
+      res.status(400).json({ error: "El usuario no tiene negocio asociado" });
       return;
     }
     try {
-      const employees = await prisma.employee.findMany({
-        where: { businessId: req.user.businessId },
+      const members = await prisma.workspaceMember.findMany({
+        where: { businessId },
         orderBy: { name: "asc" },
       });
-      res.json(employees);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch employees" });
+      res.json(members);
+    } catch {
+      res.status(500).json({ error: "Failed to fetch staff members" });
     }
   });
 
   router.post("/", auth, requireGestor, async (req: Request, res: Response) => {
-    if (!req.user?.businessId) {
-      res.status(403).json({ error: "Negocio no asociado" });
+    const businessId = req.user!.businessId;
+    if (!businessId) {
+      res.status(400).json({ error: "El usuario no tiene negocio asociado" });
       return;
     }
     try {
@@ -37,40 +39,41 @@ export const employeeRouter = (prisma: PrismaClient) => {
         res.status(400).json({ error: "name es requerido" });
         return;
       }
-      const data = {
-        businessId: req.user.businessId,
-        name,
-        photoUrl: typeof body.photoUrl === "string" ? body.photoUrl.trim() || null : null,
-        linkedInUrl: typeof body.linkedInUrl === "string" ? body.linkedInUrl.trim() || null : null,
-        phoneNumber: typeof body.phoneNumber === "string" ? body.phoneNumber.trim() || null : null,
-        email: typeof body.email === "string" ? body.email.trim() || null : null,
-        weeklyHours: typeof body.weeklyHours === "number" ? body.weeklyHours : null,
-        color: typeof body.color === "string" ? body.color.trim() || null : null,
-        role: roleToDb(typeof body.role === "string" ? body.role : "member"),
-        defaultWorkStartHour: typeof body.defaultWorkStartHour === "number" ? body.defaultWorkStartHour : null,
-        defaultWorkEndHour: typeof body.defaultWorkEndHour === "number" ? body.defaultWorkEndHour : null,
-      };
-      const employee = await prisma.employee.create({ data });
-      res.status(201).json(employee);
+      const member = await prisma.workspaceMember.create({
+        data: {
+          businessId,
+          name,
+          userId: typeof body.userId === "string" ? body.userId : null,
+          photoUrl: typeof body.photoUrl === "string" ? body.photoUrl.trim() || null : null,
+          linkedInUrl: typeof body.linkedInUrl === "string" ? body.linkedInUrl.trim() || null : null,
+          phone: typeof body.phone === "string" ? body.phone.trim() || null : null,
+          email: typeof body.email === "string" ? body.email.trim() || null : null,
+          weeklyHours: typeof body.weeklyHours === "number" ? body.weeklyHours : null,
+          color: typeof body.color === "string" ? body.color.trim() || null : null,
+          position: typeof body.position === "string" ? body.position.trim() || null : null,
+          role: roleToDb(typeof body.role === "string" ? body.role : "member"),
+          defaultWorkStartHour: typeof body.defaultWorkStartHour === "number" ? body.defaultWorkStartHour : null,
+          defaultWorkEndHour: typeof body.defaultWorkEndHour === "number" ? body.defaultWorkEndHour : null,
+        },
+      });
+      res.status(201).json(member);
     } catch (error) {
-      res.status(500).json({ error: "Failed to create employee" });
+      const msg = error instanceof Error ? error.message : "Failed to create staff member";
+      res.status(500).json({ error: msg });
     }
   });
 
   router.put("/:id", auth, requireGestor, async (req: Request, res: Response) => {
-    if (!req.user?.businessId) {
-      res.status(403).json({ error: "Negocio no asociado" });
-      return;
-    }
-    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id ?? "";
-    if (!id) {
-      res.status(400).json({ error: "id es requerido" });
+    const businessId = req.user!.businessId;
+    const id = req.params.id as string;
+    if (!businessId) {
+      res.status(400).json({ error: "El usuario no tiene negocio asociado" });
       return;
     }
     try {
-      const existing = await prisma.employee.findUnique({ where: { id } });
-      if (!existing || existing.businessId !== req.user.businessId) {
-        res.status(404).json({ error: "Empleado no encontrado" });
+      const existing = await prisma.workspaceMember.findUnique({ where: { id } });
+      if (!existing || existing.businessId !== businessId) {
+        res.status(404).json({ error: "Miembro no encontrado" });
         return;
       }
       const body = req.body ?? {};
@@ -79,48 +82,45 @@ export const employeeRouter = (prisma: PrismaClient) => {
         res.status(400).json({ error: "name es requerido" });
         return;
       }
-      const updateData = {
-        name,
-        photoUrl: typeof body.photoUrl === "string" ? body.photoUrl.trim() || null : existing.photoUrl,
-        linkedInUrl: typeof body.linkedInUrl === "string" ? body.linkedInUrl.trim() || null : existing.linkedInUrl,
-        phoneNumber: typeof body.phoneNumber === "string" ? body.phoneNumber.trim() || null : existing.phoneNumber,
-        email: typeof body.email === "string" ? body.email.trim() || null : existing.email,
-        weeklyHours: typeof body.weeklyHours === "number" ? body.weeklyHours : existing.weeklyHours,
-        color: typeof body.color === "string" ? body.color.trim() || null : existing.color,
-        role: body.role != null ? roleToDb(String(body.role)) : existing.role,
-        defaultWorkStartHour: typeof body.defaultWorkStartHour === "number" ? body.defaultWorkStartHour : existing.defaultWorkStartHour,
-        defaultWorkEndHour: typeof body.defaultWorkEndHour === "number" ? body.defaultWorkEndHour : existing.defaultWorkEndHour,
-      };
-      const employee = await prisma.employee.update({
+      const member = await prisma.workspaceMember.update({
         where: { id },
-        data: updateData,
+        data: {
+          name,
+          photoUrl: body.photoUrl !== undefined ? (body.photoUrl || null) : existing.photoUrl,
+          linkedInUrl: body.linkedInUrl !== undefined ? (body.linkedInUrl || null) : existing.linkedInUrl,
+          phone: body.phone !== undefined ? (body.phone || null) : existing.phone,
+          email: body.email !== undefined ? (body.email || null) : existing.email,
+          weeklyHours: body.weeklyHours !== undefined ? (typeof body.weeklyHours === "number" ? body.weeklyHours : null) : existing.weeklyHours,
+          color: body.color !== undefined ? (body.color || null) : existing.color,
+          position: body.position !== undefined ? (body.position || null) : existing.position,
+          role: body.role != null ? roleToDb(String(body.role)) : existing.role,
+          defaultWorkStartHour: body.defaultWorkStartHour !== undefined ? (typeof body.defaultWorkStartHour === "number" ? body.defaultWorkStartHour : null) : existing.defaultWorkStartHour,
+          defaultWorkEndHour: body.defaultWorkEndHour !== undefined ? (typeof body.defaultWorkEndHour === "number" ? body.defaultWorkEndHour : null) : existing.defaultWorkEndHour,
+        },
       });
-      res.json(employee);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to update employee" });
+      res.json(member);
+    } catch {
+      res.status(500).json({ error: "Failed to update staff member" });
     }
   });
 
   router.delete("/:id", auth, requireGestor, async (req: Request, res: Response) => {
-    if (!req.user?.businessId) {
-      res.status(403).json({ error: "Negocio no asociado" });
-      return;
-    }
-    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id ?? "";
-    if (!id) {
-      res.status(400).json({ error: "id es requerido" });
+    const businessId = req.user!.businessId;
+    const id = req.params.id as string;
+    if (!businessId) {
+      res.status(400).json({ error: "El usuario no tiene negocio asociado" });
       return;
     }
     try {
-      const existing = await prisma.employee.findUnique({ where: { id } });
-      if (!existing || existing.businessId !== req.user.businessId) {
-        res.status(404).json({ error: "Empleado no encontrado" });
+      const existing = await prisma.workspaceMember.findUnique({ where: { id } });
+      if (!existing || existing.businessId !== businessId) {
+        res.status(404).json({ error: "Miembro no encontrado" });
         return;
       }
-      await prisma.employee.delete({ where: { id } });
+      await prisma.workspaceMember.delete({ where: { id } });
       res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ error: "Failed to delete employee" });
+    } catch {
+      res.status(500).json({ error: "Failed to delete staff member" });
     }
   });
 

@@ -3,6 +3,68 @@
     <h4 class="font-semibold text-brand-primary text-sm mb-2">{{ $t('scheduler.slotFinderTitle') }}</h4>
     <p class="text-xs text-app-text/80 mb-3">{{ $t('scheduler.slotFinderHint') }}</p>
 
+    <div class="flex gap-1 mb-3 p-0.5 bg-app-bg rounded-lg border border-app-border-subtle">
+      <button
+        type="button"
+        class="flex-1 py-1.5 text-xs font-medium rounded-md transition-colors"
+        :class="mode === 'manual' ? 'bg-brand-primary text-white shadow-sm' : 'text-app-text/70 hover:text-app-text'"
+        @click="mode = 'manual'"
+      >
+        {{ $t('scheduler.slotFinderModeManual') }}
+      </button>
+      <button
+        type="button"
+        class="flex-1 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center justify-center gap-1"
+        :class="mode === 'ai' ? 'bg-brand-primary text-white shadow-sm' : 'text-app-text/70 hover:text-app-text'"
+        @click="mode = 'ai'"
+      >
+        <span>✨</span>
+        <span>{{ $t('scheduler.slotFinderModeAI') }}</span>
+      </button>
+    </div>
+
+    <div
+      v-if="mode === 'ai'"
+      class="space-y-2 mb-3"
+    >
+      <div>
+        <label class="text-xs font-medium text-app-text/80 block mb-1">{{ $t('scheduler.slotFinderAILabel') }}</label>
+        <textarea
+          v-model="aiQuery"
+          rows="3"
+          class="w-full p-2 bg-app-bg border border-app-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 resize-none"
+          :placeholder="$t('scheduler.slotFinderAIPlaceholder')"
+          maxlength="500"
+        />
+        <p class="text-[10px] text-app-text/50 text-right mt-0.5">
+          {{ aiQuery.length }}/500
+        </p>
+      </div>
+      <button
+        type="button"
+        class="w-full py-2 text-xs font-semibold rounded-lg bg-brand-primary text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 transition-opacity"
+        :disabled="!aiQuery.trim() || aiLoading"
+        @click="runAISearch"
+      >
+        <span v-if="aiLoading" class="inline-block w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+        <span v-else>✨</span>
+        <span>{{ aiLoading ? $t('scheduler.slotFinderAISearching') : $t('scheduler.slotFinderAISearch') }}</span>
+      </button>
+      <p
+        v-if="aiError"
+        class="text-xs text-red-600 bg-red-50 rounded-lg px-2 py-1.5"
+      >
+        {{ aiError }}
+      </p>
+      <div
+        v-if="aiApplied && !aiError"
+        class="text-xs text-emerald-700 bg-emerald-50 rounded-lg px-2 py-1.5 flex items-center gap-1"
+      >
+        <span>✓</span>
+        <span>{{ $t('scheduler.slotFinderAIApplied', { count: timeWindows.length }) }}</span>
+      </div>
+    </div>
+
     <div class="space-y-2 mb-3">
       <div class="grid grid-cols-2 gap-2">
         <div>
@@ -23,7 +85,7 @@
         </div>
       </div>
 
-      <div>
+      <div v-if="mode === 'manual'">
         <label class="text-xs font-medium text-app-text/80 block mb-1">{{ $t('scheduler.slotFinderTimeWindows') }}</label>
         <div class="space-y-2">
           <div
@@ -85,6 +147,20 @@
         </div>
       </div>
 
+      <div v-if="mode === 'ai' && timeWindows.length > 0">
+        <label class="text-xs font-medium text-app-text/80 block mb-1">{{ $t('scheduler.slotFinderTimeWindows') }}</label>
+        <div class="space-y-1">
+          <div
+            v-for="(win, idx) in timeWindows"
+            :key="idx"
+            class="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-app-bg/50 border border-app-border-subtle text-xs text-app-text"
+          >
+            <span class="font-medium text-brand-primary w-8">{{ getDayLabel(win.dayOfWeek) }}</span>
+            <span>{{ win.startHourStr }} – {{ win.endHourStr }}</span>
+          </div>
+        </div>
+      </div>
+
       <div>
         <label class="text-xs font-medium text-app-text/80 block mb-1">{{ $t('scheduler.slotFinderDuration') }}</label>
         <select
@@ -100,68 +176,78 @@
     </div>
 
     <div class="max-h-40 overflow-y-auto space-y-1 custom-scrollbar">
+      <p
+        v-if="availableSlots.length > 0"
+        class="text-[10px] text-app-text/60 mb-1"
+      >
+        {{ $t('scheduler.slotFinderClickToBook') }}
+      </p>
       <button
         v-for="slot in availableSlots"
         :key="`${slot.date.toISOString()}-${slot.startHour}-${slot.memberId}`"
         type="button"
-        class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium bg-app-surface border border-app-border-subtle hover:bg-brand-primary/10 hover:border-brand-primary/20 transition-colors"
+        class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium bg-app-surface border border-app-border-subtle hover:bg-brand-primary/10 hover:border-brand-primary/30 cursor-pointer flex items-center justify-between gap-2 transition-colors"
         @click="$emit('slot-select', slot)"
       >
-        <span class="text-app-title">{{ formatSlotLabel(slot.startHour) }} - {{ formatSlotLabel(slot.endHour) }}</span>
-        <span class="text-app-text/70 ml-1">· {{ formatDayShort(slot.date) }}</span>
-        <span class="text-app-text/60 ml-1 truncate">· {{ slot.memberName.split(' ')[0] }}</span>
+        <span>
+          <span class="text-app-title">{{ formatSlotLabel(slot.startHour) }} – {{ formatSlotLabel(slot.endHour) }}</span>
+          <span class="text-app-text/70 ml-1">· {{ formatDayShort(slot.date) }}</span>
+          <span class="text-app-text/60 ml-1 truncate">· {{ slot.memberName.split(' ')[0] }}</span>
+        </span>
+        <span class="text-brand-primary text-[10px] font-semibold shrink-0">{{ $t('scheduler.slotFinderReserve') }}</span>
       </button>
       <p
-        v-if="availableSlots.length === 0 && !showAddToWaitlist"
+        v-if="availableSlots.length === 0 && !showWaitlistSection"
         class="text-xs text-app-text/60 py-2"
       >
         {{ $t('scheduler.slotFinderNoResults') }}
       </p>
-      <div
-        v-if="showAddToWaitlist"
-        class="pt-3 mt-3 border-t border-app-border-subtle space-y-2"
-      >
-        <p class="text-xs font-medium text-app-text">
-          {{ $t('scheduler.slotFinderAddToWaitlistTitle') }}
-        </p>
-        <div class="flex gap-2">
-          <select
-            v-model="waitlistServiceId"
-            class="flex-1 p-2 bg-app-bg border border-app-border rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
-          >
-            <option value="">
-              {{ $t('scheduler.slotFinderSelectService') }}
-            </option>
-            <option
-              v-for="s in services"
-              :key="s.id"
-              :value="s.id"
-            >
-              {{ s.name }}
-            </option>
-          </select>
-          <button
-            type="button"
-            class="px-3 py-2 rounded-lg bg-brand-primary text-white text-xs font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-            :disabled="!waitlistServiceId || waitlistLoading"
-            @click="handleAddToWaitlist"
-          >
-            {{ waitlistLoading ? $t('common.loading') : $t('scheduler.slotFinderAddToWaitlist') }}
-          </button>
-        </div>
-        <p
-          v-if="waitlistError"
-          class="text-xs text-red-600"
+    </div>
+
+    <div
+      v-if="showWaitlistSection"
+      class="mt-3 pt-3 border-t border-app-border-subtle space-y-2"
+    >
+      <p class="text-xs font-medium text-app-text">
+        {{ availableSlots.length === 0 ? $t('scheduler.slotFinderAddToWaitlistTitle') : $t('scheduler.slotFinderOrAddToWaitlist') }}
+      </p>
+      <div class="flex gap-2">
+        <select
+          v-model="waitlistServiceId"
+          class="flex-1 p-2 bg-app-bg border border-app-border rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
         >
-          {{ waitlistError }}
-        </p>
-        <p
-          v-else-if="waitlistSuccess"
-          class="text-xs text-emerald-600"
+          <option value="">
+            {{ $t('scheduler.slotFinderSelectService') }}
+          </option>
+          <option
+            v-for="s in services"
+            :key="s.id"
+            :value="s.id"
+          >
+            {{ s.name }}
+          </option>
+        </select>
+        <button
+          type="button"
+          class="px-3 py-2 rounded-lg bg-brand-primary text-white text-xs font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+          :disabled="!waitlistServiceId || waitlistLoading"
+          @click="handleAddToWaitlist"
         >
-          {{ $t('scheduler.slotFinderAddToWaitlistSuccess') }}
-        </p>
+          {{ waitlistLoading ? $t('common.loading') : $t('scheduler.slotFinderAddToWaitlist') }}
+        </button>
       </div>
+      <p
+        v-if="waitlistError"
+        class="text-xs text-red-600"
+      >
+        {{ waitlistError }}
+      </p>
+      <p
+        v-else-if="waitlistSuccess"
+        class="text-xs text-emerald-600"
+      >
+        {{ $t('scheduler.slotFinderAddToWaitlistSuccess') }}
+      </p>
     </div>
   </div>
 </template>
@@ -174,6 +260,7 @@
   import { getIntlLocale } from "@/utils/intlLocale";
   import { useServiceStore } from "@/stores/service";
   import { bookingApi } from "@/infrastructure/bookingApi";
+  import { aiApi } from "@/infrastructure/aiApi";
   import type { ScheduleBlock } from "@/interfaces";
   import type { Appointment } from "@/interfaces";
   import type { TeamMember } from "@/interfaces/team";
@@ -195,6 +282,15 @@
   defineEmits<{
     (e: "slot-select", slot: AvailableSlot): void;
   }>();
+
+  const { t } = useI18n();
+
+  const mode = ref<"manual" | "ai">("manual");
+
+  const aiQuery = ref("");
+  const aiLoading = ref(false);
+  const aiError = ref("");
+  const aiApplied = ref(false);
 
   const hourToTimeStr = (h: number) => {
     const hi = Math.floor(Math.max(0, Math.min(24, h)));
@@ -250,7 +346,6 @@
     { immediate: true },
   );
 
-  const { t } = useI18n();
   const dayOptions = computed(() => [
     { value: 0, label: t("scheduler.slotFinderDaySun") },
     { value: 1, label: t("scheduler.slotFinderDayMon") },
@@ -260,6 +355,9 @@
     { value: 5, label: t("scheduler.slotFinderDayFri") },
     { value: 6, label: t("scheduler.slotFinderDaySat") },
   ]);
+
+  const getDayLabel = (dayOfWeek: number) =>
+    dayOptions.value.find((d) => d.value === dayOfWeek)?.label ?? String(dayOfWeek);
 
   const addWindow = () => {
     timeWindows.value.push({
@@ -271,6 +369,49 @@
 
   const removeWindow = (idx: number) => {
     timeWindows.value.splice(idx, 1);
+  };
+
+  const nextMonthStart = () => {
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() + 1);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  };
+
+  const nextMonthEnd = () => {
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() + 2);
+    d.setDate(0);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  };
+
+  const runAISearch = async () => {
+    aiError.value = "";
+    aiApplied.value = false;
+    aiLoading.value = true;
+    try {
+      const result = await aiApi.parseSlotQuery(aiQuery.value);
+      if (result.windows.length === 0) {
+        aiError.value = t("scheduler.slotFinderAINoWindows");
+        return;
+      }
+      timeWindows.value = result.windows.map((w) => ({
+        dayOfWeek: w.dayOfWeek,
+        startHourStr: hourToTimeStr(w.startHour),
+        endHourStr: hourToTimeStr(w.endHour),
+      }));
+      durationMinutes.value = result.durationMinutes ?? 60;
+      fromDate.value = nextMonthStart();
+      toDate.value = nextMonthEnd();
+      aiApplied.value = true;
+    } catch (err) {
+      aiError.value = err instanceof Error ? err.message : t("scheduler.slotFinderAIError");
+    } finally {
+      aiLoading.value = false;
+    }
   };
 
   const timeWindowsComputed = computed<TimeWindow[]>(() =>
@@ -313,8 +454,8 @@
     slotDurationMinutes: () => props.slotDurationMinutes,
   });
 
-  const showAddToWaitlist = computed(
-    () => availableSlots.value.length === 0 && !!props.businessId && services.value.length > 0,
+  const showWaitlistSection = computed(
+    () => !!props.businessId && services.value.length > 0,
   );
 
   const waitlistServiceId = ref("");

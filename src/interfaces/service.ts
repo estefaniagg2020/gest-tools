@@ -25,8 +25,8 @@ export interface Service {
   id: string;
   name: string;
   category: string;
-  categoryId?: string | null;
-  serviceCategory?: { id: string; label: string; icon: string } | null;
+  categoryId: string;
+  serviceCategory?: { id: string; label: string; icon: string };
   duration: number;
   price: number;
   description?: string;

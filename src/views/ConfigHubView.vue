@@ -47,8 +47,9 @@
 
   const onHeFinalizado = () => {
     const userId = authStore.user?.id;
+    const businessId = authStore.user?.businessId ?? null;
     if (userId) {
-      gestorConfigStore.markOnboardingComplete(userId);
+      gestorConfigStore.markOnboardingComplete(userId, businessId);
     }
   };
 </script>

@@ -1,7 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import type { Service, CatalogCategory } from "@/interfaces";
-import { loadStoredServices, saveServiceList } from "@/infrastructure/serviceStorage";
 import { bookingApi } from "@/infrastructure/bookingApi";
 import { useAuthStore } from "@/stores/auth";
 
@@ -24,8 +23,8 @@ const mapApiService = (s: {
   id: string;
   name: string;
   category: string;
-  categoryId?: string | null;
-  serviceCategory?: { id: string; label: string; icon: string } | null;
+  categoryId: string;
+  serviceCategory?: { id: string; label: string; icon: string };
   duration: number;
   price: number;
   description?: string | null;
@@ -34,8 +33,8 @@ const mapApiService = (s: {
   id: s.id,
   name: s.name,
   category: s.category,
-  categoryId: s.categoryId ?? null,
-  serviceCategory: s.serviceCategory ?? null,
+  categoryId: s.categoryId,
+  serviceCategory: s.serviceCategory,
   duration: s.duration,
   price: s.price,
   description: s.description ?? undefined,
@@ -56,70 +55,42 @@ export const useServiceStore = defineStore("service", () => {
 
   const initialize = async () => {
     const businessId = getBusinessId();
-    if (businessId) {
-      try {
-        catalog.value = await bookingApi.getCatalog(businessId);
-        return;
-      } catch {
-        // fall through to local fallback
-      }
+    if (!businessId) {
+      catalog.value = [];
+      return;
     }
-    const stored = loadStoredServices() ?? [];
-    catalog.value = stored.length
-      ? [{ id: "local", label: "General", icon: "📋", isSystem: false, services: stored.map((s) => ({ id: s.id, name: s.name, duration: s.duration, price: s.price, description: s.description ?? null, isSystemService: false })) }]
-      : [];
+    try {
+      catalog.value = await bookingApi.getCatalog(businessId);
+    } catch (e) {
+      console.error("Error fetching services from API:", e);
+      catalog.value = [];
+    }
   };
 
   const getServiceById = (id: string) => services.value.find((s) => s.id === id);
 
   const getServicesByCategory = (categoryId: string) =>
-    services.value.filter((s) => s.categoryId === categoryId || s.serviceCategory?.id === categoryId);
+    services.value.filter((s) => s.categoryId === categoryId);
 
   const addService = async (service: Omit<Service, "id">): Promise<Service> => {
     const businessId = getBusinessId();
-    if (businessId) {
-      try {
-        const created = await bookingApi.createService(businessId, service);
-        await initialize();
-        return mapApiService(created);
-      } catch {
-        // fall through
-      }
-    }
-    const id = `svc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const newService: Service = { ...service, id };
-    saveServiceList([...services.value, newService]);
+    if (!businessId) throw new Error("No business ID — cannot create service");
+    const created = await bookingApi.createService(businessId, service);
     await initialize();
-    return newService;
+    return mapApiService(created);
   };
 
   const updateService = async (id: string, updates: Partial<Omit<Service, "id">>) => {
     const businessId = getBusinessId();
-    if (businessId) {
-      try {
-        await bookingApi.updateService(businessId, id, updates);
-        await initialize();
-        return;
-      } catch {
-        // fall through
-      }
-    }
-    const updated = services.value.map((s) => (s.id === id ? { ...s, ...updates } : s));
-    saveServiceList(updated);
+    if (!businessId) throw new Error("No business ID — cannot update service");
+    await bookingApi.updateService(businessId, id, updates);
     await initialize();
   };
 
   const deleteService = async (id: string) => {
     const businessId = getBusinessId();
-    if (businessId) {
-      try {
-        await bookingApi.deleteService(businessId, id);
-      } catch {
-        // fall through
-      }
-    } else {
-      saveServiceList(services.value.filter((s) => s.id !== id));
-    }
+    if (!businessId) return;
+    await bookingApi.deleteService(businessId, id);
     await initialize();
   };
 

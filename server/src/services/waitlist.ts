@@ -67,6 +67,66 @@ export const getMyWaitlist = async (
   });
 };
 
+export const getWaitlistByBusiness = async (
+  prisma: PrismaClient,
+  businessId: string,
+) => {
+  return prisma.slotWaitlistEntry.findMany({
+    where: { businessId },
+    orderBy: { createdAt: "asc" },
+    include: {
+      user: { select: { name: true, username: true } },
+      client: { select: { id: true, name: true } },
+      service: { select: { id: true, name: true } },
+    },
+  });
+};
+
+export const addClientToWaitlist = async (
+  prisma: PrismaClient,
+  businessId: string,
+  clientId: string,
+  serviceId: string,
+  preferredStart: string,
+  preferredEnd: string,
+) => {
+  const startDate = new Date(preferredStart);
+  const endDate = new Date(preferredEnd);
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    throw new Error("Fechas inválidas");
+  }
+  const client = await prisma.client.findFirst({
+    where: { id: clientId, businessId },
+  });
+  if (!client) {
+    throw new Error("Cliente no encontrado o no pertenece al negocio");
+  }
+  const existing = await prisma.slotWaitlistEntry.findFirst({
+    where: {
+      clientId,
+      businessId,
+      serviceId,
+      preferredStart: startDate,
+      preferredEnd: endDate,
+    },
+  });
+  if (existing) return existing;
+  return prisma.slotWaitlistEntry.create({
+    data: {
+      userId: null,
+      clientId,
+      businessId,
+      serviceId,
+      preferredStart: startDate,
+      preferredEnd: endDate,
+    },
+    include: {
+      client: { select: { id: true, name: true } },
+      service: { select: { id: true, name: true } },
+    },
+  });
+};
+
 export const getMyNotifications = async (
   prisma: PrismaClient,
   userId: string,
@@ -100,11 +160,14 @@ export const notifyWaitlistForFreedSlot = async (
     orderBy: { createdAt: "asc" },
     include: { user: true },
   });
-  const matching = entries.filter((e) =>
-    slotMatches(slotStart, slotEnd, e.preferredStart, e.preferredEnd),
+  const matching = entries.filter(
+    (e) =>
+      e.userId != null &&
+      slotMatches(slotStart, slotEnd, e.preferredStart, e.preferredEnd),
   );
   const created = [];
   for (const entry of matching) {
+    if (!entry.userId) continue;
     const notif = await prisma.waitlistNotification.create({
       data: {
         userId: entry.userId,

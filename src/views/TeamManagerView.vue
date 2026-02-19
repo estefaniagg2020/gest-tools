@@ -10,6 +10,7 @@
         class="relative mb-8"
         :show-clear-button="orderedMembers.length > 0"
         :search-query="searchQuery"
+        :can-manage="canManage"
         @create="openCreateModal"
         @clear="handleClearTeam"
         @update:search-query="searchQuery = $event"
@@ -21,6 +22,7 @@
             v-for="member in paginatedMembers"
             :key="member.id"
             :member="member"
+            :can-manage="canManage"
             @edit="editMember(member)"
             @delete="deleteMember(member.id)"
           />
@@ -42,6 +44,7 @@
             v-for="member in paginatedMembers"
             :key="member.id"
             :member="member"
+            :can-manage="canManage"
             @edit="editMember(member)"
             @delete="deleteMember(member.id)"
           />
@@ -71,6 +74,7 @@
 <script setup lang="ts">
   import { ref, computed, watch } from "vue";
   import { useI18n } from "vue-i18n";
+  import { storeToRefs } from "pinia";
   import TeamManagerHeader from "@/components/team/TeamManagerHeader.vue";
   import TeamCard from "@/components/team/TeamCard.vue";
   import TeamAvatarTile from "@/components/team/TeamAvatarTile.vue";
@@ -78,6 +82,8 @@
   import TeamPagination from "@/components/team/TeamPagination.vue";
   import { useTeamManager } from "@/composables/useTeamManager";
   import { useConfirmDialog } from "@/composables/useConfirmDialog";
+  import { useAuthStore } from "@/stores/auth";
+  import { AUTH_CONFIG } from "@/data/authConfig";
 
   const PAGE_SIZE = 10;
 
@@ -96,6 +102,10 @@
 
   const { t } = useI18n();
   const { show: showConfirm } = useConfirmDialog();
+
+  const authStore = useAuthStore();
+  const { currentRole } = storeToRefs(authStore);
+  const canManage = computed(() => currentRole.value === AUTH_CONFIG.ROLE_MANAGER);
 
   const handleClearTeam = async () => {
     const ok = await showConfirm({

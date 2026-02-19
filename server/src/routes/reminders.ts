@@ -64,7 +64,7 @@ export const remindersRouter = (prisma: PrismaClient) => {
         {
           clientName:
             apt.user.name ?? apt.user.username ?? "Cliente",
-          serviceName: apt.service.name,
+          serviceName: apt.service?.name ?? "Servicio",
           businessName: apt.business.name,
           dateFormatted: formatDateForWhatsApp(start),
           timeFormatted: formatTimeForWhatsApp(start),

@@ -158,7 +158,12 @@ export const useTeamManager = () => {
     const gestorConfigStore = useGestorConfigStore();
     const configMembers = gestorConfigStore.teamMembers;
     if (store.members.length === 0 && configMembers.length > 0) {
-      await syncWizardTeamMembers(configMembers);
+      try {
+        await syncWizardTeamMembers(configMembers);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Error al sincronizar miembros del equipo";
+        addToast(msg, "error");
+      }
     }
   });
 

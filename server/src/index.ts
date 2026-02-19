@@ -23,6 +23,8 @@ import { bonosRouter } from "./routes/bonos.js";
 import { serviceCategoriesRouter } from "./routes/service-categories.js";
 import { settingsRouter } from "./routes/settings.js";
 import { professionsRouter } from "./routes/professions.js";
+import { salesRouter } from "./routes/sales.js";
+import { aiRouter } from "./routes/ai.js";
 import { ensureProfessionTemplates } from "./services/ensureTemplates.js";
 
 dotenv.config();
@@ -66,6 +68,8 @@ app.use("/api/bonos", bonosRouter(prisma));
 app.use("/api/service-categories", serviceCategoriesRouter(prisma));
 app.use("/api/settings", settingsRouter(prisma));
 app.use("/api/professions", professionsRouter(prisma));
+app.use("/api/sales", salesRouter(prisma));
+app.use("/api/ai", aiRouter());
 
 ensureProfessionTemplates(prisma)
   .then(() => {

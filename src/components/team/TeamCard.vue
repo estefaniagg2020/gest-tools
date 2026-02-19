@@ -42,6 +42,7 @@
       </div>
 
       <div
+        v-if="canManage"
         class="absolute top-2 right-2 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10"
       >
         <button
@@ -74,6 +75,7 @@
 
   const props = defineProps<{
     member: TeamMember;
+    canManage?: boolean;
   }>();
 
   defineEmits<{ edit: []; delete: [] }>();

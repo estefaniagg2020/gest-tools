@@ -76,7 +76,7 @@ export const bookingsRouter = (prisma: PrismaClient) => {
         start: startDate,
         end: endDate,
         status: "confirmed",
-        paymentStatus: "simulated_paid",
+        paymentStatus: "paid",
         discountPercent:
           discountPercent != null && discountPercent > 0 ? discountPercent : null,
       },
@@ -107,7 +107,7 @@ export const bookingsRouter = (prisma: PrismaClient) => {
         {
           clientName: user.name ?? req.user.username ?? "Cliente",
           serviceName: service.name,
-          businessName: appointment.business.name,
+          businessName: (appointment as any).business?.name ?? "Negocio",
           dateFormatted: formatDateForWhatsApp(startDate),
           timeFormatted: formatTimeForWhatsApp(startDate),
         },
@@ -153,13 +153,15 @@ export const bookingsRouter = (prisma: PrismaClient) => {
         business: { select: { name: true } },
       },
     });
-    await notifyWaitlistForFreedSlot(
-      prisma,
-      appointment.businessId,
-      appointment.serviceId,
-      appointment.start,
-      appointment.end,
-    );
+    if (appointment.serviceId) {
+      await notifyWaitlistForFreedSlot(
+        prisma,
+        appointment.businessId,
+        appointment.serviceId,
+        appointment.start,
+        appointment.end,
+      );
+    }
     res.json(updated);
   });
 

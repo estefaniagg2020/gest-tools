@@ -41,6 +41,23 @@ export const authRouter = (prisma: PrismaClient) => {
       where: { id: user.id },
       data: { sessionToken: token },
     });
+    let workspaces = await prisma.workspaceMember.findMany({
+      where: { userId: user.id },
+      select: { businessId: true },
+      take: 1,
+    });
+    // Gestor with no workspace: auto-create business on first login
+    if (workspaces.length === 0 && user.role === "gestor") {
+      const { businessId } = await prisma.$transaction(async (tx) => {
+        const company = await tx.company.create({ data: { name: user.username } });
+        const business = await tx.business.create({ data: { name: user.username, companyId: company.id } });
+        await tx.workspaceMember.create({
+          data: { userId: user.id, businessId: business.id, role: "admin", name: user.username },
+        });
+        return { businessId: business.id };
+      });
+      workspaces = [{ businessId }];
+    }
     res.json({
       user: {
         id: user.id,
@@ -49,7 +66,7 @@ export const authRouter = (prisma: PrismaClient) => {
         name: user.name,
         email: user.email,
         phone: user.phone,
-        businessId: user.businessId,
+        businessId: workspaces[0]?.businessId ?? null,
       },
       token,
     });
@@ -89,14 +106,23 @@ export const authRouter = (prisma: PrismaClient) => {
     }
     const salt = generateSalt();
     const passwordHash = hashPassword(password, salt);
-    const user = await prisma.user.create({
-      data: {
-        username: trimmed,
-        passwordHash,
-        salt,
-        role: "gestor",
-      },
+
+    const { user, businessId } = await prisma.$transaction(async (tx) => {
+      const newUser = await tx.user.create({
+        data: { username: trimmed, passwordHash, salt, role: "gestor" },
+      });
+      const company = await tx.company.create({
+        data: { name: trimmed },
+      });
+      const business = await tx.business.create({
+        data: { name: trimmed, companyId: company.id },
+      });
+      await tx.workspaceMember.create({
+        data: { userId: newUser.id, businessId: business.id, role: "admin", name: trimmed },
+      });
+      return { user: newUser, businessId: business.id };
     });
+
     const token = generateSessionToken();
     await prisma.user.update({
       where: { id: user.id },
@@ -110,7 +136,7 @@ export const authRouter = (prisma: PrismaClient) => {
         name: user.name,
         email: user.email,
         phone: user.phone,
-        businessId: user.businessId,
+        businessId,
       },
       token,
     });
@@ -217,6 +243,11 @@ export const authRouter = (prisma: PrismaClient) => {
       where: { id: req.user.id },
       data: data as { name?: string | null; phone?: string | null },
     });
+    const workspaces = await prisma.workspaceMember.findMany({
+      where: { userId: user.id },
+      select: { businessId: true },
+      take: 1,
+    });
     res.json({
       user: {
         id: user.id,
@@ -225,7 +256,7 @@ export const authRouter = (prisma: PrismaClient) => {
         name: user.name,
         email: user.email,
         phone: user.phone ?? undefined,
-        businessId: user.businessId,
+        businessId: workspaces[0]?.businessId ?? null,
       },
     });
   });

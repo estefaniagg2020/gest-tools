@@ -9,18 +9,14 @@ import { useAuthStore } from "@/stores/auth";
 import {
   getServiceTemplates,
   getBusinessServiceDefaults,
-  getSystemServiceNamesOfOtherTypes,
   type ServiceTemplate,
 } from "@/data/serviceTemplates";
 import type { Service } from "@/interfaces";
-import {
-  getRemovedSystemServiceNames,
-  markSystemServiceRemoved,
-} from "@/infrastructure/serviceSystemRemovedStorage";
+import { markSystemServiceRemoved } from "@/infrastructure/serviceSystemRemovedStorage";
 
 const buildDefaultForm = (firstCategoryId: string) => ({
   name: "",
-  category: firstCategoryId,
+  categoryId: firstCategoryId,
   duration: 60,
   price: 0,
   description: "",
@@ -71,7 +67,7 @@ export const useServiciosManager = () => {
     isEditing.value = true;
     editingId.value = service.id;
     form.name = service.name;
-    form.category = service.category;
+    form.categoryId = service.categoryId;
     form.duration = service.duration;
     form.price = service.price;
     form.description = service.description ?? "";
@@ -89,7 +85,7 @@ export const useServiciosManager = () => {
     const businessDefaults = getBusinessServiceDefaults(configStore.businessType);
     const payload = {
       name: form.name.trim(),
-      category: form.category,
+      categoryId: form.categoryId,
       duration: form.duration,
       price: form.price,
       description: form.description.trim() || undefined,
@@ -174,7 +170,7 @@ export const useServiciosManager = () => {
     );
     await serviceStore.addService({
       name: template.name,
-      category: categoryId,
+      categoryId,
       duration: template.duration,
       price: template.price,
       description: template.description,
@@ -209,61 +205,6 @@ export const useServiciosManager = () => {
     await configStore.initialize(userId, businessId);
     categoryStore.initialize();
     await serviceStore.initialize();
-
-    if (businessId) return;
-
-    const currentBusinessType = configStore.businessType || "estetica";
-    const templates = getServiceTemplates(currentBusinessType);
-    if (!templates) return;
-
-    const otherTypesNames = new Set(
-      getSystemServiceNamesOfOtherTypes(currentBusinessType).map((n) => n.toLowerCase()),
-    );
-    const staleServices = serviceStore.services.filter((s) =>
-      otherTypesNames.has(s.name.toLowerCase()),
-    );
-    await Promise.all(staleServices.map((s) => serviceStore.deleteService(s.id)));
-
-    const removedNames = await getRemovedSystemServiceNames({
-      businessId: null,
-      businessType: currentBusinessType,
-    });
-    const isRemovedByUser = (name: string) =>
-      removedNames.some((r) => r.toLowerCase() === name.toLowerCase());
-
-    templates.categories.forEach((cat) => ensureCategoryExists(cat.id, cat.label, cat.icon));
-    const businessDefaults = getBusinessServiceDefaults(currentBusinessType);
-    let added = 0;
-    for (const template of templates.services) {
-      if (isRemovedByUser(template.name)) continue;
-      const alreadyExists = serviceStore.services.some(
-        (s) => s.name.toLowerCase() === template.name.toLowerCase(),
-      );
-      if (!alreadyExists) {
-        const categoryId = ensureCategoryExists(
-          template.suggestedCategory,
-          template.suggestedCategory,
-          template.suggestedCategoryIcon,
-        );
-        await serviceStore.addService({
-          name: template.name,
-          category: categoryId,
-          duration: template.duration,
-          price: template.price,
-          description: template.description,
-          requiresCabin: businessDefaults.requiresCabin,
-          requiresTherapist: businessDefaults.requiresStaff,
-          employeesCount: businessDefaults.requiresStaff ? 1 : undefined,
-        });
-        added++;
-      }
-    }
-    if (added > 0) {
-      addToast(
-        added === 1 ? "Servicio de sistema añadido" : `${added} servicios de sistema añadidos`,
-        "success",
-      );
-    }
   });
 
   watch(businessType, async (newType, oldType) => {

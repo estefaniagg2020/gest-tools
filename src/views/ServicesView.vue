@@ -180,7 +180,7 @@
             {{ $t('servicios.categoryLabel') }}
           </label>
           <select
-            v-model="form.category"
+            v-model="form.categoryId"
             required
             class="input-modern w-full rounded-xl border border-app-border bg-app-bg/50 px-4 py-2.5 text-app-title transition-colors focus:border-brand-accent focus:bg-app-surface focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
           >

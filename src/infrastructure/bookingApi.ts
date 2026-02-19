@@ -11,6 +11,8 @@ export interface Service {
   id: string;
   name: string;
   category: string;
+  categoryId: string;
+  serviceCategory: { id: string; label: string; icon: string };
   duration: number;
   price: number;
   description?: string | null;
@@ -67,7 +69,7 @@ export const bookingApi = {
 
   createService: async (
     businessId: string,
-    payload: Omit<Service, "id"> & { categoryId?: string | null },
+    payload: { name: string; categoryId: string; duration: number; price: number; description?: string; requiresCabin?: boolean; requiresTherapist?: boolean; employeesCount?: number },
   ): Promise<Service> => {
     const res = await apiFetch(`/api/businesses/${businessId}/services`, {
       method: "POST",
@@ -81,7 +83,7 @@ export const bookingApi = {
   updateService: async (
     businessId: string,
     serviceId: string,
-    payload: Partial<Omit<Service, "id">>,
+    payload: Partial<{ name: string; categoryId: string; duration: number; price: number; description?: string; requiresCabin?: boolean; requiresTherapist?: boolean }>,
   ): Promise<Service> => {
     const res = await apiFetch(`/api/businesses/${businessId}/services/${serviceId}`, {
       method: "PUT",
@@ -181,4 +183,38 @@ export const bookingApi = {
       method: "PATCH",
     });
   },
+
+  getWaitlistByBusiness: async (): Promise<WaitlistEntryByBusiness[]> => {
+    const res = await apiFetch("/api/waitlist/by-business");
+    if (!res.ok) throw new Error("Error al cargar lista de espera del negocio");
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  },
+
+  addClientToWaitlist: async (payload: {
+    clientId: string;
+    serviceId: string;
+    preferredStart: string;
+    preferredEnd: string;
+  }): Promise<unknown> => {
+    const res = await apiFetch("/api/waitlist/for-client", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error ?? "Error al añadir a la lista");
+    return data;
+  },
 };
+
+export interface WaitlistEntryByBusiness {
+  id: string;
+  userId: string;
+  businessId: string;
+  serviceId: string;
+  preferredStart: string;
+  preferredEnd: string;
+  createdAt: string;
+  user: { name: string | null; username: string };
+  service: { id: string; name: string };
+}

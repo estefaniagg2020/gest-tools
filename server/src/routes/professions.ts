@@ -83,9 +83,10 @@ export const professionsRouter = (prisma: PrismaClient) => {
   });
 
   router.get("/:id", async (req: Request, res: Response) => {
+    const profId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     try {
       const profession = await prisma.profession.findUnique({
-        where: { id: req.params.id },
+        where: { id: profId },
         include: {
           categories: {
             orderBy: { label: "asc" },
@@ -162,15 +163,19 @@ export const professionsRouter = (prisma: PrismaClient) => {
       const saved = await prisma.profession.create({
         data: {
           id: discovery.professionId,
+          code: discovery.professionId, // Stable slug
           label: discovery.professionLabel,
+          sector: "Otros", // Default sector for AI-discovered professions
           categories: {
             create: discovery.categories.map((cat) => ({
               id: cat.id,
+              code: cat.id, // Stable slug
               label: cat.label,
               icon: cat.icon,
               services: {
                 create: cat.services.map((svc) => ({
                   id: svc.id,
+                  code: svc.id, // Stable slug
                   name: svc.name,
                   duration: svc.duration,
                   price: svc.price,

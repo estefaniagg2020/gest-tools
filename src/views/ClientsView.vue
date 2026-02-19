@@ -31,7 +31,7 @@
 
     <div
       v-if="clientStore.clients.length > 0"
-      class="mb-6 space-y-3"
+      class="relative mb-6 space-y-3"
     >
       <label for="clients-search" class="sr-only">{{ $t('clients.searchLabel') }}</label>
       <input
@@ -53,7 +53,7 @@
 
     <div
       v-if="filteredClients.length > 0"
-      class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+      class="relative grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
     >
       <div
         v-for="client in filteredClients"
@@ -101,18 +101,31 @@
         </div>
       </div>
     </div>
-    <p
+    <div
       v-else
-      class="text-sm text-app-text/70 py-8 text-center"
+      class="relative flex flex-col items-center justify-center py-16 px-4 text-center gap-4"
     >
-      {{
-        filterActiveBono && !searchQuery
-          ? $t('clients.noClientsWithActiveBono')
-          : searchQuery
-            ? $t('clients.noClientsSearch')
-            : $t('clients.noClientsEmpty')
-      }}
-    </p>
+      <span class="text-5xl">👥</span>
+      <p class="text-base font-semibold text-app-title">
+        {{
+          filterActiveBono && !searchQuery
+            ? $t('clients.noClientsWithActiveBono')
+            : searchQuery
+              ? $t('clients.noClientsSearch')
+              : $t('clients.noClientsEmpty')
+        }}
+      </p>
+      <BaseButton
+        v-if="!filterActiveBono && !searchQuery"
+        variant="primary"
+        @click="openCreateModal"
+      >
+        <template #icon>
+          <span class="text-lg leading-none">+</span>
+        </template>
+        {{ $t('clients.addClient') }}
+      </BaseButton>
+    </div>
 
     <Modal
       :is-open="isModalOpen"

@@ -43,6 +43,7 @@ const router = createRouter({
           path: "team",
           name: "team",
           component: TeamManagerView,
+          meta: { requiresGestor: true },
         },
         {
           path: "spas",
@@ -82,6 +83,7 @@ const router = createRouter({
           path: "config/data",
           name: "config-data",
           component: () => import("../views/ConfigWizardView.vue"),
+          meta: { requiresGestor: true },
         },
         {
           path: "config/themes",
@@ -186,6 +188,9 @@ router.beforeEach(async (to) => {
   }
   if (!authStore.isAuthenticated && to.name === "setup" && authStore.hasAnyUser()) {
     return { name: "login" };
+  }
+  if (authStore.isAuthenticated && to.meta.requiresGestor && !authStore.isGestor) {
+    return { name: "dashboard" };
   }
   if (authStore.isAuthenticated && to.name === "dashboard") {
     const userId = authStore.user?.id;

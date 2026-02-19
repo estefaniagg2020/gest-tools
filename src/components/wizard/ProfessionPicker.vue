@@ -150,11 +150,7 @@
   const allResults = ref<Profession[]>([]);
   const selectedProfession = ref<FullProfession | null>(null);
 
-  const filteredResults = computed(() =>
-    allResults.value.filter((p) =>
-      p.label.toLowerCase().includes(query.value.toLowerCase()),
-    ),
-  );
+  const filteredResults = computed(() => allResults.value);
 
   const showAiOption = computed(
     () =>

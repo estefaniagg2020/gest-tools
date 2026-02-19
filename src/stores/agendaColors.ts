@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed, watch } from "vue";
 import type { AgendaColorSet, AgendaColorsConfig } from "@/interfaces/agendaColors";
-import { loadAgendaColorsConfig, saveAgendaColorsConfig } from "@/infrastructure/agendaColorsStorage";
+import { agendaColorsApi } from "@/infrastructure/agendaColorsApi";
 import { useThemeStore } from "@/stores/theme";
 import { getDefaultAgendaColorsForTheme } from "@/data/agendaColorDefaults";
 import { normalizeAgendaColorsConfig } from "@/utils/agendaColorsValidation";
@@ -32,6 +32,8 @@ const globalSetFromRefs = (
 ): AgendaColorSet => ({ agendaBg, markedDaysColor, vacationColor });
 
 export const useAgendaColorsStore = defineStore("agendaColors", () => {
+  const businessId = ref<string | null>(null);
+
   const sameColorsForAll = ref(true);
   const agendaBg = ref("#ffffff");
   const markedDaysColor = ref("#017074");
@@ -48,36 +50,57 @@ export const useAgendaColorsStore = defineStore("agendaColors", () => {
     return per ?? globalSet.value;
   };
 
-  const initialize = () => {
-    const themeStore = useThemeStore();
-    const themeDefaults = getDefaultAgendaColorsForTheme(themeStore.themeId);
-    const stored = loadAgendaColorsConfig();
-    if (stored) {
-      const normalized = normalizeAgendaColorsConfig(stored, themeDefaults);
-      sameColorsForAll.value = normalized.sameColorsForAll;
-      agendaBg.value = normalized.agendaBg;
-      markedDaysColor.value = normalized.markedDaysColor;
-      vacationColor.value = normalized.vacationColor;
-      perAgendaColors.value = normalized.perAgendaColors ?? [];
-    } else {
-      sameColorsForAll.value = themeDefaults.sameColorsForAll;
-      agendaBg.value = themeDefaults.agendaBg;
-      markedDaysColor.value = themeDefaults.markedDaysColor;
-      vacationColor.value = themeDefaults.vacationColor;
-      perAgendaColors.value = [];
-    }
+  const applyCurrentColors = () => {
     const setToApply = sameColorsForAll.value
       ? globalSetFromRefs(agendaBg.value, markedDaysColor.value, vacationColor.value)
       : (perAgendaColors.value[0] ?? globalSetFromRefs(agendaBg.value, markedDaysColor.value, vacationColor.value));
     applyColorsToDocument(setToApply);
   };
 
-  const reapply = () => {
-    const setToApply = sameColorsForAll.value
-      ? globalSetFromRefs(agendaBg.value, markedDaysColor.value, vacationColor.value)
-      : (perAgendaColors.value[0] ?? globalSetFromRefs(agendaBg.value, markedDaysColor.value, vacationColor.value));
-    applyColorsToDocument(setToApply);
+  const saveToApi = () => {
+    if (!businessId.value) return;
+    const config: AgendaColorsConfig = {
+      sameColorsForAll: sameColorsForAll.value,
+      agendaBg: agendaBg.value,
+      markedDaysColor: markedDaysColor.value,
+      vacationColor: vacationColor.value,
+      perAgendaColors: perAgendaColors.value.length > 0 ? perAgendaColors.value : undefined,
+    };
+    agendaColorsApi.save(businessId.value, config).catch(() => {});
   };
+
+  const initialize = async (bId: string | null) => {
+    businessId.value = bId;
+    const themeStore = useThemeStore();
+    const themeDefaults = getDefaultAgendaColorsForTheme(themeStore.themeId);
+
+    if (bId) {
+      try {
+        const stored = await agendaColorsApi.load(bId);
+        if (stored) {
+          const normalized = normalizeAgendaColorsConfig(stored, themeDefaults);
+          sameColorsForAll.value = normalized.sameColorsForAll;
+          agendaBg.value = normalized.agendaBg;
+          markedDaysColor.value = normalized.markedDaysColor;
+          vacationColor.value = normalized.vacationColor;
+          perAgendaColors.value = normalized.perAgendaColors ?? [];
+          applyCurrentColors();
+          return;
+        }
+      } catch {
+        // fall through to theme defaults
+      }
+    }
+
+    sameColorsForAll.value = themeDefaults.sameColorsForAll;
+    agendaBg.value = themeDefaults.agendaBg;
+    markedDaysColor.value = themeDefaults.markedDaysColor;
+    vacationColor.value = themeDefaults.vacationColor;
+    perAgendaColors.value = [];
+    applyCurrentColors();
+  };
+
+  const reapply = () => applyCurrentColors();
 
   watch(
     () => useThemeStore().colorMode,
@@ -86,14 +109,7 @@ export const useAgendaColorsStore = defineStore("agendaColors", () => {
   );
 
   const persistAndApply = () => {
-    const config: AgendaColorsConfig = {
-      sameColorsForAll: sameColorsForAll.value,
-      agendaBg: agendaBg.value,
-      markedDaysColor: markedDaysColor.value,
-      vacationColor: vacationColor.value,
-      perAgendaColors: perAgendaColors.value.length > 0 ? perAgendaColors.value : undefined,
-    };
-    saveAgendaColorsConfig(config);
+    saveToApi();
     const setToApply = sameColorsForAll.value
       ? globalSet.value
       : (perAgendaColors.value[0] ?? globalSet.value);

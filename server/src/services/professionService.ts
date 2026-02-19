@@ -37,6 +37,7 @@ export async function instantiateProfessionTemplate(
     // 3. Iterate services in category
     for (const templateService of templateCat.services) {
       await prisma.service.create({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         data: {
           businessId,
           categoryId: businessCat.id,
@@ -46,7 +47,7 @@ export async function instantiateProfessionTemplate(
           description: templateService.description,
           onlineBookingEnabled: true,
           requiresTherapist: true,
-        },
+        } as any,
       });
     }
   }

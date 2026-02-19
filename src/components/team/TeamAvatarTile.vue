@@ -88,6 +88,7 @@
 
   const props = defineProps<{
     member: TeamMember;
+    canManage?: boolean;
   }>();
 
   const isManager = computed(() => props.member.role === "manager");
@@ -113,6 +114,7 @@
   };
 
   const toggleMenu = () => {
+    if (!props.canManage) return;
     if (menuOpen.value) {
       menuOpen.value = false;
       menuPosition.value = null;

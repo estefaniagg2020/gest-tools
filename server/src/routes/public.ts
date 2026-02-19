@@ -1,20 +1,5 @@
 import { Router } from "express";
-import { PrismaClient, Prisma } from "@prisma/client";
-
-// Define the type with includes
-type BusinessWithPublicProfile = Prisma.BusinessGetPayload<{
-  include: {
-    gestorConfig: true;
-    services: {
-        where: { onlineBookingEnabled: true };
-        include: { serviceCategory: true };
-    };
-    employees: {
-        where: { role: 'member' };
-        select: { id: true; name: true; photoUrl: true; role: true };
-    };
-  }
-}>;
+import { PrismaClient } from "@prisma/client";
 
 export const publicRouter = (prisma: PrismaClient) => {
   const router = Router();
@@ -32,19 +17,17 @@ export const publicRouter = (prisma: PrismaClient) => {
             where: { onlineBookingEnabled: true },
             include: { serviceCategory: true }
           },
-          employees: {
-             where: { role: 'member' },
-             select: { id: true, name: true, photoUrl: true, role: true }
+          workspaceMembers: {
+             select: { id: true, name: true, photoUrl: true, role: true, position: true }
           },
         }
-      }) as BusinessWithPublicProfile | null;
+      });
 
       if (!business) {
         res.status(404).json({ error: "Business not found" });
         return;
       }
 
-      // Transform for public consumption
       const config = business.gestorConfig; 
       
       const publicData = {
@@ -59,7 +42,7 @@ export const publicRouter = (prisma: PrismaClient) => {
             email: config?.email 
         },
         services: business.services,
-        team: business.employees
+        team: business.workspaceMembers
       };
 
       res.json(publicData);
@@ -68,6 +51,8 @@ export const publicRouter = (prisma: PrismaClient) => {
       res.status(500).json({ error: "Server error" });
     }
   });
+
+
 
   // GET /availability -> Check slots
   router.get("/availability", async (req, res) => {

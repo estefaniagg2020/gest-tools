@@ -50,21 +50,26 @@ export const useClientsManager = () => {
     isEditing.value = false;
   };
 
-  const saveClient = () => {
+  const saveClient = async () => {
     const payload = {
       name: form.name.trim(),
       email: (form.email ?? "").trim() || undefined,
       phone: (form.phone ?? "").trim() || undefined,
       notes: (form.notes ?? "").trim() || undefined,
     };
-    if (isEditing.value && editingId.value) {
-      clientStore.updateClient(editingId.value, payload);
-      addToast("Cliente actualizado correctamente", "success");
-    } else {
-      clientStore.addClient(payload);
-      addToast("Cliente creado con éxito", "success");
+    try {
+      if (isEditing.value && editingId.value) {
+        await clientStore.updateClient(editingId.value, payload);
+        addToast("Cliente actualizado correctamente", "success");
+      } else {
+        await clientStore.addClient(payload);
+        addToast("Cliente creado con éxito", "success");
+      }
+      closeModal();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Error al guardar cliente";
+      addToast(msg, "error");
     }
-    closeModal();
   };
 
   const confirmDelete = async (id: string) => {

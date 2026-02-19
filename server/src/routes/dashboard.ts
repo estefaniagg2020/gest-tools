@@ -114,16 +114,16 @@ export const dashboardRouter = (prisma: PrismaClient) => {
             start: { gte: monthStart, lte: monthEnd },
             status: { not: CANCELLED_STATUS },
           },
-          select: { employeeId: true },
-        }),
+          select: { workspaceMemberId: true },
+        }) as any as { workspaceMemberId: string | null }[],
         prisma.appointment.findMany({
           where: {
             businessId,
             start: { gte: monthStart, lte: monthEnd },
             status: { not: CANCELLED_STATUS },
           },
-          select: { serviceId: true, employeeId: true, service: { select: { name: true, price: true } } },
-        }),
+          select: { serviceId: true, workspaceMemberId: true, service: { select: { name: true, price: true } } },
+        }) as any as { serviceId: string, workspaceMemberId: string | null, service: { name: string, price: number } | null }[],
         prisma.appointment.findMany({
           where: {
             businessId,
@@ -132,10 +132,9 @@ export const dashboardRouter = (prisma: PrismaClient) => {
           },
           select: { start: true, end: true },
         }),
-        prisma.user.count({
+        prisma.client.count({
           where: {
             businessId,
-            role: "client",
             createdAt: { gte: monthStart, lte: monthEnd },
           },
         }),
@@ -155,6 +154,7 @@ export const dashboardRouter = (prisma: PrismaClient) => {
           where: { businessId },
           include: {
             user: { select: { name: true, username: true } },
+            client: { select: { name: true } },
             service: { select: { name: true } },
           },
           orderBy: { createdAt: "asc" },
@@ -176,25 +176,25 @@ export const dashboardRouter = (prisma: PrismaClient) => {
         ? Math.round((reservasCanceladas / totalReservasMes) * 100)
         : 0;
 
-      const countByEmployeeId = new Map<string, number>();
+      const countByMemberId = new Map<string, number>();
       for (const a of appointmentsForPerson) {
-        const key = a.employeeId ?? "__sin_asignar__";
-        countByEmployeeId.set(key, (countByEmployeeId.get(key) ?? 0) + 1);
+        const key = a.workspaceMemberId ?? "__sin_asignar__";
+        countByMemberId.set(key, (countByMemberId.get(key) ?? 0) + 1);
       }
 
-      const employeeIds = [...countByEmployeeId.keys()].filter((id) => id !== "__sin_asignar__");
-      const employees =
-        employeeIds.length > 0
-          ? await prisma.employee.findMany({
-              where: { id: { in: employeeIds }, businessId },
+      const memberIds = [...countByMemberId.keys()].filter((id) => id !== "__sin_asignar__");
+      const members =
+        memberIds.length > 0
+          ? await prisma.workspaceMember.findMany({
+              where: { id: { in: memberIds }, businessId },
               select: { id: true, name: true },
             })
           : [];
-      const employeeNames = new Map(employees.map((e) => [e.id, e.name]));
+      const memberNames = new Map(members.map((m) => [m.id, m.name]));
 
-      const reservasPorPersona = [...countByEmployeeId.entries()].map(([employeeId, count]) => ({
-        employeeId: employeeId === "__sin_asignar__" ? null : employeeId,
-        employeeName: employeeId === "__sin_asignar__" ? "Sin asignar" : employeeNames.get(employeeId) ?? null,
+      const reservasPorPersona = [...countByMemberId.entries()].map(([memberId, count]) => ({
+        employeeId: memberId === "__sin_asignar__" ? null : memberId,
+        employeeName: memberId === "__sin_asignar__" ? "Sin asignar" : memberNames.get(memberId) ?? null,
         count,
       }));
 
@@ -202,16 +202,16 @@ export const dashboardRouter = (prisma: PrismaClient) => {
         ? reservasPorPersona.reduce((a, b) => (a.count >= b.count ? a : b))
         : null;
 
-      const ventasByEmployeeId = new Map<string, number>();
+      const ventasByMemberId = new Map<string, number>();
       for (const a of appointmentsMonth) {
-        const key = a.employeeId ?? "__sin_asignar__";
+        const key = a.workspaceMemberId ?? "__sin_asignar__";
         const price = a.service?.price ?? 0;
-        ventasByEmployeeId.set(key, (ventasByEmployeeId.get(key) ?? 0) + price);
+        ventasByMemberId.set(key, (ventasByMemberId.get(key) ?? 0) + price);
       }
-      const ventasPorEmpleado = [...ventasByEmployeeId.entries()]
-        .map(([employeeId, amount]) => ({
-          employeeId: employeeId === "__sin_asignar__" ? null : employeeId,
-          employeeName: employeeId === "__sin_asignar__" ? "Sin asignar" : employeeNames.get(employeeId) ?? null,
+      const ventasPorEmpleado = [...ventasByMemberId.entries()]
+        .map(([memberId, amount]) => ({
+          employeeId: memberId === "__sin_asignar__" ? null : memberId,
+          employeeName: memberId === "__sin_asignar__" ? "Sin asignar" : memberNames.get(memberId) ?? null,
           amount: Math.round(amount * 100) / 100,
         }))
         .sort((a, b) => b.amount - a.amount);
@@ -232,16 +232,16 @@ export const dashboardRouter = (prisma: PrismaClient) => {
         return sum + ms / (1000 * 60 * 60);
       }, 0);
 
-      const nextEmployeeIds = proximasCitasHoy
-        .map((a) => a.employeeId)
-        .filter((id): id is string => id !== null);
-      const nextEmployees = nextEmployeeIds.length > 0
-        ? await prisma.employee.findMany({
-            where: { id: { in: nextEmployeeIds }, businessId },
+      const nextMemberIds = proximasCitasHoy
+        .map((a: any) => a.workspaceMemberId)
+        .filter((id: string | null): id is string => id !== null);
+      const nextMembers = nextMemberIds.length > 0
+        ? await prisma.workspaceMember.findMany({
+            where: { id: { in: nextMemberIds }, businessId },
             select: { id: true, name: true },
           })
         : [];
-      const nextEmpNames = new Map(nextEmployees.map((e) => [e.id, e.name]));
+      const nextMemberNames = new Map(nextMembers.map((m) => [m.id, m.name]));
 
       const config = await prisma.gestorConfig.findUnique({
         where: { businessId },
@@ -270,7 +270,7 @@ export const dashboardRouter = (prisma: PrismaClient) => {
         proximasCitasHoy: proximasCitasHoy.map((a) => ({
           id: a.id,
           serviceName: a.service?.name ?? "",
-          employeeName: a.employeeId ? nextEmpNames.get(a.employeeId) ?? null : null,
+          employeeName: a.workspaceMemberId ? nextMemberNames.get(a.workspaceMemberId) ?? null : null,
           start: a.start.toISOString(),
         })),
         ocupacionSemanal,
@@ -278,7 +278,7 @@ export const dashboardRouter = (prisma: PrismaClient) => {
         productosBajoStock: [],
         listaEspera: waitlistEntries.map((e) => ({
           id: e.id,
-          clientName: e.user.name ?? e.user.username,
+          clientName: e.user ? (e.user.name ?? e.user.username) : (e.client?.name ?? "Cliente"),
           serviceName: e.service.name,
           preferredStart: e.preferredStart.toISOString(),
           createdAt: e.createdAt.toISOString(),

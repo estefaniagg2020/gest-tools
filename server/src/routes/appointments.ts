@@ -18,7 +18,7 @@ export const appointmentsRouter = (prisma: PrismaClient) => {
       });
       const mapped = appointments.map((a) => ({
         ...a,
-        memberId: a.employeeId,
+        memberId: a.workspaceMemberId,
         cartItems: a.cartItems ?? undefined,
         start: a.start.toISOString(),
         end: a.end.toISOString(),
@@ -43,7 +43,7 @@ export const appointmentsRouter = (prisma: PrismaClient) => {
         status: body.status ?? "pending",
         paymentStatus: body.paymentStatus ?? "pending",
         serviceId: body.serviceId ?? null,
-        employeeId: body.memberId ?? body.employeeId ?? null,
+        workspaceMemberId: body.memberId ?? body.workspaceMemberId ?? null,
         clientId: body.clientId ?? null,
         clientName: body.clientName ?? null,
         notes: body.notes ?? null,
@@ -56,7 +56,7 @@ export const appointmentsRouter = (prisma: PrismaClient) => {
       const appointment = await prisma.appointment.create({ data });
       res.status(201).json({
         ...appointment,
-        memberId: appointment.employeeId,
+        memberId: appointment.workspaceMemberId,
         start: appointment.start.toISOString(),
         end: appointment.end.toISOString(),
       });
@@ -84,7 +84,7 @@ export const appointmentsRouter = (prisma: PrismaClient) => {
           ...(body.status !== undefined && { status: body.status }),
           ...(body.paymentStatus !== undefined && { paymentStatus: body.paymentStatus }),
           ...(body.serviceId !== undefined && { serviceId: body.serviceId }),
-          ...("memberId" in body && { employeeId: body.memberId }),
+          ...("memberId" in body && { workspaceMemberId: body.memberId }),
           ...(body.clientId !== undefined && { clientId: body.clientId }),
           ...(body.clientName !== undefined && { clientName: body.clientName }),
           ...(body.notes !== undefined && { notes: body.notes }),
@@ -95,7 +95,7 @@ export const appointmentsRouter = (prisma: PrismaClient) => {
           ...(body.discountPercent !== undefined && { discountPercent: body.discountPercent }),
         },
       });
-      res.json({ ...updated, memberId: updated.employeeId, start: updated.start.toISOString(), end: updated.end.toISOString() });
+      res.json({ ...updated, memberId: updated.workspaceMemberId, start: updated.start.toISOString(), end: updated.end.toISOString() });
     } catch (error) {
       res.status(500).json({ error: "Failed to update appointment" });
     }

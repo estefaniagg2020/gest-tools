@@ -17,7 +17,10 @@
         class="input-modern w-full sm:w-56 rounded-xl border border-app-border bg-app-bg/50 px-4 py-2.5 text-app-title placeholder:text-app-text/60 transition-colors focus:border-brand-accent focus:bg-app-surface focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
         @input="$emit('update:searchQuery', ($event.target as HTMLInputElement).value)"
       />
-      <div class="flex flex-wrap gap-2">
+      <div
+        v-if="canManage"
+        class="flex flex-wrap gap-2"
+      >
         <BaseButton
           v-if="showClearButton"
           type="button"
@@ -42,6 +45,6 @@
 <script setup lang="ts">
   import BaseButton from "@/components/common/BaseButton.vue";
 
-  defineProps<{ showClearButton?: boolean; searchQuery?: string }>();
+  defineProps<{ showClearButton?: boolean; searchQuery?: string; canManage?: boolean }>();
   defineEmits<{ create: []; clear: []; "update:searchQuery": [value: string] }>();
 </script>

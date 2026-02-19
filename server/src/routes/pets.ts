@@ -6,7 +6,7 @@ export const petsRouter = (prisma: PrismaClient) => {
 
   // Get pets for a specific client (owner)
   router.get("/client/:clientId", async (req: Request, res: Response) => {
-    const { clientId } = req.params;
+    const clientId = Array.isArray(req.params.clientId) ? req.params.clientId[0] : req.params.clientId;
     try {
       const pets = await prisma.pet.findMany({
         where: { ownerId: clientId },
@@ -27,7 +27,7 @@ export const petsRouter = (prisma: PrismaClient) => {
 
   // Get single pet details
   router.get("/:id", async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     try {
       const pet = await prisma.pet.findUnique({
         where: { id },
@@ -104,7 +104,7 @@ export const petsRouter = (prisma: PrismaClient) => {
 
   // Update a pet
   router.put("/:id", async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const data = req.body;
 
     // Remove immutable fields
@@ -130,7 +130,7 @@ export const petsRouter = (prisma: PrismaClient) => {
 
   // Delete a pet
   router.delete("/:id", async (req: Request, res: Response) => {
-      const { id } = req.params;
+      const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
       
       try {
           await prisma.pet.delete({
@@ -147,7 +147,7 @@ export const petsRouter = (prisma: PrismaClient) => {
 
   // Get notes for a pet
   router.get("/:id/notes", async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     try {
       const notes = await prisma.clientNote.findMany({
         where: { petId: id },
@@ -162,7 +162,7 @@ export const petsRouter = (prisma: PrismaClient) => {
 
   // Create a note for a pet
   router.post("/:id/notes", async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const { content, type } = req.body;
 
     if (!content) {

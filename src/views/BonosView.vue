@@ -44,6 +44,7 @@
     </div>
 
     <Modal
+      class="relative"
       :is-open="isBuyBonoOpen"
       :title="$t('bonosPage.buyBonoModalTitle')"
       @close="closeBuyBonoModal"
@@ -93,7 +94,7 @@
 
     <ul
       v-if="filteredTemplates.length > 0"
-      class="space-y-3"
+      class="relative space-y-3"
     >
       <li
         v-for="template in filteredTemplates"
@@ -127,7 +128,7 @@
 
     <p
       v-else
-      class="text-sm text-app-text/70 py-8 text-center"
+      class="relative text-sm text-app-text/70 py-8 text-center"
     >
       {{ searchQuery ? $t("bonosPage.noBonosSearch") : $t("bonosPage.noBonos") }}
     </p>

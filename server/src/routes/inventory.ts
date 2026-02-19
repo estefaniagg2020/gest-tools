@@ -91,7 +91,7 @@ export const inventoryRouter = (prisma: PrismaClient) => {
 
     try {
       const product = await prisma.product.update({
-        where: { id },
+        where: { id: id as string },
         data: {
           ...data,
           price: data.price ? Number(data.price) : undefined,
@@ -111,7 +111,7 @@ export const inventoryRouter = (prisma: PrismaClient) => {
       const { id } = req.params;
       try {
           await prisma.product.delete({
-              where: { id }
+              where: { id: id as string }
           });
           res.json({ success: true });
       } catch (error) {
@@ -138,14 +138,14 @@ export const inventoryRouter = (prisma: PrismaClient) => {
       const [movement, updatedProduct] = await prisma.$transaction([
         prisma.stockMovement.create({
           data: {
-            productId: id,
+            productId: id as string,
             quantity: Number(quantity),
             type,
             reason,
           },
         }),
         prisma.product.update({
-          where: { id },
+          where: { id: id as string },
           data: {
             stockLevel: {
               increment: Number(quantity),
@@ -166,7 +166,7 @@ export const inventoryRouter = (prisma: PrismaClient) => {
         const { id } = req.params;
         try {
             const movements = await prisma.stockMovement.findMany({
-                where: { productId: id },
+                where: { productId: id as string },
                 orderBy: { createdAt: "desc" },
                 take: 50 // Limit to last 50 movements
             });

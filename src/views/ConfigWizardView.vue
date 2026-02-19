@@ -416,6 +416,7 @@
   import { useAuthStore } from "@/stores/auth";
   import { useGestorConfigStore } from "@/stores/gestorConfig";
   import { syncWizardTeamMembers } from "@/composables/useTeamManager";
+  import { useToast } from "@/composables/useToast";
   import ProfessionPicker from "@/components/wizard/ProfessionPicker.vue";
   import { DEFAULT_CONTACT_DATA } from "@/interfaces";
   import type { WizardTeamMember } from "@/interfaces";
@@ -425,6 +426,7 @@
   const authStore = useAuthStore();
   const gestorConfigStore = useGestorConfigStore();
   const { user } = storeToRefs(authStore);
+  const { addToast } = useToast();
 
   const currentStep = ref(1);
   const saving = ref(false);
@@ -556,7 +558,11 @@
     try {
       const payload = buildConfigPayload(false);
       await gestorConfigStore.setConfig(user.value.id, payload, user.value.businessId ?? null);
-      syncWizardTeamMembers(payload.teamMembers).catch(() => {});
+      try {
+        await syncWizardTeamMembers(payload.teamMembers);
+      } catch {
+        addToast("Configuración guardada, pero no se pudieron sincronizar los miembros del equipo. Revísalos en la vista Equipo.", "error");
+      }
     } catch {
       saveError.value = "No se pudo guardar. Inténtalo de nuevo.";
     } finally {
@@ -571,7 +577,11 @@
     try {
       const payload = buildConfigPayload(true);
       await gestorConfigStore.setConfig(user.value.id, payload, user.value.businessId ?? null);
-      syncWizardTeamMembers(payload.teamMembers).catch(() => {});
+      try {
+        await syncWizardTeamMembers(payload.teamMembers);
+      } catch {
+        addToast("Configuración guardada, pero no se pudieron sincronizar los miembros del equipo. Revísalos en la vista Equipo.", "error");
+      }
       router.push({ name: "config" });
     } catch {
       saveError.value = "No se pudo guardar. Inténtalo de nuevo.";

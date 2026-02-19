@@ -19,7 +19,10 @@ export const requireAuth = (prisma: PrismaClient) => {
         name: true,
         email: true,
         phone: true,
-        businessId: true,
+        workspaces: {
+          select: { businessId: true },
+          take: 1
+        }
       },
     });
     if (!user) {
@@ -33,7 +36,7 @@ export const requireAuth = (prisma: PrismaClient) => {
       name: user.name,
       email: user.email,
       phone: user.phone,
-      businessId: user.businessId,
+      businessId: user.workspaces[0]?.businessId ?? null,
     };
     next();
   };

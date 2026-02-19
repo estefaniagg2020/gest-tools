@@ -1,16 +1,61 @@
 import { Router, Request, Response } from "express";
 import type { PrismaClient } from "@prisma/client";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, requireGestor } from "../middleware/auth.js";
 import {
   addToWaitlist,
+  addClientToWaitlist,
   getMyWaitlist,
   getMyNotifications,
   markNotificationRead,
+  getWaitlistByBusiness,
 } from "../services/waitlist.js";
 
 export const waitlistRouter = (prisma: PrismaClient) => {
   const router = Router();
   const auth = requireAuth(prisma);
+
+  router.get("/by-business", auth, requireGestor, async (req: Request, res: Response) => {
+    if (!req.user?.businessId) {
+      res.status(403).json({ error: "Negocio no asociado" });
+      return;
+    }
+    const entries = await getWaitlistByBusiness(prisma, req.user.businessId);
+    res.json(entries);
+  });
+
+  router.post("/for-client", auth, requireGestor, async (req: Request, res: Response) => {
+    if (!req.user?.businessId) {
+      res.status(403).json({ error: "Negocio no asociado" });
+      return;
+    }
+    const { clientId, serviceId, preferredStart, preferredEnd } = req.body as {
+      clientId?: string;
+      serviceId?: string;
+      preferredStart?: string;
+      preferredEnd?: string;
+    };
+    if (!clientId || !serviceId || !preferredStart || !preferredEnd) {
+      res.status(400).json({
+        error: "clientId, serviceId, preferredStart y preferredEnd requeridos",
+      });
+      return;
+    }
+    try {
+      const entry = await addClientToWaitlist(
+        prisma,
+        req.user.businessId,
+        clientId,
+        serviceId,
+        preferredStart,
+        preferredEnd,
+      );
+      res.status(201).json(entry);
+    } catch (e) {
+      res
+        .status(400)
+        .json({ error: e instanceof Error ? e.message : "Error al añadir a la lista" });
+    }
+  });
 
   router.post("/", auth, async (req: Request, res: Response) => {
     if (!req.user) {

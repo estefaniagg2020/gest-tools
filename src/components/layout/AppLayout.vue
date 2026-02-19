@@ -183,7 +183,7 @@
         await gestorConfigStore.initialize(u.id, u.businessId ?? null);
         layoutStore.initialize(u.id);
         useModuleIconsStore().initialize(u.id);
-        agendaColorsStore.initialize();
+        await agendaColorsStore.initialize(u.businessId ?? null);
         useBillingConfig().load();
       }
     },

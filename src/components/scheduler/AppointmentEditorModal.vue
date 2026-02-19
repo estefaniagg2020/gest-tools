@@ -25,7 +25,7 @@
       </div>
 
       <div>
-        <label class="block text-sm font-bold text-gray-700 mb-1">Cliente (opcional)</label>
+        <label class="block text-sm font-bold text-gray-700 mb-1">Cliente</label>
         <ClientNameInput
           v-model:client-id="form.clientId"
           v-model:client-name="form.clientName"
@@ -37,7 +37,7 @@
       </div>
 
       <div>
-        <label class="block text-sm font-bold text-gray-700 mb-1">Servicio (opcional)</label>
+        <label class="block text-sm font-bold text-gray-700 mb-1">Servicio</label>
         <SearchableSelect
           v-model="form.serviceId"
           :options="serviceOptions"
@@ -48,7 +48,7 @@
       </div>
 
       <div>
-        <label class="block text-sm font-bold text-gray-700 mb-1">Empleado (opcional)</label>
+        <label class="block text-sm font-bold text-gray-700 mb-1">Empleado</label>
         <SearchableSelect
           v-model="form.memberId"
           :options="memberOptions"
@@ -59,7 +59,7 @@
       </div>
 
       <div>
-        <label class="block text-sm font-bold text-gray-700 mb-1">Fecha (opcional)</label>
+        <label class="block text-sm font-bold text-gray-700 mb-1">Fecha</label>
         <input
           v-model="form.dateStr"
           type="date"
@@ -70,7 +70,7 @@
 
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-bold text-gray-700 mb-1">Inicio (opcional)</label>
+          <label class="block text-sm font-bold text-gray-700 mb-1">Inicio</label>
           <input
             v-model="form.startTime"
             type="time"
@@ -79,7 +79,7 @@
           />
         </div>
         <div>
-          <label class="block text-sm font-bold text-gray-700 mb-1">Fin (opcional)</label>
+          <label class="block text-sm font-bold text-gray-700 mb-1">Fin</label>
           <input
             v-model="form.endTime"
             type="time"
@@ -116,7 +116,7 @@
       </div>
 
       <div>
-        <label class="block text-sm font-bold text-gray-700 mb-1">Notas (opcional)</label>
+        <label class="block text-sm font-bold text-gray-700 mb-1">Notas</label>
         <textarea
           v-model="form.notes"
           rows="2"
@@ -224,7 +224,7 @@
       >
         <p class="text-sm font-semibold text-red-700">Cancelar cita</p>
         <div>
-          <label class="block text-xs font-bold text-gray-600 mb-1">Motivo (opcional)</label>
+          <label class="block text-xs font-bold text-gray-600 mb-1">Motivo</label>
           <textarea
             v-model="cancelReason"
             rows="2"

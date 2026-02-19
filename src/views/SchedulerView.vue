@@ -37,7 +37,7 @@
 
           <button
           type="button"
-          class="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg border border-app-border bg-app-surface hover:bg-app-bg text-app-text text-sm font-medium transition-colors cursor-pointer shrink-0 shadow-sm"
+          class="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-app-border bg-app-surface hover:bg-app-bg text-app-text text-sm font-medium transition-colors cursor-pointer shrink-0 shadow-sm"
           :title="isRightPanelVisible ? $t('scheduler.hidePanel') : $t('scheduler.showPanel')"
           @click="isRightPanelVisible = !isRightPanelVisible"
         >
@@ -137,7 +137,7 @@
 
     <div
       v-show="isRightPanelVisible"
-      class="w-full lg:w-72 hidden lg:flex flex-col h-full gap-4 shrink-0 min-w-0"
+      class="w-full md:w-72 flex flex-col h-full gap-4 shrink-0 min-w-0 overflow-y-auto"
     >
       <div class="app-card p-4">
         <label class="text-sm font-medium text-app-text mb-2 block">{{ $t('scheduler.agendaLabel') }}</label>
@@ -158,37 +158,23 @@
       <WaitlistPanel
         :is-dragging-confirmed="isDraggingConfirmedAppointment"
         :waitlist-entries="waitlistEntries"
+        :clients="clientStore.clients"
+        :services="serviceStore.services"
         @cancel-appointment="cancelAppointmentById"
+        @added="loadWaitlistByBusiness"
       />
 
-      <div class="app-card p-4 bg-brand-soft/30 border-brand-primary/10">
-        <h4 class="font-semibold text-brand-primary text-sm mb-2">{{ $t('scheduler.quickActions') }}</h4>
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-if="blocks.length === 0"
-            @click="regenerate"
-            class="text-sm text-brand-primary hover:underline flex items-center gap-1 cursor-pointer"
-          >
-            {{ $t('scheduler.generateTestData') }}
-          </button>
-        </div>
-        <div class="text-xs text-app-text/80 mt-2">
-          {{ $t('scheduler.quickAddHint') }}
-        </div>
-        <SlotFinderCard
-          v-if="filteredMembers.length > 0"
-          class="mt-4"
-          :members="filteredMembers"
-          :blocks="activeBlocks"
-          :appointments="activeAppointments"
-          :min-hour="slotFinderMinHour"
-          :max-hour="slotFinderMaxHour"
-          :slot-duration-minutes="schedulerSettings.slotDurationMinutes.value"
-          :initial-date="currentDate"
-          :business-id="authStore.user?.businessId ?? null"
-          @slot-select="onSlotSelect"
-        />
-      </div>
+      <SlotFinderCard
+        :members="filteredMembers"
+        :blocks="activeBlocks"
+        :appointments="activeAppointments"
+        :min-hour="slotFinderMinHour"
+        :max-hour="slotFinderMaxHour"
+        :slot-duration-minutes="schedulerSettings.slotDurationMinutes.value"
+        :initial-date="currentDate"
+        :business-id="authStore.user?.businessId ?? null"
+        @slot-select="onSlotSelect"
+      />
     </div>
 
     <BlockEditorModal
@@ -235,7 +221,6 @@
   import { useScheduleActions } from "@/composables/useScheduleActions";
   import { AUTH_CONFIG } from "@/data/authConfig";
   import { DEFAULT_THEME_ID } from "@/data/themes";
-  import { generateAllSchedules } from "@/utils/scheduleGenerator";
   import { slotOverlapsExisting } from "@/composables/useScheduleOverlap";
   import CalendarHeader from "@/components/scheduler/CalendarHeader.vue";
   import WeekView from "@/components/scheduler/WeekView.vue";
@@ -257,6 +242,7 @@
   import { useScheduleDrag } from "@/composables/useScheduleDrag";
   import { getIntlLocale } from "@/utils/intlLocale";
   import { useConfirmDialog } from "@/composables/useConfirmDialog";
+  import { bookingApi, type WaitlistEntryByBusiness } from "@/infrastructure/bookingApi";
 
   const { t } = useI18n();
   const { show: showConfirm } = useConfirmDialog();
@@ -293,6 +279,16 @@
   const appointmentModalKey = ref(0);
   const editingAppointment = ref<import("@/interfaces").Appointment | null>(null);
   const initialAppointmentMemberId = ref<string | undefined>(undefined);
+  const waitlistByBusiness = ref<WaitlistEntryByBusiness[]>([]);
+
+  const loadWaitlistByBusiness = async () => {
+    if (authStore.user?.role !== "gestor" || !authStore.user?.businessId) return;
+    try {
+      waitlistByBusiness.value = await bookingApi.getWaitlistByBusiness();
+    } catch {
+      waitlistByBusiness.value = [];
+    }
+  };
 
   const handleClickOutsideAddMenu = (e: MouseEvent) => {
     if (addButtonRef.value && !addButtonRef.value.contains(e.target as Node)) {
@@ -301,13 +297,13 @@
   };
 
   const handleResize = () => {
-    if (window.innerWidth < 1024) isRightPanelVisible.value = false;
+    if (window.innerWidth < 768) isRightPanelVisible.value = false;
   };
 
   onMounted(() => {
     document.addEventListener("click", handleClickOutsideAddMenu);
     window.addEventListener("resize", handleResize);
-    if (window.innerWidth < 1024) isRightPanelVisible.value = false;
+    if (window.innerWidth < 768) isRightPanelVisible.value = false;
     void teamStore.initialize();
     scheduleStore.initialize();
     clientStore.initialize();
@@ -317,15 +313,13 @@
     agendaListStore.initialize();
     rejectedRequestsStore.initialize();
     view.value = schedulerSettingsStore.defaultView;
+    void loadWaitlistByBusiness();
 
     const agendaCount = agendaListStore.agendas.length;
     if (agendaCount > 0 && selectedAgendaIndex.value >= agendaCount) {
       selectedAgendaIndex.value = agendaCount - 1;
     }
 
-    if (scheduleStore.blocks.length === 0 && teamStore.members.length > 0) {
-      generateAllSchedules(teamStore.members, currentDate.value);
-    }
   });
 
   onUnmounted(() => {
@@ -333,7 +327,7 @@
     window.removeEventListener("resize", handleResize);
   });
 
-  const PIXELS_PER_HOUR_FIXED = 45;
+  const PIXELS_PER_HOUR_FIXED = 70;
   const gridSettings = computed(() => ({
     startHour: schedulerSettings.startHour.value,
     endHour: schedulerSettings.endHour.value,
@@ -540,16 +534,6 @@
     closeModal();
   };
 
-  const regenerate = async () => {
-    const ok = await showConfirm({
-      title: "Regenerar datos",
-      message: t("scheduler.regenerateConfirm"),
-      confirmLabel: "Regenerar",
-      variant: "danger",
-    });
-    if (ok) generateAllSchedules(teamStore.members, currentDate.value);
-  };
-
   const cancelAppointment = () => {
     closeAppointmentModal();
   };
@@ -636,7 +620,21 @@
   });
 
   const waitlistEntries = computed(() => {
-    return [];
+    const list = waitlistByBusiness.value;
+    const byService = new Map<string, { serviceName: string; count: number }>();
+    for (const e of list) {
+      const cur = byService.get(e.serviceId);
+      if (cur) {
+        cur.count += 1;
+      } else {
+        byService.set(e.serviceId, { serviceName: e.service.name, count: 1 });
+      }
+    }
+    return Array.from(byService.entries()).map(([id, { serviceName, count }]) => ({
+      id,
+      serviceName,
+      count,
+    }));
   });
 
   const cancelAppointmentById = (appointmentId: string) => {

@@ -1,91 +1,60 @@
 import { defineStore } from "pinia";
-import { ref, computed } from "vue";
+import { computed } from "vue";
 import type { LayoutConfig, SidebarPosition, CalendarAppearance } from "@/interfaces";
-import { DEFAULT_LAYOUT_CONFIG } from "@/interfaces";
-import * as layoutStorage from "@/infrastructure/layoutStorage";
+import { useGestorConfigStore } from "@/stores/gestorConfig";
 import { useAuthStore } from "@/stores/auth";
-import { storeToRefs } from "pinia";
 
 export const useLayoutStore = defineStore("layout", () => {
+  const configStore = useGestorConfigStore();
   const authStore = useAuthStore();
-  const { user } = storeToRefs(authStore);
 
-  const sidebarPosition = ref<SidebarPosition>(DEFAULT_LAYOUT_CONFIG.sidebarPosition);
-  const showNavbar = ref(DEFAULT_LAYOUT_CONFIG.showNavbar);
-  const calendarAppearance = ref<CalendarAppearance>(DEFAULT_LAYOUT_CONFIG.calendarAppearance);
-  const sidebarModuleIds = ref<string[]>([...DEFAULT_LAYOUT_CONFIG.sidebarModuleIds]);
-  const dashboardModuleIds = ref<string[]>([...DEFAULT_LAYOUT_CONFIG.dashboardModuleIds]);
-
-  const showSidebar = computed(
-    () => sidebarPosition.value !== "none"
+  // Computed views over gestorConfigStore (source of truth in DB)
+  const sidebarPosition = computed<SidebarPosition>(
+    () => configStore.sidebarPosition as SidebarPosition,
   );
+  const showNavbar = computed(() => configStore.showNavbar);
+  const calendarAppearance = computed<CalendarAppearance>(
+    () => configStore.calendarAppearance as CalendarAppearance,
+  );
+  const sidebarModuleIds = computed(() => configStore.sidebarModuleIds);
+  const dashboardModuleIds = computed(() => configStore.dashboardModuleIds);
 
-  const initialize = (userId: string) => {
-    const stored = layoutStorage.loadLayoutConfig(userId);
-    
-    if (stored) {
-      sidebarPosition.value = stored.sidebarPosition;
-      showNavbar.value = stored.showNavbar;
-      calendarAppearance.value = stored.calendarAppearance;
-      sidebarModuleIds.value = [...stored.sidebarModuleIds];
-      dashboardModuleIds.value =
-        stored.dashboardModuleIds.length > 0
-          ? [...stored.dashboardModuleIds]
-          : [...DEFAULT_LAYOUT_CONFIG.dashboardModuleIds];
-    } else {
-      sidebarPosition.value = DEFAULT_LAYOUT_CONFIG.sidebarPosition;
-      showNavbar.value = DEFAULT_LAYOUT_CONFIG.showNavbar;
-      calendarAppearance.value = DEFAULT_LAYOUT_CONFIG.calendarAppearance;
-      sidebarModuleIds.value = [...DEFAULT_LAYOUT_CONFIG.sidebarModuleIds];
-      dashboardModuleIds.value = [...DEFAULT_LAYOUT_CONFIG.dashboardModuleIds];
-    }
+  const showSidebar = computed(() => sidebarPosition.value !== "none");
+
+  const persist = async (updates: Partial<LayoutConfig>) => {
+    const currentConfig = configStore.getConfig();
+    await configStore.setConfig(
+      authStore.user?.id || authStore.currentUserId || "default",
+      { ...currentConfig, ...updates },
+      authStore.user?.businessId,
+    );
   };
 
-  const setLayout = (config: LayoutConfig) => {
-    sidebarPosition.value = config.sidebarPosition;
-    showNavbar.value = config.showNavbar;
-    calendarAppearance.value = config.calendarAppearance;
-    sidebarModuleIds.value = [...config.sidebarModuleIds];
-    dashboardModuleIds.value = [...config.dashboardModuleIds];
-    const uid = user.value?.id;
-    if (uid) layoutStorage.saveLayoutConfig(uid, config);
+  // initialize is a no-op — gestorConfigStore.initialize() loads everything from API
+  const initialize = (_userId: string) => {};
+
+  const setLayout = async (config: LayoutConfig) => {
+    await persist(config);
   };
 
-  const setSidebarPosition = (position: SidebarPosition) => {
-    sidebarPosition.value = position;
-    persist();
+  const setSidebarPosition = async (position: SidebarPosition) => {
+    await persist({ sidebarPosition: position });
   };
 
-  const setShowNavbar = (value: boolean) => {
-    showNavbar.value = value;
-    persist();
+  const setShowNavbar = async (value: boolean) => {
+    await persist({ showNavbar: value });
   };
 
-  const setCalendarAppearance = (appearance: CalendarAppearance) => {
-    calendarAppearance.value = appearance;
-    persist();
+  const setCalendarAppearance = async (appearance: CalendarAppearance) => {
+    await persist({ calendarAppearance: appearance });
   };
 
-  const setSidebarModuleIds = (ids: string[]) => {
-    sidebarModuleIds.value = [...ids];
-    persist();
+  const setSidebarModuleIds = async (ids: string[]) => {
+    await persist({ sidebarModuleIds: ids });
   };
 
-  const setDashboardModuleIds = (ids: string[]) => {
-    dashboardModuleIds.value = [...ids];
-    persist();
-  };
-
-  const persist = () => {
-    const uid = user.value?.id;
-    if (!uid) return;
-    layoutStorage.saveLayoutConfig(uid, {
-      sidebarPosition: sidebarPosition.value,
-      showNavbar: showNavbar.value,
-      calendarAppearance: calendarAppearance.value,
-      sidebarModuleIds: sidebarModuleIds.value,
-      dashboardModuleIds: dashboardModuleIds.value,
-    });
+  const setDashboardModuleIds = async (ids: string[]) => {
+    await persist({ dashboardModuleIds: ids });
   };
 
   const getConfig = (): LayoutConfig => ({

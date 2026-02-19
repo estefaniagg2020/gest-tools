@@ -1,7 +1,4 @@
 -- CreateEnum
-CREATE TYPE "EmployeeRole" AS ENUM ('manager', 'therapist', 'admin');
-
--- CreateEnum
 CREATE TYPE "SidebarPosition" AS ENUM ('left', 'right', 'none');
 
 -- CreateEnum
@@ -11,10 +8,40 @@ CREATE TYPE "CalendarAppearance" AS ENUM ('default', 'compact', 'spacious');
 CREATE TYPE "UserRole" AS ENUM ('gestor', 'client');
 
 -- CreateEnum
+CREATE TYPE "AppointmentStatus" AS ENUM ('pending', 'confirmed', 'cancelled', 'completed', 'no_show');
+
+-- CreateEnum
+CREATE TYPE "PaymentStatus" AS ENUM ('pending', 'paid', 'refunded', 'partial');
+
+-- CreateEnum
+CREATE TYPE "AppointmentOrigin" AS ENUM ('manual', 'online', 'widget');
+
+-- CreateEnum
+CREATE TYPE "BlockStatus" AS ENUM ('active', 'cancelled');
+
+-- CreateEnum
+CREATE TYPE "BonoType" AS ENUM ('session_pack', 'time_pack', 'unlimited');
+
+-- CreateEnum
+CREATE TYPE "WorkspaceRole" AS ENUM ('admin', 'member');
+
+-- CreateEnum
+CREATE TYPE "SaleStatus" AS ENUM ('open', 'paid', 'refunded', 'voided');
+
+-- CreateEnum
+CREATE TYPE "SaleItemType" AS ENUM ('service', 'product');
+
+-- CreateEnum
+CREATE TYPE "PaymentMethod" AS ENUM ('cash', 'card', 'transfer', 'bono', 'mixed');
+
+-- CreateEnum
 CREATE TYPE "StockMovementType" AS ENUM ('ADJUSTMENT', 'SALE', 'PURCHASE', 'USAGE', 'RETURN');
 
 -- CreateEnum
 CREATE TYPE "ClientNoteType" AS ENUM ('GENERAL', 'FORMULA', 'ALLERGY', 'TREATMENT', 'VETERINARY_HISTORY');
+
+-- CreateEnum
+CREATE TYPE "EmployeeRole" AS ENUM ('manager', 'member', 'admin');
 
 -- CreateTable
 CREATE TABLE "Company" (
@@ -44,7 +71,6 @@ CREATE TABLE "GestorConfig" (
     "businessId" TEXT NOT NULL,
     "logoUrl" TEXT,
     "numberOfPeople" INTEGER NOT NULL DEFAULT 0,
-    "businessType" TEXT,
     "email" TEXT,
     "phone" TEXT,
     "address" TEXT,
@@ -86,44 +112,34 @@ CREATE TABLE "GestorConfig" (
     "locale" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "bookingEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "depositPercent" INTEGER NOT NULL DEFAULT 0,
+    "depositRequired" BOOLEAN NOT NULL DEFAULT false,
+    "description" TEXT,
+    "publicPhoneNumber" TEXT,
+    "slug" TEXT,
+    "socialLinks" JSONB,
+    "professionId" TEXT,
 
     CONSTRAINT "GestorConfig_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Employee" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "photoUrl" TEXT,
-    "linkedInUrl" TEXT,
-    "phoneNumber" TEXT,
-    "email" TEXT,
-    "weeklyHours" DOUBLE PRECISION,
-    "color" TEXT,
-    "role" "EmployeeRole" NOT NULL DEFAULT 'therapist',
-    "businessId" TEXT NOT NULL,
-    "defaultWorkStartHour" INTEGER,
-    "defaultWorkEndHour" INTEGER,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Employee_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Service" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "category" TEXT NOT NULL,
     "duration" INTEGER NOT NULL,
     "price" DOUBLE PRECISION NOT NULL,
     "description" TEXT,
     "requiresCabin" BOOLEAN NOT NULL DEFAULT false,
     "requiresTherapist" BOOLEAN NOT NULL DEFAULT true,
     "businessId" TEXT NOT NULL,
-    "categoryId" TEXT,
+    "categoryId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "depositAmount" DOUBLE PRECISION,
+    "onlineBookingEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "sourceServiceId" TEXT,
 
     CONSTRAINT "Service_pkey" PRIMARY KEY ("id")
 );
@@ -138,7 +154,6 @@ CREATE TABLE "User" (
     "name" TEXT,
     "email" TEXT,
     "phone" TEXT,
-    "businessId" TEXT,
     "sessionToken" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -152,14 +167,11 @@ CREATE TABLE "Appointment" (
     "businessId" TEXT NOT NULL,
     "serviceId" TEXT,
     "userId" TEXT,
-    "employeeId" TEXT,
     "clientId" TEXT,
     "petId" TEXT,
     "clientName" TEXT,
     "start" TIMESTAMP(3) NOT NULL,
     "end" TIMESTAMP(3) NOT NULL,
-    "status" TEXT NOT NULL DEFAULT 'pending',
-    "paymentStatus" TEXT NOT NULL DEFAULT 'pending',
     "notes" TEXT,
     "cancellationReason" TEXT,
     "isAtHome" BOOLEAN NOT NULL DEFAULT false,
@@ -168,6 +180,10 @@ CREATE TABLE "Appointment" (
     "discountPercent" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "status" "AppointmentStatus" NOT NULL DEFAULT 'pending',
+    "paymentStatus" "PaymentStatus" NOT NULL DEFAULT 'pending',
+    "origin" "AppointmentOrigin" NOT NULL DEFAULT 'manual',
+    "workspaceMemberId" TEXT,
 
     CONSTRAINT "Appointment_pkey" PRIMARY KEY ("id")
 );
@@ -182,10 +198,10 @@ CREATE TABLE "ScheduleBlock" (
     "type" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT,
-    "status" TEXT NOT NULL DEFAULT 'active',
     "serviceId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "status" "BlockStatus" NOT NULL DEFAULT 'active',
 
     CONSTRAINT "ScheduleBlock_pkey" PRIMARY KEY ("id")
 );
@@ -212,6 +228,7 @@ CREATE TABLE "ServiceCategory" (
     "icon" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "sourceCategoryId" TEXT,
 
     CONSTRAINT "ServiceCategory_pkey" PRIMARY KEY ("id")
 );
@@ -221,13 +238,13 @@ CREATE TABLE "BonoTemplate" (
     "id" TEXT NOT NULL,
     "businessId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "type" TEXT NOT NULL,
     "sessions" INTEGER,
     "price" DOUBLE PRECISION,
     "validDays" INTEGER,
     "serviceId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "type" "BonoType" NOT NULL,
 
     CONSTRAINT "BonoTemplate_pkey" PRIMARY KEY ("id")
 );
@@ -369,11 +386,155 @@ CREATE TABLE "ClientNote" (
     CONSTRAINT "ClientNote_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "Profession" (
+    "label" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
+    "id" TEXT NOT NULL,
+    "sector" TEXT,
+
+    CONSTRAINT "Profession_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ProfessionSynonym" (
+    "id" TEXT NOT NULL,
+    "synonym" TEXT NOT NULL,
+    "professionId" TEXT NOT NULL,
+
+    CONSTRAINT "ProfessionSynonym_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ProfessionCategory" (
+    "professionId" TEXT NOT NULL,
+    "label" TEXT NOT NULL,
+    "icon" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
+    "id" TEXT NOT NULL,
+
+    CONSTRAINT "ProfessionCategory_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ProfessionService" (
+    "categoryId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "duration" INTEGER NOT NULL,
+    "price" DOUBLE PRECISION NOT NULL,
+    "description" TEXT,
+    "code" TEXT NOT NULL,
+    "id" TEXT NOT NULL,
+
+    CONSTRAINT "ProfessionService_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "WorkspaceMember" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT,
+    "businessId" TEXT NOT NULL,
+    "role" "WorkspaceRole" NOT NULL DEFAULT 'member',
+    "position" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "name" TEXT NOT NULL,
+    "photoUrl" TEXT,
+    "linkedInUrl" TEXT,
+    "phone" TEXT,
+    "email" TEXT,
+    "weeklyHours" DOUBLE PRECISION,
+    "color" TEXT,
+    "defaultWorkStartHour" INTEGER,
+    "defaultWorkEndHour" INTEGER,
+
+    CONSTRAINT "WorkspaceMember_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Sale" (
+    "id" TEXT NOT NULL,
+    "businessId" TEXT NOT NULL,
+    "appointmentId" TEXT,
+    "clientId" TEXT,
+    "subtotal" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "taxAmount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "discountAmount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "total" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "paymentMethod" "PaymentMethod" NOT NULL DEFAULT 'cash',
+    "status" "SaleStatus" NOT NULL DEFAULT 'open',
+    "notes" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Sale_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "SaleItem" (
+    "id" TEXT NOT NULL,
+    "saleId" TEXT NOT NULL,
+    "type" "SaleItemType" NOT NULL,
+    "serviceId" TEXT,
+    "productId" TEXT,
+    "name" TEXT NOT NULL,
+    "unitPrice" DOUBLE PRECISION NOT NULL,
+    "quantity" INTEGER NOT NULL DEFAULT 1,
+    "discount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "lineTotal" DOUBLE PRECISION NOT NULL,
+    "clientBonoId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "SaleItem_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "GestorConfig_businessId_key" ON "GestorConfig"("businessId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "GestorConfig_slug_key" ON "GestorConfig"("slug");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Profession_code_key" ON "Profession"("code");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ProfessionSynonym_synonym_key" ON "ProfessionSynonym"("synonym");
+
+-- CreateIndex
+CREATE INDEX "ProfessionSynonym_professionId_idx" ON "ProfessionSynonym"("professionId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ProfessionCategory_code_key" ON "ProfessionCategory"("code");
+
+-- CreateIndex
+CREATE INDEX "ProfessionCategory_professionId_idx" ON "ProfessionCategory"("professionId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ProfessionService_code_key" ON "ProfessionService"("code");
+
+-- CreateIndex
+CREATE INDEX "ProfessionService_categoryId_idx" ON "ProfessionService"("categoryId");
+
+-- CreateIndex
+CREATE INDEX "WorkspaceMember_businessId_idx" ON "WorkspaceMember"("businessId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "WorkspaceMember_userId_businessId_key" ON "WorkspaceMember"("userId", "businessId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Sale_appointmentId_key" ON "Sale"("appointmentId");
+
+-- CreateIndex
+CREATE INDEX "Sale_businessId_idx" ON "Sale"("businessId");
+
+-- CreateIndex
+CREATE INDEX "Sale_clientId_idx" ON "Sale"("clientId");
+
+-- CreateIndex
+CREATE INDEX "SaleItem_saleId_idx" ON "SaleItem"("saleId");
 
 -- AddForeignKey
 ALTER TABLE "Business" ADD CONSTRAINT "Business_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -382,19 +543,25 @@ ALTER TABLE "Business" ADD CONSTRAINT "Business_companyId_fkey" FOREIGN KEY ("co
 ALTER TABLE "GestorConfig" ADD CONSTRAINT "GestorConfig_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Employee" ADD CONSTRAINT "Employee_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "GestorConfig" ADD CONSTRAINT "GestorConfig_professionId_fkey" FOREIGN KEY ("professionId") REFERENCES "Profession"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Service" ADD CONSTRAINT "Service_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Service" ADD CONSTRAINT "Service_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "ServiceCategory"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Service" ADD CONSTRAINT "Service_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "ServiceCategory"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "User" ADD CONSTRAINT "User_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Service" ADD CONSTRAINT "Service_sourceServiceId_fkey" FOREIGN KEY ("sourceServiceId") REFERENCES "ProfessionService"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_clientId_fkey" FOREIGN KEY ("clientId") REFERENCES "Client"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_petId_fkey" FOREIGN KEY ("petId") REFERENCES "Pet"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_serviceId_fkey" FOREIGN KEY ("serviceId") REFERENCES "Service"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -403,10 +570,7 @@ ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_serviceId_fkey" FOREIGN KE
 ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_clientId_fkey" FOREIGN KEY ("clientId") REFERENCES "Client"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_petId_fkey" FOREIGN KEY ("petId") REFERENCES "Pet"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_workspaceMemberId_fkey" FOREIGN KEY ("workspaceMemberId") REFERENCES "WorkspaceMember"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ScheduleBlock" ADD CONSTRAINT "ScheduleBlock_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -418,6 +582,9 @@ ALTER TABLE "Client" ADD CONSTRAINT "Client_businessId_fkey" FOREIGN KEY ("busin
 ALTER TABLE "ServiceCategory" ADD CONSTRAINT "ServiceCategory_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "ServiceCategory" ADD CONSTRAINT "ServiceCategory_sourceCategoryId_fkey" FOREIGN KEY ("sourceCategoryId") REFERENCES "ProfessionCategory"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "BonoTemplate" ADD CONSTRAINT "BonoTemplate_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -427,16 +594,16 @@ ALTER TABLE "ClientBono" ADD CONSTRAINT "ClientBono_clientId_fkey" FOREIGN KEY (
 ALTER TABLE "ClientBono" ADD CONSTRAINT "ClientBono_templateId_fkey" FOREIGN KEY ("templateId") REFERENCES "BonoTemplate"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "SlotWaitlistEntry" ADD CONSTRAINT "SlotWaitlistEntry_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "SlotWaitlistEntry" ADD CONSTRAINT "SlotWaitlistEntry_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "SlotWaitlistEntry" ADD CONSTRAINT "SlotWaitlistEntry_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "SlotWaitlistEntry" ADD CONSTRAINT "SlotWaitlistEntry_petId_fkey" FOREIGN KEY ("petId") REFERENCES "Pet"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "SlotWaitlistEntry" ADD CONSTRAINT "SlotWaitlistEntry_serviceId_fkey" FOREIGN KEY ("serviceId") REFERENCES "Service"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "SlotWaitlistEntry" ADD CONSTRAINT "SlotWaitlistEntry_petId_fkey" FOREIGN KEY ("petId") REFERENCES "Pet"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "SlotWaitlistEntry" ADD CONSTRAINT "SlotWaitlistEntry_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "WaitlistNotification" ADD CONSTRAINT "WaitlistNotification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -457,13 +624,40 @@ ALTER TABLE "Supplier" ADD CONSTRAINT "Supplier_businessId_fkey" FOREIGN KEY ("b
 ALTER TABLE "StockMovement" ADD CONSTRAINT "StockMovement_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "ClientPhoto" ADD CONSTRAINT "ClientPhoto_petId_fkey" FOREIGN KEY ("petId") REFERENCES "Pet"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "ClientPhoto" ADD CONSTRAINT "ClientPhoto_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ClientPhoto" ADD CONSTRAINT "ClientPhoto_petId_fkey" FOREIGN KEY ("petId") REFERENCES "Pet"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "ClientNote" ADD CONSTRAINT "ClientNote_petId_fkey" FOREIGN KEY ("petId") REFERENCES "Pet"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ClientNote" ADD CONSTRAINT "ClientNote_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ClientNote" ADD CONSTRAINT "ClientNote_petId_fkey" FOREIGN KEY ("petId") REFERENCES "Pet"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "ProfessionSynonym" ADD CONSTRAINT "ProfessionSynonym_professionId_fkey" FOREIGN KEY ("professionId") REFERENCES "Profession"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProfessionCategory" ADD CONSTRAINT "ProfessionCategory_professionId_fkey" FOREIGN KEY ("professionId") REFERENCES "Profession"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProfessionService" ADD CONSTRAINT "ProfessionService_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "ProfessionCategory"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "WorkspaceMember" ADD CONSTRAINT "WorkspaceMember_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "WorkspaceMember" ADD CONSTRAINT "WorkspaceMember_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Sale" ADD CONSTRAINT "Sale_appointmentId_fkey" FOREIGN KEY ("appointmentId") REFERENCES "Appointment"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Sale" ADD CONSTRAINT "Sale_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Sale" ADD CONSTRAINT "Sale_clientId_fkey" FOREIGN KEY ("clientId") REFERENCES "Client"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SaleItem" ADD CONSTRAINT "SaleItem_saleId_fkey" FOREIGN KEY ("saleId") REFERENCES "Sale"("id") ON DELETE CASCADE ON UPDATE CASCADE;
