@@ -27,6 +27,74 @@
         </div>
 
         <div>
+          <label
+            for="settings-taxId"
+            class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2"
+          >
+            {{ $t('settings.taxId') }}
+          </label>
+          <input
+            id="settings-taxId"
+            v-model="form.taxId"
+            type="text"
+            :placeholder="$t('settings.taxIdPlaceholder')"
+            class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 placeholder:text-gray-400"
+          />
+        </div>
+
+        <div>
+          <label
+            for="settings-address"
+            class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2"
+          >
+            {{ $t('settings.address') }}
+          </label>
+          <input
+            id="settings-address"
+            v-model="form.businessAddress"
+            type="text"
+            :placeholder="$t('settings.address')"
+            class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 placeholder:text-gray-400"
+          />
+        </div>
+
+        <div>
+          <label
+            for="settings-population"
+            class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2"
+          >
+            {{ $t('settings.population') }}
+          </label>
+          <input
+            id="settings-population"
+            v-model="form.businessPopulation"
+            type="text"
+            :placeholder="$t('settings.population')"
+            class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 placeholder:text-gray-400"
+          />
+        </div>
+
+        <div class="flex items-start gap-3">
+          <input
+            id="settings-canarias"
+            v-model="form.isCanarias"
+            type="checkbox"
+            class="mt-1 h-4 w-4 rounded border-gray-300 text-brand-accent focus:ring-brand-accent/20"
+          />
+          <div class="min-w-0">
+            <label
+              for="settings-canarias"
+              class="block text-sm font-medium text-gray-700 cursor-pointer"
+            >
+              {{ $t('settings.isCanarias') }}
+            </label>
+            <p class="text-xs text-gray-500 mt-0.5">
+              {{ $t('settings.isCanariasHint') }}
+            </p>
+          </div>
+        </div>
+
+        <div>
           <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
             {{ $t('common.logo') }}
           </label>
@@ -110,6 +178,10 @@
 
   const form = reactive({
     companyName: "",
+    taxId: "",
+    businessAddress: "",
+    businessPopulation: "",
+    isCanarias: false,
     logoPreview: null as string | null,
     logoDataUrl: null as string | null,
   });
@@ -117,6 +189,10 @@
   const syncFormFromStore = () => {
     const config = gestorConfigStore.getConfig();
     form.companyName = config.companyName;
+    form.taxId = config.taxId ?? "";
+    form.businessAddress = config.businessAddress ?? "";
+    form.businessPopulation = config.businessPopulation ?? "";
+    form.isCanarias = config.isCanarias ?? false;
     form.logoDataUrl = config.logoUrl;
     form.logoPreview = config.logoUrl;
   };
@@ -141,18 +217,25 @@
     form.logoPreview = null;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!user.value) return;
     error.value = "";
     success.value = false;
     loading.value = true;
     const current = gestorConfigStore.getConfig();
-    gestorConfigStore.setConfig(user.value.id, {
-      ...current,
-      companyName: form.companyName.trim() || "Mi Gestor",
-      logoUrl: form.logoDataUrl,
-    });
-    loading.value = false;
-    success.value = true;
+    try {
+      await gestorConfigStore.setConfig(user.value.id, {
+        ...current,
+        companyName: form.companyName.trim(),
+        taxId: form.taxId.trim() || undefined,
+        businessAddress: form.businessAddress.trim() || undefined,
+        businessPopulation: form.businessPopulation.trim() || undefined,
+        isCanarias: form.isCanarias,
+        logoUrl: form.logoDataUrl,
+      }, user.value.businessId ?? null);
+    } finally {
+      loading.value = false;
+      success.value = true;
+    }
   };
 </script>

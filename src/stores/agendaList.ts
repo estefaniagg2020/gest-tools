@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
+import { i18n } from "@/i18n";
 import type { AgendaEntry, AgendaListConfig } from "@/interfaces/agendaList";
 import { loadAgendaListConfig, saveAgendaListConfig } from "@/infrastructure/agendaListStorage";
 import { AGENDA_LIST } from "@/data/constants";
@@ -14,14 +15,18 @@ export const useAgendaListStore = defineStore("agendaList", () => {
 
   const agendaNames = computed(() => agendas.value.map((a) => a.name));
 
+  const getDefaultNamePrefix = () =>
+    i18n.global.t("scheduler.defaultAgendaName") as string;
+
   const initialize = () => {
     const stored = loadAgendaListConfig();
+    const prefix = getDefaultNamePrefix();
     if (stored) {
       numberOfAgendas.value = clampNumberOfAgendas(stored.numberOfAgendas);
-      agendas.value = ensureAgendasLength(stored.agendas, numberOfAgendas.value);
+      agendas.value = ensureAgendasLength(stored.agendas, numberOfAgendas.value, prefix);
     } else {
       numberOfAgendas.value = AGENDA_LIST.DEFAULT_AGENDAS;
-      agendas.value = ensureAgendasLength([], AGENDA_LIST.DEFAULT_AGENDAS);
+      agendas.value = ensureAgendasLength([], AGENDA_LIST.DEFAULT_AGENDAS, prefix);
     }
   };
 
@@ -30,12 +35,13 @@ export const useAgendaListStore = defineStore("agendaList", () => {
   };
 
   const updateAgendaList = (updates: Partial<AgendaListConfig>) => {
+    const prefix = getDefaultNamePrefix();
     if (updates.numberOfAgendas !== undefined) {
       numberOfAgendas.value = clampNumberOfAgendas(updates.numberOfAgendas);
-      agendas.value = ensureAgendasLength(agendas.value, numberOfAgendas.value);
+      agendas.value = ensureAgendasLength(agendas.value, numberOfAgendas.value, prefix);
     }
     if (updates.agendas !== undefined) {
-      agendas.value = ensureAgendasLength(updates.agendas, numberOfAgendas.value);
+      agendas.value = ensureAgendasLength(updates.agendas, numberOfAgendas.value, prefix);
     }
     persist();
   };
@@ -43,9 +49,10 @@ export const useAgendaListStore = defineStore("agendaList", () => {
   const setAgendaName = (index: number, name: string) => {
     if (index < 0 || index >= agendas.value.length) return;
     const next = [...agendas.value];
+    const prefix = getDefaultNamePrefix();
     next[index] = {
       ...next[index],
-      name: name.trim() || `${AGENDA_LIST.DEFAULT_NAME_PREFIX} ${index + 1}`,
+      name: name.trim() !== "" ? name : `${prefix} ${index + 1}`,
     };
     agendas.value = next;
     persist();

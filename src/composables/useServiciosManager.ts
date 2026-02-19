@@ -1,6 +1,7 @@
-import { ref, reactive, computed, onMounted } from "vue";
+import { ref, reactive, computed, onMounted, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useServiceStore } from "@/stores/service";
+import { useConfirmDialog } from "@/composables/useConfirmDialog";
 import { useServiceCategoryStore } from "@/stores/serviceCategory";
 import { useGestorConfigStore } from "@/stores/gestorConfig";
 import { useToast } from "@/composables/useToast";
@@ -8,9 +9,14 @@ import { useAuthStore } from "@/stores/auth";
 import {
   getServiceTemplates,
   getBusinessServiceDefaults,
+  getSystemServiceNamesOfOtherTypes,
   type ServiceTemplate,
 } from "@/data/serviceTemplates";
 import type { Service } from "@/interfaces";
+import {
+  getRemovedSystemServiceNames,
+  markSystemServiceRemoved,
+} from "@/infrastructure/serviceSystemRemovedStorage";
 
 const buildDefaultForm = (firstCategoryId: string) => ({
   name: "",
@@ -23,10 +29,22 @@ const buildDefaultForm = (firstCategoryId: string) => ({
 export const useServiciosManager = () => {
   const serviceStore = useServiceStore();
   const categoryStore = useServiceCategoryStore();
+  const { show: showConfirm } = useConfirmDialog();
   const configStore = useGestorConfigStore();
   const authStore = useAuthStore();
-  const { categories } = storeToRefs(categoryStore);
+  const { categories: userCategories } = storeToRefs(categoryStore);
+  const { catalog } = storeToRefs(serviceStore);
+  const { businessType } = storeToRefs(configStore);
   const { addToast } = useToast();
+
+  const categories = computed(() => {
+    const catalogIds = new Set(catalog.value.map((c) => c.id));
+    const userOnly = userCategories.value.filter((c) => !catalogIds.has(c.id));
+    return [
+      ...catalog.value.map((c) => ({ id: c.id, label: c.label, icon: c.icon })),
+      ...userOnly,
+    ];
+  });
 
   const isModalOpen = ref(false);
   const isEditing = ref(false);
@@ -67,7 +85,7 @@ export const useServiciosManager = () => {
     isEditing.value = false;
   };
 
-  const saveService = () => {
+  const saveService = async () => {
     const businessDefaults = getBusinessServiceDefaults(configStore.businessType);
     const payload = {
       name: form.name.trim(),
@@ -80,20 +98,34 @@ export const useServiciosManager = () => {
       employeesCount: businessDefaults.requiresStaff ? 1 : undefined,
     };
     if (isEditing.value && editingId.value) {
-      serviceStore.updateService(editingId.value, payload);
+      await serviceStore.updateService(editingId.value, payload);
       addToast("Servicio actualizado correctamente", "success");
     } else {
-      serviceStore.addService(payload);
+      await serviceStore.addService(payload);
       addToast("Servicio creado con éxito", "success");
     }
     closeModal();
   };
 
-  const confirmDelete = (id: string) => {
-    if (confirm("¿Estás seguro de eliminar este servicio?")) {
-      serviceStore.deleteService(id);
-      addToast("Servicio eliminado", "success");
+  const confirmDelete = async (id: string) => {
+    const ok = await showConfirm({
+      title: "Eliminar servicio",
+      message: "¿Estás seguro de eliminar este servicio? Esta acción no se puede deshacer.",
+      confirmLabel: "Eliminar",
+      variant: "danger",
+    });
+    if (!ok) return;
+    const businessId = authStore.user?.businessId ?? null;
+    if (!businessId) {
+      const service = serviceStore.getServiceById(id);
+      const businessType = configStore.businessType || "estetica";
+      const templates = getServiceTemplates(businessType);
+      if (service && templates?.services.some((t) => t.name.toLowerCase() === service.name.toLowerCase())) {
+        await markSystemServiceRemoved({ businessId: null, businessType, serviceName: service.name });
+      }
     }
+    await serviceStore.deleteService(id);
+    addToast("Servicio eliminado", "success");
   };
 
   const isCategoryModalOpen = ref(false);
@@ -130,17 +162,17 @@ export const useServiciosManager = () => {
       (c) => c.label.toLowerCase() === label.toLowerCase()
     );
     if (byLabel) return byLabel.id;
-    return categoryStore.addCategory({ label, icon }).id;
+    return categoryStore.addCategoryWithId({ id, label, icon }).id;
   };
 
-  const quickAddFromTemplate = (template: ServiceTemplate) => {
+  const quickAddFromTemplate = async (template: ServiceTemplate) => {
     const businessDefaults = getBusinessServiceDefaults(configStore.businessType);
     const categoryId = ensureCategoryExists(
       template.suggestedCategory,
       template.suggestedCategory,
       template.suggestedCategoryIcon,
     );
-    serviceStore.addService({
+    await serviceStore.addService({
       name: template.name,
       category: categoryId,
       duration: template.duration,
@@ -153,16 +185,16 @@ export const useServiciosManager = () => {
     addToast(`"${template.name}" añadido`, "success");
   };
 
-  const quickAddAllTemplates = () => {
+  const quickAddAllTemplates = async () => {
     const templates = suggestedTemplates.value;
     if (!templates) return;
     templates.categories.forEach((cat) => ensureCategoryExists(cat.id, cat.label, cat.icon));
-    templates.services.forEach((template) => {
+    for (const template of templates.services) {
       const alreadyExists = serviceStore.services.some(
         (s) => s.name.toLowerCase() === template.name.toLowerCase()
       );
-      if (!alreadyExists) quickAddFromTemplate(template);
-    });
+      if (!alreadyExists) await quickAddFromTemplate(template);
+    }
     addToast("Servicios sugeridos añadidos", "success");
   };
 
@@ -171,11 +203,75 @@ export const useServiciosManager = () => {
       (s) => s.name.toLowerCase() === template.name.toLowerCase()
     );
 
-  onMounted(() => {
+  onMounted(async () => {
     const userId = authStore.currentUserId ?? "local";
-    configStore.initialize(userId);
+    const businessId = authStore.user?.businessId ?? null;
+    await configStore.initialize(userId, businessId);
     categoryStore.initialize();
-    serviceStore.initialize();
+    await serviceStore.initialize();
+
+    if (businessId) return;
+
+    const currentBusinessType = configStore.businessType || "estetica";
+    const templates = getServiceTemplates(currentBusinessType);
+    if (!templates) return;
+
+    const otherTypesNames = new Set(
+      getSystemServiceNamesOfOtherTypes(currentBusinessType).map((n) => n.toLowerCase()),
+    );
+    const staleServices = serviceStore.services.filter((s) =>
+      otherTypesNames.has(s.name.toLowerCase()),
+    );
+    await Promise.all(staleServices.map((s) => serviceStore.deleteService(s.id)));
+
+    const removedNames = await getRemovedSystemServiceNames({
+      businessId: null,
+      businessType: currentBusinessType,
+    });
+    const isRemovedByUser = (name: string) =>
+      removedNames.some((r) => r.toLowerCase() === name.toLowerCase());
+
+    templates.categories.forEach((cat) => ensureCategoryExists(cat.id, cat.label, cat.icon));
+    const businessDefaults = getBusinessServiceDefaults(currentBusinessType);
+    let added = 0;
+    for (const template of templates.services) {
+      if (isRemovedByUser(template.name)) continue;
+      const alreadyExists = serviceStore.services.some(
+        (s) => s.name.toLowerCase() === template.name.toLowerCase(),
+      );
+      if (!alreadyExists) {
+        const categoryId = ensureCategoryExists(
+          template.suggestedCategory,
+          template.suggestedCategory,
+          template.suggestedCategoryIcon,
+        );
+        await serviceStore.addService({
+          name: template.name,
+          category: categoryId,
+          duration: template.duration,
+          price: template.price,
+          description: template.description,
+          requiresCabin: businessDefaults.requiresCabin,
+          requiresTherapist: businessDefaults.requiresStaff,
+          employeesCount: businessDefaults.requiresStaff ? 1 : undefined,
+        });
+        added++;
+      }
+    }
+    if (added > 0) {
+      addToast(
+        added === 1 ? "Servicio de sistema añadido" : `${added} servicios de sistema añadidos`,
+        "success",
+      );
+    }
+  });
+
+  watch(businessType, async (newType, oldType) => {
+    if (!newType || newType === oldType) return;
+    const businessId = authStore.user?.businessId ?? null;
+    if (!businessId) return;
+    await new Promise((r) => setTimeout(r, 300));
+    await serviceStore.initialize();
   });
 
   return {

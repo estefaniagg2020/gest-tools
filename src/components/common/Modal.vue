@@ -27,7 +27,7 @@
                 props.variant === 'modern' ? 'text-white' : 'text-gray-800',
               ]"
             >
-              <slot name="title">Modal Title</slot>
+              <slot name="title">{{ props.title}}</slot>
             </h3>
             <button
               type="button"

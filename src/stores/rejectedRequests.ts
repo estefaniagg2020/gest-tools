@@ -7,9 +7,9 @@ import { useAuthStore } from "@/stores/auth";
 export const useRejectedRequestsStore = defineStore("rejectedRequests", () => {
   const rejections = ref<RejectedRequest[]>([]);
 
-  const normalizeRejection = (r: RejectedRequest & { therapistId?: string }): RejectedRequest => ({
-    ...r,
-    memberId: r.memberId ?? r.therapistId ?? "",
+  const normalizeRejection = (rejectedRequest: RejectedRequest & { therapistId?: string }): RejectedRequest => ({
+    ...rejectedRequest,
+    memberId: rejectedRequest.memberId ?? rejectedRequest.therapistId ?? "",
   });
 
   const initialize = () => {

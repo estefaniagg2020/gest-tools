@@ -125,9 +125,9 @@ export const useNotificacionesAvisos = () => {
     );
   });
 
-  onMounted(() => {
+  onMounted(async () => {
     scheduleStore.initialize();
-    teamStore.initialize();
+    await teamStore.initialize();
   });
 
   return {

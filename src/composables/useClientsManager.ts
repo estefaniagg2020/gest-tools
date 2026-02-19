@@ -1,6 +1,7 @@
 import { ref, reactive, onMounted } from "vue";
 import { useClientStore } from "@/stores/client";
 import { useToast } from "@/composables/useToast";
+import { useConfirmDialog } from "@/composables/useConfirmDialog";
 import type { Client } from "@/interfaces";
 
 const getDefaultForm = (): Omit<Client, "id"> => ({
@@ -13,6 +14,7 @@ const getDefaultForm = (): Omit<Client, "id"> => ({
 export const useClientsManager = () => {
   const clientStore = useClientStore();
   const { addToast } = useToast();
+  const { show: showConfirm } = useConfirmDialog();
 
   const isModalOpen = ref(false);
   const isEditing = ref(false);
@@ -65,8 +67,14 @@ export const useClientsManager = () => {
     closeModal();
   };
 
-  const confirmDelete = (id: string) => {
-    if (confirm("¿Estás seguro de eliminar este cliente?")) {
+  const confirmDelete = async (id: string) => {
+    const ok = await showConfirm({
+      title: "Eliminar cliente",
+      message: "¿Estás seguro de eliminar este cliente? Esta acción no se puede deshacer.",
+      confirmLabel: "Eliminar",
+      variant: "danger",
+    });
+    if (ok) {
       clientStore.deleteClient(id);
       addToast("Cliente eliminado", "success");
     }

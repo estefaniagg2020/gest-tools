@@ -6,11 +6,11 @@ interface WithStartEnd {
 }
 
 const getMinutesFromMidnight = (dateStr: string): number => {
-  const d = new Date(dateStr);
-  return d.getHours() * 60 + d.getMinutes();
+  const date = new Date(dateStr);
+  return date.getHours() * 60 + date.getMinutes();
 };
 
-const SMALL_HEIGHT_THRESHOLD = 40;
+const SMALL_HEIGHT_THRESHOLD = 28;
 
 export const useBlockPosition = (
   block: MaybeRefOrGetter<WithStartEnd>,
@@ -19,19 +19,19 @@ export const useBlockPosition = (
   topOffset: MaybeRefOrGetter<number> = () => 0,
 ) => {
   const top = computed(() => {
-    const b = toValue(block);
+    const blockVal = toValue(block);
     const start = toValue(startHour);
     const pixels = toValue(pixelsPerHour);
-    const startMinutes = getMinutesFromMidnight(b.start);
+    const startMinutes = getMinutesFromMidnight(blockVal.start);
     const offsetMinutes = startMinutes - start * 60;
     return (offsetMinutes / 60) * pixels;
   });
 
   const height = computed(() => {
-    const b = toValue(block);
+    const blockVal = toValue(block);
     const pixels = toValue(pixelsPerHour);
-    const startMinutes = getMinutesFromMidnight(b.start);
-    const endMinutes = getMinutesFromMidnight(b.end);
+    const startMinutes = getMinutesFromMidnight(blockVal.start);
+    const endMinutes = getMinutesFromMidnight(blockVal.end);
     const duration = endMinutes - startMinutes;
     return (duration / 60) * pixels;
   });

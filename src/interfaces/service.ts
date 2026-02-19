@@ -4,13 +4,33 @@ export interface ServiceCategoryDefinition {
   icon: string;
 }
 
+export interface CatalogService {
+  id: string;
+  name: string;
+  duration: number;
+  price: number;
+  description?: string | null;
+  isSystemService: boolean;
+}
+
+export interface CatalogCategory {
+  id: string;
+  label: string;
+  icon: string;
+  isSystem: boolean;
+  services: CatalogService[];
+}
+
 export interface Service {
   id: string;
   name: string;
   category: string;
+  categoryId?: string | null;
+  serviceCategory?: { id: string; label: string; icon: string } | null;
   duration: number;
   price: number;
   description?: string;
+  isSystemService?: boolean;
   requiresCabin?: boolean;
   requiresTherapist?: boolean;
   employeesCount?: number;

@@ -9,8 +9,8 @@ export const useDashboard = () => {
   const authStore = useAuthStore();
   const teamStore = useTeamStore();
 
-  onMounted(() => {
-    teamStore.initialize();
+  onMounted(async () => {
+    await teamStore.initialize();
   });
 
   const isManagerUserId = (id: string | null) =>

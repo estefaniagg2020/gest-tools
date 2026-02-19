@@ -1,9 +1,9 @@
 <template>
   <aside
-    class="sidebar-aside h-full py-4 flex flex-col transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)]"
+    class="sidebar-aside h-full py-4 md:py-3 flex flex-col transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)]"
     :class="[
-      isCollapsed ? 'w-20' : 'w-72',
-      sidebarPosition === 'right' ? 'pr-4 pl-0' : 'pl-4',
+      isCollapsed ? 'w-20' : 'w-64 md:w-56 lg:w-72',
+      sidebarPosition === 'right' ? 'pr-3 md:pr-2 pl-0' : 'pl-3 md:pl-2',
     ]"
   >
     <button
@@ -17,8 +17,8 @@
     <div
       class="sidebar-inner h-full shadow-xl flex flex-col relative overflow-hidden transition-colors duration-200 bg-[var(--chrome-surface)] border border-[var(--chrome-border)] rounded-2xl"
     >
-      <div
-        class="p-6 flex items-center gap-3 mb-2"
+<div
+      class="p-6 md:p-4 flex items-center gap-3 mb-2"
         :class="{ 'justify-center': isCollapsed }"
       >
         <AppBrand
@@ -29,7 +29,7 @@
         />
       </div>
 
-      <nav class="flex-1 min-h-0 py-2 px-4 space-y-1 overflow-y-auto custom-scrollbar">
+      <nav class="flex-1 min-h-0 py-2 px-4 md:px-3 space-y-1 overflow-y-auto custom-scrollbar">
         <NavItem
           v-for="mod in navModules"
           :key="mod.id"
@@ -99,7 +99,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed } from "vue";
+  import { ref, computed, onMounted, onUnmounted } from "vue";
   import { useI18n } from "vue-i18n";
   import { storeToRefs } from "pinia";
   import { useRouter } from "vue-router";
@@ -113,7 +113,28 @@
     sidebarPosition: "left" | "right" | "none";
   }>();
 
-  const isCollapsed = ref(false);
+  const TABLET_MIN = 768;
+  const TABLET_MAX = 1023;
+  const isTabletViewport = () => {
+    if (typeof window === "undefined") return false;
+    return window.innerWidth >= TABLET_MIN && window.innerWidth <= TABLET_MAX;
+  };
+  const isCollapsed = ref(isTabletViewport());
+
+  let resizeHandler: (() => void) | null = null;
+
+  onMounted(() => {
+    if (typeof window === "undefined") return;
+    if (isTabletViewport()) isCollapsed.value = true;
+    resizeHandler = () => {
+      if (isTabletViewport()) isCollapsed.value = true;
+    };
+    window.addEventListener("resize", resizeHandler);
+  });
+
+  onUnmounted(() => {
+    if (resizeHandler) window.removeEventListener("resize", resizeHandler);
+  });
   const authStore = useAuthStore();
   const themeStore = useThemeStore();
   const router = useRouter();

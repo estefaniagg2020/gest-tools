@@ -126,27 +126,12 @@
               >
                 ¿A qué se dedica tu empresa?
               </label>
-              <select
+              <ProfessionPicker
                 id="wizard-activity"
                 v-model="form.businessType"
-                class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-brand-accent/20 focus:border-brand-accent text-gray-900 transition-colors"
-              >
-                <option
-                  value=""
-                  disabled
-                >
-                  Selecciona la actividad
-                </option>
-                <option
-                  v-for="opt in BUSINESS_TYPES"
-                  :key="opt.id"
-                  :value="opt.id"
-                >
-                  {{ opt.label }}
-                </option>
-              </select>
+              />
               <p class="mt-1 text-xs text-gray-500">
-                Negocios que gestionan citas o agenda.
+                Escribe tu actividad. Si no aparece la buscaremos con IA.
               </p>
             </div>
           </div>
@@ -283,6 +268,89 @@
               />
             </div>
           </div>
+
+          <!-- Step 5: Fiscal y ubicación -->
+          <div
+            v-show="currentStep === 5"
+            class="space-y-6"
+          >
+            <p class="text-sm text-gray-500">
+              Datos fiscales y ubicación de la empresa para facturación y horarios (Canarias tiene huso distinto).
+            </p>
+            <div>
+              <span class="block text-sm font-semibold text-gray-800 mb-3">
+                Ubicación del negocio
+              </span>
+              <div class="flex flex-wrap gap-4">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input
+                    v-model="form.isCanarias"
+                    type="radio"
+                    :value="false"
+                    class="w-4 h-4 text-brand-accent border-gray-300 focus:ring-brand-accent/20"
+                  />
+                  <span class="text-sm font-medium text-gray-800">Península</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input
+                    v-model="form.isCanarias"
+                    type="radio"
+                    :value="true"
+                    class="w-4 h-4 text-brand-accent border-gray-300 focus:ring-brand-accent/20"
+                  />
+                  <span class="text-sm font-medium text-gray-800">Canarias</span>
+                </label>
+              </div>
+              <p class="mt-1 text-xs text-gray-500">
+                En Canarias la hora se muestra una hora menos que en la península.
+              </p>
+            </div>
+            <div>
+              <label
+                for="wizard-taxId"
+                class="block text-sm font-semibold text-gray-800 mb-2"
+              >
+                CIF / NIF <span class="text-gray-400 font-normal">(opcional)</span>
+              </label>
+              <input
+                id="wizard-taxId"
+                v-model="form.taxId"
+                type="text"
+                placeholder="Ej. B12345678 o 12345678A"
+                class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-brand-accent/20 focus:border-brand-accent text-gray-900 placeholder-gray-400 transition-colors"
+              />
+            </div>
+            <div>
+              <label
+                for="wizard-businessAddress"
+                class="block text-sm font-semibold text-gray-800 mb-2"
+              >
+                Dirección fiscal
+              </label>
+              <input
+                id="wizard-businessAddress"
+                v-model="form.businessAddress"
+                type="text"
+                placeholder="Calle, número, código postal, localidad"
+                class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-brand-accent/20 focus:border-brand-accent text-gray-900 placeholder-gray-400 transition-colors"
+              />
+            </div>
+            <div>
+              <label
+                for="wizard-businessPopulation"
+                class="block text-sm font-semibold text-gray-800 mb-2"
+              >
+                Población
+              </label>
+              <input
+                id="wizard-businessPopulation"
+                v-model="form.businessPopulation"
+                type="text"
+                placeholder="Ej. Madrid, Las Palmas de G.C."
+                class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-brand-accent/20 focus:border-brand-accent text-gray-900 placeholder-gray-400 transition-colors"
+              />
+            </div>
+          </div>
         </div>
 
         <div class="px-6 sm:px-8 py-4 bg-gray-50/80 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
@@ -304,20 +372,30 @@
               </BaseButton>
             </RouterLink>
           </div>
-          <BaseButton
-            v-if="currentStep < totalSteps"
-            type="button"
-            @click="goToNextStep"
-          >
-            Siguiente
-          </BaseButton>
-          <BaseButton
-            v-else
-            :disabled="saving"
-            @click="handleFinish"
-          >
-            {{ saving ? "Guardando…" : "Finalizar" }}
-          </BaseButton>
+          <div class="flex flex-wrap items-center gap-3">
+            <BaseButton
+              type="button"
+              variant="outline"
+              :disabled="saving"
+              @click="saveCurrentStep"
+            >
+              {{ saving ? "Guardando…" : "Guardar" }}
+            </BaseButton>
+            <BaseButton
+              v-if="currentStep < totalSteps"
+              type="button"
+              @click="goToNextStep"
+            >
+              Siguiente
+            </BaseButton>
+            <BaseButton
+              v-else
+              :disabled="saving"
+              @click="handleFinish"
+            >
+              Finalizar
+            </BaseButton>
+          </div>
         </div>
       </div>
 
@@ -338,8 +416,8 @@
   import { useAuthStore } from "@/stores/auth";
   import { useGestorConfigStore } from "@/stores/gestorConfig";
   import { syncWizardTeamMembers } from "@/composables/useTeamManager";
-  import { BUSINESS_TYPES } from "@/data/businessTypes";
-  import { DEFAULT_COMPANY_NAME, DEFAULT_CONTACT_DATA } from "@/interfaces";
+  import ProfessionPicker from "@/components/wizard/ProfessionPicker.vue";
+  import { DEFAULT_CONTACT_DATA } from "@/interfaces";
   import type { WizardTeamMember } from "@/interfaces";
   import BaseButton from "@/components/common/BaseButton.vue";
 
@@ -357,6 +435,7 @@
     { id: "activity", label: "Actividad" },
     { id: "team", label: "Equipo" },
     { id: "contact", label: "Contacto" },
+    { id: "fiscal", label: "Fiscal y ubicación" },
   ];
   const totalSteps = steps.length;
 
@@ -368,6 +447,10 @@
     businessType: "",
     contactData: { ...DEFAULT_CONTACT_DATA },
     teamMembers: [] as WizardTeamMember[],
+    taxId: "",
+    businessAddress: "",
+    businessPopulation: "",
+    isCanarias: false,
   });
 
   const syncFormFromStore = () => {
@@ -379,6 +462,10 @@
     form.businessType = c.businessType;
     form.contactData = { ...DEFAULT_CONTACT_DATA, ...c.contactData };
     form.teamMembers = (c.teamMembers ?? []).map((m) => ({ ...m }));
+    form.taxId = c.taxId ?? "";
+    form.businessAddress = c.businessAddress ?? "";
+    form.businessPopulation = c.businessPopulation ?? "";
+    form.isCanarias = c.isCanarias ?? false;
   };
 
   const addTeamMember = () => {
@@ -390,7 +477,13 @@
   };
 
   onMounted(syncFormFromStore);
-  watch(user, syncFormFromStore, { immediate: true });
+  watch(
+    () => user.value?.id,
+    (newId, oldId) => {
+      if (newId && newId !== oldId) syncFormFromStore();
+    },
+    { immediate: false },
+  );
 
   const onLogoChange = (e: Event) => {
     const input = e.target as HTMLInputElement;
@@ -430,31 +523,55 @@
     });
   };
 
+  const buildConfigPayload = (complete: boolean) => {
+    const validMembers = form.teamMembers.filter((m) => m.name.trim() !== "");
+    const normalizedMembers = validMembers.map((m) => ({
+      id: m.id,
+      name: m.name.trim(),
+      specialty: m.specialty.trim(),
+    }));
+    return {
+      companyName: form.companyName.trim(),
+      logoUrl: form.logoDataUrl,
+      numberOfPeople: normalizedMembers.length || 1,
+      businessType: form.businessType || "",
+      contactData: {
+        email: form.contactData.email.trim(),
+        phone: form.contactData.phone.trim(),
+        address: form.contactData.address?.trim() || "",
+      },
+      onboardingComplete: complete,
+      teamMembers: normalizedMembers,
+      taxId: form.taxId.trim() || undefined,
+      businessAddress: form.businessAddress.trim() || undefined,
+      businessPopulation: form.businessPopulation.trim() || undefined,
+      isCanarias: form.isCanarias,
+    };
+  };
+
+  const saveCurrentStep = async () => {
+    if (!user.value) return;
+    saveError.value = "";
+    saving.value = true;
+    try {
+      const payload = buildConfigPayload(false);
+      await gestorConfigStore.setConfig(user.value.id, payload, user.value.businessId ?? null);
+      syncWizardTeamMembers(payload.teamMembers).catch(() => {});
+    } catch {
+      saveError.value = "No se pudo guardar. Inténtalo de nuevo.";
+    } finally {
+      saving.value = false;
+    }
+  };
+
   const handleFinish = async () => {
     if (!user.value) return;
     saveError.value = "";
     saving.value = true;
     try {
-      const validMembers = form.teamMembers.filter((m) => m.name.trim() !== "");
-      const normalizedMembers = validMembers.map((m) => ({
-        id: m.id,
-        name: m.name.trim(),
-        specialty: m.specialty.trim(),
-      }));
-      gestorConfigStore.setConfig(user.value.id, {
-        companyName: form.companyName.trim() || DEFAULT_COMPANY_NAME,
-        logoUrl: form.logoDataUrl,
-        numberOfPeople: normalizedMembers.length || 1,
-        businessType: form.businessType || BUSINESS_TYPES[0].id,
-        contactData: {
-          email: form.contactData.email.trim(),
-          phone: form.contactData.phone.trim(),
-          address: form.contactData.address?.trim() || "",
-        },
-        onboardingComplete: true,
-        teamMembers: normalizedMembers,
-      });
-      syncWizardTeamMembers(normalizedMembers);
+      const payload = buildConfigPayload(true);
+      await gestorConfigStore.setConfig(user.value.id, payload, user.value.businessId ?? null);
+      syncWizardTeamMembers(payload.teamMembers).catch(() => {});
       router.push({ name: "config" });
     } catch {
       saveError.value = "No se pudo guardar. Inténtalo de nuevo.";

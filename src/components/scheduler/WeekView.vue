@@ -1,17 +1,38 @@
 <template>
   <div class="flex flex-col h-full agenda-grid-bg rounded-xl overflow-hidden border border-app-border-subtle shadow-(--shadow-card)">
-    <div class="flex border-b border-app-border-subtle bg-app-surface">
-      <div class="w-16 shrink-0 border-r border-app-border-subtle bg-app-surface"></div>
+    <div
+      class="flex border-b border-app-border-subtle"
+      :class="isThemeSelected ? 'bg-brand-accent' : 'bg-app-surface'"
+    >
+      <div
+        class="w-16 shrink-0 border-r border-app-border-subtle"
+        :class="isThemeSelected ? 'bg-brand-accent' : 'bg-app-surface'"
+      ></div>
       <div
         v-for="day in weekDays"
         :key="day.toISOString()"
         class="flex-1 py-3 text-center border-r border-app-border-subtle last:border-0"
-        :class="{ 'bg-brand-primary/5': dates.isToday(day) }"
+        :class="{
+          'bg-brand-primary': isThemeSelected,
+          'bg-brand-soft': dates.isToday(day) && !isThemeSelected,
+        }"
       >
-        <div class="text-xs font-medium text-app-text/80">{{ dates.formatDayName(day) }}</div>
         <div
-          class="text-xl font-bold text-app-title"
-          :class="{ 'text-brand-primary': dates.isToday(day) }"
+          class="text-xs font-medium"
+          :class="{
+            'text-white': isThemeSelected,
+            'text-app-text/80': !isThemeSelected,
+          }"
+        >
+          {{ dates.formatDayName(day) }}
+        </div>
+        <div
+          class="text-xl font-bold"
+          :class="{
+            'text-white': isThemeSelected,
+            'text-brand-primary': dates.isToday(day) && !isThemeSelected,
+            'text-app-title': !dates.isToday(day) && !isThemeSelected,
+          }"
         >
           {{ day.getDate() }}
         </div>
@@ -42,10 +63,10 @@
         <div
           v-for="(day, dayIndex) in weekDays"
           :key="day.toISOString()"
-          class="flex-1 relative border-r border-app-border-subtle last:border-0 cursor-crosshair"
+          :ref="(el) => setDayRef(el as HTMLElement | null, dayIndex)"
+          class="flex-1 relative border-r border-app-border-subtle last:border-0 cursor-default"
           @click="handleGridClick($event, day)"
-          @mousemove="handleGridMouseMove($event, day, dayIndex)"
-          @mouseleave="hoverSlot = null"
+          @pointermove="scheduleDrag.update($event)"
         >
           <div
             v-for="slotStart in gridSlotStarts"
@@ -60,13 +81,6 @@
           >
             <span class="absolute -top-1 left-0 w-2 h-2 rounded-full bg-brand-primary" />
           </div>
-          <div
-            v-if="hoverSlot !== null && hoverDayIndex === dayIndex"
-            class="absolute left-0 right-0 rounded py-0.5 px-1.5 bg-brand-primary/10 border border-brand-primary/20 text-brand-primary text-[10px] font-medium pointer-events-none z-10"
-            :style="{ top: (hoverSlot - props.startHour) * props.pixelsPerHour + topOffset + 2 + 'px' }"
-          >
-            Crear cita · {{ grid.formatSlotLabel(hoverSlot) }}
-          </div>
 
           <BlockCard
             v-for="item in filterAgendaItemsByDay(props.items, day)"
@@ -75,6 +89,8 @@
             :start-hour="props.startHour"
             :pixels-per-hour="props.pixelsPerHour"
             :top-offset="topOffset"
+            :overlap-left="overlapMap.get(item.id)?.left"
+            :overlap-width="overlapMap.get(item.id)?.width"
             @click="$emit('item-click', item)"
           />
         </div>
@@ -84,11 +100,16 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, ref } from "vue";
+  import { computed, onMounted, onUnmounted, ref } from "vue";
+  import { DEFAULT_THEME_ID } from "@/data/themes";
   import { useScheduleGrid } from "@/composables/useScheduleGrid";
   import { useScheduleDates } from "@/composables/useScheduleDates";
   import { filterAgendaItemsByDay } from "@/composables/useScheduleBlocks";
+  import { computeOverlapLayout } from "@/composables/useOverlapLayout";
+  import { useThemeStore } from "@/stores/theme";
+  import { useScheduleDrag } from "@/composables/useScheduleDrag";
   import type { AgendaItem } from "@/interfaces";
+  import { isAppointment, isScheduleBlock } from "@/interfaces";
   import BlockCard from "./BlockCard.vue";
 
   const WORK_START = 8;
@@ -109,6 +130,8 @@
   const emit = defineEmits<{
     (e: "item-click", item: AgendaItem): void;
     (e: "grid-click", data: { date: Date; hour: number }): void;
+    (e: "appointment-move", data: { appointmentId: string; date: Date; hour: number }): void;
+    (e: "block-move", data: { blockId: string; date: Date; hour: number }): void;
   }>();
 
   const grid = useScheduleGrid(
@@ -124,6 +147,18 @@
   const gridSlotStarts = computed((): number[] => grid.slotStarts.value);
   const gridContentHeight = computed(() => grid.totalHeight.value + topOffset);
   const dates = useScheduleDates();
+  const themeStore = useThemeStore();
+  const scheduleDrag = useScheduleDrag();
+  const isThemeSelected = computed(() => themeStore.themeId !== DEFAULT_THEME_ID);
+
+  const overlapMap = computed(() => {
+    const result = new Map<string, { left: number; width: number }>();
+    for (const day of props.weekDays) {
+      const dayItems = filterAgendaItemsByDay(props.items, day);
+      computeOverlapLayout(dayItems).forEach((info, id) => result.set(id, info));
+    }
+    return result;
+  });
 
   const workingHoursStyle = computed(() => {
     const start = Math.max(props.startHour, WORK_START);
@@ -142,21 +177,58 @@
     return { top: `${top}px` };
   });
 
-  const hoverSlot = ref<number | null>(null);
-  const hoverDayIndex = ref<number | null>(null);
+  // Refs to day column elements for drop position calculation
+  const dayColRefs = ref<(HTMLElement | null)[]>([]);
+  const setDayRef = (el: HTMLElement | null, index: number) => {
+    dayColRefs.value[index] = el;
+  };
 
-  const handleGridMouseMove = (event: MouseEvent, _day: Date, dayIndex: number) => {
-    const hour = grid.getSlotStartFromClick(event, topOffset);
-    hoverSlot.value = hour;
-    hoverDayIndex.value = dayIndex;
+  const getHourFromPoint = (clientY: number, el: HTMLElement): number | null => {
+    const rect = el.getBoundingClientRect();
+    const y = clientY - rect.top - topOffset;
+    if (y < 0) return null;
+    const step = (props.slotDurationMinutes ?? 60) / 60;
+    const slotIndex = Math.floor(y / props.pixelsPerHour / step);
+    const hour = props.startHour + slotIndex * step;
+    if (hour >= props.startHour && hour < props.endHour) return Math.round(hour * 100) / 100;
+    return null;
   };
 
   const handleGridClick = (event: MouseEvent, day: Date) => {
+    if (scheduleDrag.moving.value) return; // ignore click after drag
     const hour = grid.getSlotStartFromClick(event, topOffset);
     if (hour !== null) {
       emit("grid-click", { date: day, hour });
     }
   };
+
+  const onDocumentPointerUp = (e: PointerEvent) => {
+    const { item, moved } = scheduleDrag.end();
+    if (!item || !moved) return;
+
+    for (let i = 0; i < props.weekDays.length; i++) {
+      const el = dayColRefs.value[i];
+      if (!el) continue;
+      const rect = el.getBoundingClientRect();
+      if (
+        e.clientX >= rect.left && e.clientX <= rect.right &&
+        e.clientY >= rect.top && e.clientY <= rect.bottom
+      ) {
+        const hour = getHourFromPoint(e.clientY, el);
+        if (hour !== null) {
+          if (isScheduleBlock(item)) {
+            emit("block-move", { blockId: item.id, date: props.weekDays[i], hour });
+          } else if (isAppointment(item)) {
+            emit("appointment-move", { appointmentId: item.id, date: props.weekDays[i], hour });
+          }
+        }
+        break;
+      }
+    }
+  };
+
+  onMounted(() => document.addEventListener("pointerup", onDocumentPointerUp));
+  onUnmounted(() => document.removeEventListener("pointerup", onDocumentPointerUp));
 </script>
 
 <style scoped>

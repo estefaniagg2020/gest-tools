@@ -8,8 +8,9 @@ export {
   DEFAULT_DASHBOARD_MODULE_IDS,
 } from "./layoutConfig";
 export type { Client } from "./client";
-export type { Appointment } from "./appointment";
-export type { Service, ServiceCategoryDefinition } from "./service";
+export type { BonoTemplate, ClientBono, BonoType } from "./bono";
+export type { Appointment, CartItem } from "./appointment";
+export type { Service, ServiceCategoryDefinition, CatalogCategory, CatalogService } from "./service";
 export type { Spa } from "./spa";
 export type { TeamMember, TeamMemberRole } from "./team";
 export type { AgendaListConfig, AgendaEntry } from "./agendaList";
@@ -28,3 +29,5 @@ export type {
   AgendaItem,
 } from "./schedule";
 export { isScheduleBlock, isAppointment } from "./schedule";
+export * from "./inventory";
+export * from "./pet";

@@ -1,101 +1,98 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import type { TeamMember } from "@/interfaces";
-import { DEFAULT_TEAM_MEMBERS } from "@/data/teamMembers";
+import type { TeamMember, TeamMemberRole } from "@/interfaces";
+import { employeeApi, type EmployeeDto } from "@/infrastructure/employeeApi";
 import { TEAM_MANAGER } from "@/data/constants";
 import { INDEX_NOT_FOUND } from "@/data/constants";
 import { generatePastelColor } from "@/utils/color";
 
-const STORAGE_KEY = "team-members";
-
-const normalizeRole = (r: string): "manager" | "member" =>
+const dbRoleToUi = (r: string): TeamMemberRole =>
   r === "manager" ? "manager" : "member";
+
+const uiRoleToDb = (r: TeamMemberRole): string =>
+  r === "manager" ? "manager" : "member";
+
+const dtoToMember = (d: EmployeeDto): TeamMember => ({
+  id: d.id,
+  name: d.name,
+  photoUrl: d.photoUrl ?? "",
+  linkedInUrl: d.linkedInUrl ?? undefined,
+  phoneNumber: d.phoneNumber ?? "",
+  email: d.email ?? "",
+  weeklyHours: d.weeklyHours ?? 40,
+  color: d.color ?? generatePastelColor(),
+  role: dbRoleToUi(d.role),
+  defaultWorkStartHour: d.defaultWorkStartHour ?? TEAM_MANAGER.DEFAULT_WORK_START_HOUR,
+  defaultWorkEndHour: d.defaultWorkEndHour ?? TEAM_MANAGER.DEFAULT_WORK_END_HOUR,
+});
+
+const memberToPayload = (m: Partial<TeamMember>): Record<string, unknown> => ({
+  name: m.name ?? "",
+  photoUrl: m.photoUrl ?? null,
+  linkedInUrl: m.linkedInUrl ?? null,
+  phoneNumber: m.phoneNumber ?? null,
+  email: m.email ?? null,
+  weeklyHours: m.weeklyHours ?? null,
+  color: m.color ?? null,
+  role: m.role != null ? uiRoleToDb(m.role) : "member",
+  defaultWorkStartHour: m.defaultWorkStartHour ?? null,
+  defaultWorkEndHour: m.defaultWorkEndHour ?? null,
+});
 
 export const useTeamStore = defineStore("team", () => {
   const members = ref<TeamMember[]>([]);
 
-  const persistMembers = () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(members.value));
-  };
-
-  const initialize = () => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as (TeamMember & { role?: string; therapistId?: string })[];
-        if (!Array.isArray(parsed) || parsed.length === 0) {
-          members.value = [];
-          persistMembers();
-          return;
-        }
-        const defaultsById = new Map(DEFAULT_TEAM_MEMBERS.map((m) => [m.id, m]));
-        const cleanPhotoUrl = (url: string) =>
-          url && !url.includes("randomfox.ca") ? url : "";
-        members.value = parsed.map((t) => {
-          const def = defaultsById.get(t.id);
-          const role = normalizeRole(t.role ?? "member");
-          const base = def
-            ? {
-                ...t,
-                linkedInUrl: t.linkedInUrl ?? def.linkedInUrl,
-                defaultWorkStartHour:
-                  t.defaultWorkStartHour ?? def.defaultWorkStartHour ?? TEAM_MANAGER.DEFAULT_WORK_START_HOUR,
-                defaultWorkEndHour:
-                  t.defaultWorkEndHour ?? def.defaultWorkEndHour ?? TEAM_MANAGER.DEFAULT_WORK_END_HOUR,
-              }
-            : t;
-          return { ...base, role, photoUrl: cleanPhotoUrl(base.photoUrl ?? "") } as TeamMember;
-        });
-        persistMembers();
-      } catch (e) {
-        console.error("Error parsing team from local storage", e);
-        members.value = [];
-        persistMembers();
-      }
-    } else {
+  const initialize = async (): Promise<void> => {
+    try {
+      const list = await employeeApi.getEmployees();
+      members.value = list.map(dtoToMember);
+    } catch {
       members.value = [];
-      persistMembers();
     }
   };
 
-  const clearMembers = () => {
+  const clearMembers = async (): Promise<void> => {
+    for (const m of members.value) {
+      try {
+        await employeeApi.deleteEmployee(m.id);
+      } catch {
+        // continue with rest
+      }
+    }
     members.value = [];
-    persistMembers();
   };
 
-  const addMember = (member: Omit<TeamMember, "id" | "color"> & { color?: string }) => {
-    const newMember: TeamMember = {
+  const addMember = async (member: Omit<TeamMember, "id" | "color"> & { color?: string }): Promise<void> => {
+    const payload = memberToPayload({
       ...member,
-      id: crypto.randomUUID(),
       color: member.color || generatePastelColor(),
-      role: "member",
-      defaultWorkStartHour: member.defaultWorkStartHour ?? TEAM_MANAGER.DEFAULT_WORK_START_HOUR,
-      defaultWorkEndHour: member.defaultWorkEndHour ?? TEAM_MANAGER.DEFAULT_WORK_END_HOUR,
-    };
-    members.value.push(newMember);
-    persistMembers();
+    });
+    const created = await employeeApi.createEmployee(payload as Omit<EmployeeDto, "id" | "businessId">);
+    members.value.push(dtoToMember(created));
   };
 
-  const updateMember = (id: string, updates: Partial<TeamMember>) => {
+  const updateMember = async (id: string, updates: Partial<TeamMember>): Promise<void> => {
+    const payload = memberToPayload(updates);
+    const updated = await employeeApi.updateEmployee(id, payload as Partial<Omit<EmployeeDto, "id" | "businessId">>);
     const index = members.value.findIndex((m) => m.id === id);
     if (index !== INDEX_NOT_FOUND) {
-      members.value[index] = { ...members.value[index], ...updates };
-      persistMembers();
+      members.value[index] = dtoToMember(updated);
     }
   };
 
-  const deleteMember = (id: string) => {
+  const deleteMember = async (id: string): Promise<void> => {
+    await employeeApi.deleteEmployee(id);
     members.value = members.value.filter((m) => m.id !== id);
-    persistMembers();
   };
 
-  const getMemberById = (id: string) => {
+  const getMemberById = (id: string): TeamMember | undefined => {
     return members.value.find((m) => m.id === id);
   };
 
-  const insertMember = (member: TeamMember) => {
-    members.value.push(member);
-    persistMembers();
+  const insertMember = async (member: Omit<TeamMember, "id"> & { id?: string }): Promise<void> => {
+    const payload = memberToPayload(member);
+    const created = await employeeApi.createEmployee(payload as Omit<EmployeeDto, "id" | "businessId">);
+    members.value.push(dtoToMember(created));
   };
 
   return {

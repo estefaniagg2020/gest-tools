@@ -1,5 +1,6 @@
 import { computed, type MaybeRefOrGetter, toValue } from "vue";
 import type { ScheduleBlock } from "@/interfaces";
+import type { Appointment } from "@/interfaces/appointment";
 import { isSameDay } from "./useScheduleDates";
 import { filterBlocksByDay } from "./useScheduleBlocks";
 
@@ -8,18 +9,24 @@ export interface MonthGridDay {
   isCurrentMonth: boolean;
   isToday: boolean;
   blocks: ScheduleBlock[];
+  appointments: Appointment[];
 }
 
 const CELLS_COUNT = 42;
+
+const filterAppointmentsByDay = (appointments: Appointment[], date: Date): Appointment[] =>
+  appointments.filter((apt) => isSameDay(new Date(apt.start), date));
 
 export const useMonthGrid = (
   currentDate: MaybeRefOrGetter<Date>,
   blocks: MaybeRefOrGetter<ScheduleBlock[]>,
   weekStartsOn: MaybeRefOrGetter<0 | 1> = 1,
+  appointments: MaybeRefOrGetter<Appointment[]> = () => [],
 ) => {
   const days = computed<MonthGridDay[]>(() => {
     const date = toValue(currentDate);
     const blocksList = toValue(blocks);
+    const appointmentsList = toValue(appointments);
     const startsOn = toValue(weekStartsOn);
     const year = date.getFullYear();
     const month = date.getMonth();
@@ -34,16 +41,20 @@ export const useMonthGrid = (
     const today = new Date();
 
     for (let i = 0; i < CELLS_COUNT; i++) {
-      const d = new Date(current);
-      const isCurrentMonth = d.getMonth() === month;
-      const dayBlocks = filterBlocksByDay(blocksList, d).sort(
-        (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime(),
+      const cellDate = new Date(current);
+      const isCurrentMonth = cellDate.getMonth() === month;
+      const dayBlocks = filterBlocksByDay(blocksList, cellDate).sort(
+        (blockA, blockB) => new Date(blockA.start).getTime() - new Date(blockB.start).getTime(),
+      );
+      const dayAppointments = filterAppointmentsByDay(appointmentsList, cellDate).sort(
+        (aptA, aptB) => new Date(aptA.start).getTime() - new Date(aptB.start).getTime(),
       );
       result.push({
-        date: d,
+        date: cellDate,
         isCurrentMonth,
-        isToday: isSameDay(d, today),
+        isToday: isSameDay(cellDate, today),
         blocks: dayBlocks,
+        appointments: dayAppointments,
       });
       current.setDate(current.getDate() + 1);
     }

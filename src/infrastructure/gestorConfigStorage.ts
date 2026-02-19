@@ -36,6 +36,10 @@ function normalizeStored(value: unknown): GestorConfig | null {
           typeof (m as WizardTeamMember).specialty === "string",
       )
     : [];
+  const businessAddress = typeof o.businessAddress === "string" ? o.businessAddress : undefined;
+  const businessPopulation = typeof o.businessPopulation === "string" ? o.businessPopulation : undefined;
+  const isCanarias = typeof o.isCanarias === "boolean" ? o.isCanarias : undefined;
+  const taxId = typeof o.taxId === "string" ? o.taxId : undefined;
   return {
     companyName: o.companyName,
     logoUrl,
@@ -44,6 +48,10 @@ function normalizeStored(value: unknown): GestorConfig | null {
     contactData,
     onboardingComplete,
     teamMembers,
+    ...(businessAddress !== undefined && { businessAddress }),
+    ...(businessPopulation !== undefined && { businessPopulation }),
+    ...(isCanarias !== undefined && { isCanarias }),
+    ...(taxId !== undefined && { taxId }),
   };
 }
 

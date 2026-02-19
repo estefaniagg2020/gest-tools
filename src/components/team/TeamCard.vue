@@ -74,7 +74,6 @@
 
   const props = defineProps<{
     member: TeamMember;
-    locationName: string;
   }>();
 
   defineEmits<{ edit: []; delete: [] }>();

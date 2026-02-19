@@ -1,36 +1,36 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import type { Client } from "@/interfaces";
-import { DEFAULT_CLIENTS } from "@/data/clients";
-import { loadStoredClients, saveClientList } from "@/infrastructure/clientStorage";
+import { clientsApi } from "@/infrastructure/clientsApi";
 
 export const useClientStore = defineStore("client", () => {
   const clients = ref<Client[]>([]);
 
-  const initialize = () => {
-    clients.value = loadStoredClients() ?? [...DEFAULT_CLIENTS];
+  const initialize = async (): Promise<void> => {
+    try {
+      clients.value = await clientsApi.getClients();
+    } catch {
+      clients.value = [];
+    }
   };
 
   const getClientById = (id: string) => clients.value.find((c) => c.id === id);
 
-  const addClient = (client: Omit<Client, "id">) => {
-    const id = `client-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const newClient: Client = { ...client, id };
-    clients.value.push(newClient);
-    saveClientList(clients.value);
-    return newClient;
+  const addClient = async (client: Omit<Client, "id">): Promise<Client> => {
+    const created = await clientsApi.createClient(client);
+    clients.value.push(created);
+    return created;
   };
 
-  const updateClient = (id: string, updates: Partial<Omit<Client, "id">>) => {
+  const updateClient = async (id: string, updates: Partial<Omit<Client, "id">>): Promise<void> => {
+    const updated = await clientsApi.updateClient(id, updates);
     const index = clients.value.findIndex((c) => c.id === id);
-    if (index === -1) return;
-    clients.value[index] = { ...clients.value[index], ...updates };
-    saveClientList(clients.value);
+    if (index !== -1) clients.value[index] = updated;
   };
 
-  const deleteClient = (id: string) => {
+  const deleteClient = async (id: string): Promise<void> => {
+    await clientsApi.deleteClient(id);
     clients.value = clients.value.filter((c) => c.id !== id);
-    saveClientList(clients.value);
   };
 
   return {

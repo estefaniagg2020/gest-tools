@@ -42,22 +42,6 @@
         </div>
       </div>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('team.assignedLocation') }}</label>
-        <select
-          v-model="form.spaId"
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent/20 focus:border-brand-accent"
-        >
-          <option
-            v-for="spa in spas"
-            :key="spa.id"
-            :value="spa.id"
-          >
-            {{ spa.name }}
-          </option>
-        </select>
-      </div>
-
       <div v-if="canEditRole">
         <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('team.role') }}</label>
         <select
@@ -109,6 +93,7 @@
           type="date"
           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent/20 focus:border-brand-accent"
         />
+        <p class="mt-1 text-xs text-gray-500">{{ $t('team.birthDateHint') }}</p>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -170,7 +155,6 @@
 
 <script setup lang="ts">
   import { computed } from "vue";
-  import type { Spa } from "@/interfaces";
   import type { TeamFormState } from "@/composables/useTeamManager";
   import Modal from "@/components/common/Modal.vue";
   import BaseButton from "@/components/common/BaseButton.vue";
@@ -182,7 +166,6 @@
     isOpen: boolean;
     isEditing: boolean;
     form: TeamFormState;
-    spas: Spa[];
   }>();
 
   defineEmits<{ close: []; save: [] }>();

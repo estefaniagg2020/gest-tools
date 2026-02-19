@@ -53,8 +53,8 @@ export type AgendaItem = ScheduleBlock | import("./appointment").Appointment;
 
 export const isScheduleBlock = (
   item: AgendaItem,
-): item is ScheduleBlock => !("clientId" in item);
+): item is ScheduleBlock => "type" in item;
 
 export const isAppointment = (
   item: AgendaItem,
-): item is import("./appointment").Appointment => "clientId" in item;
+): item is import("./appointment").Appointment => !("type" in item);

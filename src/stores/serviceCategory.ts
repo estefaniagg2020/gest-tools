@@ -1,52 +1,52 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import type { ServiceCategoryDefinition } from "@/interfaces";
-import { DEFAULT_SERVICE_CATEGORIES } from "@/data/serviceCategoryDefaults";
-import {
-  loadServiceCategories,
-  saveServiceCategories,
-} from "@/infrastructure/serviceCategoryStorage";
+import { serviceCategoriesApi } from "@/infrastructure/serviceCategoriesApi";
 
 export const useServiceCategoryStore = defineStore("serviceCategory", () => {
   const categories = ref<ServiceCategoryDefinition[]>([]);
 
-  const initialize = () => {
-    const stored = loadServiceCategories();
-    categories.value =
-      stored && stored.length > 0 ? stored : [...DEFAULT_SERVICE_CATEGORIES];
-    if (stored?.length === 0 || !stored) {
-      saveServiceCategories(categories.value);
+  const initialize = async (): Promise<void> => {
+    try {
+      categories.value = await serviceCategoriesApi.getCategories();
+    } catch {
+      categories.value = [];
     }
   };
 
   const getCategoryById = (id: string) =>
     categories.value.find((c) => c.id === id);
 
-  const addCategory = (payload: { label: string; icon: string }) => {
-    const id = `cat-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-    const newCategory: ServiceCategoryDefinition = {
-      id,
-      label: payload.label.trim(),
-      icon: payload.icon || "📋",
-    };
-    categories.value.push(newCategory);
-    saveServiceCategories(categories.value);
-    return newCategory;
+  const addCategory = async (payload: { label: string; icon: string }): Promise<ServiceCategoryDefinition> => {
+    const created = await serviceCategoriesApi.createCategory(payload);
+    categories.value.push(created);
+    return created;
   };
 
-  const updateCategory = (
+  const addCategoryWithId = async (payload: {
+    id: string;
+    label: string;
+    icon: string;
+  }): Promise<ServiceCategoryDefinition> => {
+    const existing = categories.value.find((c) => c.id === payload.id);
+    if (existing) return existing;
+    const created = await serviceCategoriesApi.createCategory({ label: payload.label, icon: payload.icon });
+    categories.value.push(created);
+    return created;
+  };
+
+  const updateCategory = async (
     id: string,
     updates: Partial<Pick<ServiceCategoryDefinition, "label" | "icon">>
-  ) => {
+  ): Promise<void> => {
+    const updated = await serviceCategoriesApi.updateCategory(id, updates);
     const index = categories.value.findIndex((c) => c.id === id);
-    if (index === -1) return;
-    categories.value[index] = { ...categories.value[index], ...updates };
-    saveServiceCategories(categories.value);
+    if (index !== -1) categories.value[index] = updated;
   };
 
-  const deleteCategory = (id: string) => {
+  const deleteCategory = async (id: string): Promise<void> => {
+    await serviceCategoriesApi.deleteCategory(id);
     categories.value = categories.value.filter((c) => c.id !== id);
-    saveServiceCategories(categories.value);
   };
 
   return {
@@ -54,6 +54,7 @@ export const useServiceCategoryStore = defineStore("serviceCategory", () => {
     initialize,
     getCategoryById,
     addCategory,
+    addCategoryWithId,
     updateCategory,
     deleteCategory,
   };

@@ -5,6 +5,8 @@
         <AppBrand
           size="lg"
           :show-subtitle="false"
+          :company-name-override="loginBranding?.companyName"
+          :logo-url-override="loginBranding ? loginBranding.logoUrl : undefined"
         />
       </div>
 
@@ -101,20 +103,21 @@
         </div>
       </div>
       <div class="mt-8 flex justify-center">
-        <BokioBrand size="sm" />
+        <BokioLogoSvg size="xl" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive } from "vue";
+  import { ref, reactive, onMounted } from "vue";
   import { useI18n } from "vue-i18n";
   import { useRouter } from "vue-router";
   import { useAuthStore } from "@/stores/auth";
+  import { publicBrandingApi } from "@/infrastructure/publicBrandingApi";
   import AppBrand from "@/components/common/AppBrand.vue";
   import BaseButton from "@/components/common/BaseButton.vue";
-  import BokioBrand from "@/components/common/BokioBrand.vue";
+  import BokioLogoSvg from "@/components/common/BokioLogoSvg.vue";
 
   const { t } = useI18n();
   const router = useRouter();
@@ -123,6 +126,11 @@
   const loading = ref(false);
   const error = ref("");
   const showPassword = ref(false);
+  const loginBranding = ref<{ companyName: string; logoUrl: string | null } | null>(null);
+
+  onMounted(async () => {
+    loginBranding.value = await publicBrandingApi.getBranding();
+  });
 
   const form = reactive({
     username: "",

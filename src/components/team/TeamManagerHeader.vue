@@ -1,8 +1,11 @@
 <template>
-  <div class="flex flex-col gap-4 mb-4 sm:mb-6 sm:flex-row sm:justify-between sm:items-end">
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
     <div class="min-w-0">
-      <h2 class="text-xl font-bold text-app-title sm:text-2xl">{{ $t('team.title') }}</h2>
-      <p class="text-sm text-app-text/70 sm:text-base">{{ $t('team.subtitle') }}</p>
+      <p class="text-xs font-semibold uppercase tracking-widest text-brand-accent mb-1">
+        {{ $t('team.kicker') }}
+      </p>
+      <h1 class="text-3xl font-bold tracking-tight text-app-title sm:text-4xl">{{ $t('team.title') }}</h1>
+      <p class="mt-2 text-app-text/80 max-w-xl">{{ $t('team.subtitle') }}</p>
     </div>
     <div class="flex flex-col sm:flex-row sm:items-center gap-2 shrink-0">
       <label for="team-search" class="sr-only">{{ $t('team.searchLabel') }}</label>

@@ -16,38 +16,41 @@ const clampWorkDays = (d: unknown): number | undefined => {
   return n >= 1 && n <= 7 ? n : undefined;
 };
 
-const defaultEntry = (index: number): AgendaEntry => ({
-  name: `${AGENDA_LIST.DEFAULT_NAME_PREFIX} ${index + 1}`,
+const defaultEntry = (index: number, prefix?: string): AgendaEntry => ({
+  name: `${prefix ?? AGENDA_LIST.DEFAULT_NAME_PREFIX} ${index + 1}`,
   startHour: undefined,
   endHour: undefined,
   workDaysPerWeek: undefined,
 });
 
-export const normalizeAgendaEntry = (raw: unknown, index: number): AgendaEntry => {
+export const normalizeAgendaEntry = (raw: unknown, index: number, prefix?: string): AgendaEntry => {
+  const fallback = `${prefix ?? AGENDA_LIST.DEFAULT_NAME_PREFIX} ${index + 1}`;
   if (raw && typeof raw === "object" && "name" in raw) {
     const name = typeof (raw as { name: unknown }).name === "string"
-      ? (raw as { name: string }).name.trim() || `${AGENDA_LIST.DEFAULT_NAME_PREFIX} ${index + 1}`
-      : `${AGENDA_LIST.DEFAULT_NAME_PREFIX} ${index + 1}`;
+      ? (raw as { name: string }).name.trim() || fallback
+      : fallback;
     const startHour = clampOptionalHour((raw as Record<string, unknown>).startHour);
     const endHour = clampOptionalHour((raw as Record<string, unknown>).endHour);
     const workDaysPerWeek = clampWorkDays((raw as Record<string, unknown>).workDaysPerWeek);
     return { name, startHour, endHour, workDaysPerWeek };
   }
-  return defaultEntry(index);
+  return defaultEntry(index, prefix);
 };
 
 export const ensureAgendasLength = (
   agendas: AgendaEntry[],
   count: number,
+  prefix?: string,
 ): AgendaEntry[] => {
+  const fallback = (i: number) => `${prefix ?? AGENDA_LIST.DEFAULT_NAME_PREFIX} ${i + 1}`;
   const result: AgendaEntry[] = agendas.slice(0, count).map((a, i) => ({
-    name: (a.name && String(a.name).trim()) || `${AGENDA_LIST.DEFAULT_NAME_PREFIX} ${i + 1}`,
+    name: (a.name && String(a.name).trim()) || fallback(i),
     startHour: clampOptionalHour(a.startHour) ?? undefined,
     endHour: clampOptionalHour(a.endHour) ?? undefined,
     workDaysPerWeek: clampWorkDays(a.workDaysPerWeek) ?? undefined,
   }));
   while (result.length < count) {
-    result.push(defaultEntry(result.length));
+    result.push(defaultEntry(result.length, prefix));
   }
   return result;
 };

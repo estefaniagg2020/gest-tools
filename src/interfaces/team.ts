@@ -11,7 +11,7 @@ export interface TeamMember {
   weeklyHours: number;
   color: string;
   role: TeamMemberRole;
-  spaId: string;
+  spaId?: string;
   defaultWorkStartHour?: number;
   defaultWorkEndHour?: number;
   birthDate?: string;

@@ -18,6 +18,10 @@ export interface GestorConfig {
   contactData: ContactData;
   onboardingComplete: boolean;
   teamMembers?: WizardTeamMember[];
+  businessAddress?: string;
+  businessPopulation?: string;
+  isCanarias?: boolean;
+  taxId?: string;
 }
 
 export const DEFAULT_COMPANY_NAME = "Mi Gestor";

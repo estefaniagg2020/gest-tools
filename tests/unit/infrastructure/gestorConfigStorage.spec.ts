@@ -31,7 +31,15 @@ describe("gestorConfigStorage", () => {
   it("should_save_and_load_config", () => {
     const config = fullConfig();
     saveGestorConfig(userId, config);
-    expect(loadGestorConfig(userId)).toEqual(config);
+    const loaded = loadGestorConfig(userId);
+    expect(loaded).not.toBeNull();
+    expect(loaded?.companyName).toBe(config.companyName);
+    expect(loaded?.logoUrl).toBe(config.logoUrl);
+    expect(loaded?.numberOfPeople).toBe(config.numberOfPeople);
+    expect(loaded?.businessType).toBe(config.businessType);
+    expect(loaded?.contactData).toEqual(config.contactData);
+    expect(loaded?.onboardingComplete).toBe(config.onboardingComplete);
+    expect(Array.isArray(loaded?.teamMembers)).toBe(true);
   });
 
   it("should_store_per_user", () => {

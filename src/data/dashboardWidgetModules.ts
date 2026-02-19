@@ -2,28 +2,29 @@ export type DashboardWidgetSize = "small" | "medium" | "large";
 
 export interface DashboardWidgetModule {
   id: string;
-  title: string;
-  description?: string;
+  titleKey: string;
+  descKey: string;
   icon?: string;
   size?: DashboardWidgetSize;
 }
 
 export const DASHBOARD_WIDGET_MODULES: readonly DashboardWidgetModule[] = [
-  { id: "reservas-mes", title: "Reservas del mes", description: "Total de reservas confirmadas durante el mes en curso.", icon: "📅", size: "small" },
-  { id: "reservas-semana", title: "Reservas de la semana", description: "Reservas confirmadas en la semana actual.", icon: "📆", size: "small" },
-  { id: "beneficio-diario", title: "Beneficio diario", description: "Ingresos generados por las reservas de hoy.", icon: "💰", size: "small" },
-  { id: "ingresos-mes", title: "Ingresos del mes", description: "Total acumulado de ingresos en el mes en curso.", icon: "💵", size: "small" },
-  { id: "reservas-canceladas", title: "Reservas canceladas", description: "Número de reservas canceladas este mes.", icon: "❌", size: "small" },
-  { id: "tasa-cancelacion", title: "Tasa de cancelación", description: "Porcentaje de reservas canceladas sobre el total del mes.", icon: "📉", size: "small" },
-  { id: "clientes-nuevos", title: "Clientes nuevos", description: "Clientes que reservaron por primera vez este mes.", icon: "🆕", size: "small" },
-  { id: "ocupacion-semanal", title: "Ocupación semanal", description: "Porcentaje de franjas ocupadas vs disponibles esta semana.", icon: "📊", size: "small" },
-  { id: "horas-trabajadas", title: "Horas trabajadas", description: "Total de horas con cita del equipo esta semana.", icon: "⏱️", size: "small" },
-  { id: "empleado-mas-reservas", title: "Empleado con más reservas", description: "El miembro del equipo con más reservas este mes.", icon: "🏆", size: "medium" },
-  { id: "grafica-reservas-persona", title: "Reservas por persona", description: "Reparto de reservas entre los miembros del equipo.", icon: "👥", size: "large" },
-  { id: "ventas-por-empleado", title: "Ventas por empleado", description: "Ranking de ingresos generados por cada miembro del equipo.", icon: "💼", size: "large" },
-  { id: "servicios-populares", title: "Servicios más solicitados", description: "Ranking de los servicios más reservados este mes.", icon: "⭐", size: "large" },
-  { id: "proximas-citas-hoy", title: "Próximas citas de hoy", description: "Las citas más próximas del día en curso.", icon: "🕐", size: "medium" },
-  { id: "productos-bajo-stock", title: "Productos bajo stock", description: "Productos del inventario que están a punto de acabarse.", icon: "📦", size: "medium" },
+  { id: "reservas-mes", titleKey: "dashboardWidgets.reservasMes", descKey: "dashboardWidgets.reservasMesDesc", icon: "📅", size: "small" },
+  { id: "reservas-semana", titleKey: "dashboardWidgets.reservasSemana", descKey: "dashboardWidgets.reservasSemanaDesc", icon: "📆", size: "small" },
+  { id: "beneficio-diario", titleKey: "dashboardWidgets.beneficioDiario", descKey: "dashboardWidgets.beneficioDiarioDesc", icon: "💰", size: "small" },
+  { id: "ingresos-mes", titleKey: "dashboardWidgets.ingresosMes", descKey: "dashboardWidgets.ingresosMesDesc", icon: "💵", size: "small" },
+  { id: "reservas-canceladas", titleKey: "dashboardWidgets.reservasCanceladas", descKey: "dashboardWidgets.reservasCanceladasDesc", icon: "❌", size: "small" },
+  { id: "tasa-cancelacion", titleKey: "dashboardWidgets.tasaCancelacion", descKey: "dashboardWidgets.tasaCancelacionDesc", icon: "📉", size: "small" },
+  { id: "clientes-nuevos", titleKey: "dashboardWidgets.clientesNuevos", descKey: "dashboardWidgets.clientesNuevosDesc", icon: "🆕", size: "small" },
+  { id: "ocupacion-semanal", titleKey: "dashboardWidgets.ocupacionSemanal", descKey: "dashboardWidgets.ocupacionSemanalDesc", icon: "📊", size: "small" },
+  { id: "horas-trabajadas", titleKey: "dashboardWidgets.horasTrabajadas", descKey: "dashboardWidgets.horasTrabajadasDesc", icon: "⏱️", size: "small" },
+  { id: "empleado-mas-reservas", titleKey: "dashboardWidgets.empleadoMasReservas", descKey: "dashboardWidgets.empleadoMasReservasDesc", icon: "🏆", size: "medium" },
+  { id: "grafica-reservas-persona", titleKey: "dashboardWidgets.graficaReservasPersona", descKey: "dashboardWidgets.graficaReservasPersonaDesc", icon: "👥", size: "large" },
+  { id: "ventas-por-empleado", titleKey: "dashboardWidgets.ventasPorEmpleado", descKey: "dashboardWidgets.ventasPorEmpleadoDesc", icon: "💼", size: "large" },
+  { id: "servicios-populares", titleKey: "dashboardWidgets.serviciosPopulares", descKey: "dashboardWidgets.serviciosPopularesDesc", icon: "⭐", size: "large" },
+  { id: "proximas-citas-hoy", titleKey: "dashboardWidgets.proximasCitasHoy", descKey: "dashboardWidgets.proximasCitasHoyDesc", icon: "🕐", size: "medium" },
+  { id: "productos-bajo-stock", titleKey: "dashboardWidgets.productosBajoStock", descKey: "dashboardWidgets.productosBajoStockDesc", icon: "📦", size: "medium" },
+  { id: "lista-espera", titleKey: "dashboardWidgets.listaEspera", descKey: "dashboardWidgets.listaEsperaDesc", icon: "⏳", size: "medium" },
 ];
 
 export const DASHBOARD_WIDGET_IDS = DASHBOARD_WIDGET_MODULES.map((m) => m.id);
@@ -32,9 +33,9 @@ export const getDashboardWidgetById = (id: string): DashboardWidgetModule | unde
   DASHBOARD_WIDGET_MODULES.find((m) => m.id === id);
 
 const WIDGET_COL_SPAN: Record<DashboardWidgetSize, string> = {
-  small: "sm:col-span-1",
-  medium: "sm:col-span-2",
-  large: "sm:col-span-3",
+  small: "col-span-1",
+  medium: "col-span-1 sm:col-span-2",
+  large: "col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-4",
 };
 
 export const getWidgetColSpan = (size: DashboardWidgetSize = "small"): string =>

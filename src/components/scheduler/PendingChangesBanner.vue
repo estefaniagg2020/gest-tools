@@ -98,13 +98,13 @@
   const pendingCount = computed(() => props.pendingBlocks.length);
 
   const typeLabel = (type: ScheduleBlockType): string => {
-    const opt = BLOCK_EDITOR_TYPE_OPTIONS.find((o) => o.value === type);
-    return opt?.label ?? "Otro";
+    const option = BLOCK_EDITOR_TYPE_OPTIONS.find((opt) => opt.value === type);
+    return option?.label ?? "Otro";
   };
 
   const memberName = (memberId: string): string => {
-    const m = teamStore.members.find((x) => x.id === memberId);
-    return m?.name ?? memberId;
+    const member = teamStore.members.find((m) => m.id === memberId);
+    return member?.name ?? memberId;
   };
 
   const openModal = () => {

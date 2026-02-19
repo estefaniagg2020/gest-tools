@@ -17,13 +17,13 @@
           variant="outline"
           @click="selectAll"
         >
-          Seleccionar todas
+          {{ $t('configDashboard.selectAll') }}
         </BaseButton>
         <BaseButton
           variant="outline"
           @click="selectNone"
         >
-          Ninguna
+          {{ $t('configDashboard.selectNone') }}
         </BaseButton>
       </div>
 
@@ -45,8 +45,8 @@
             <div class="flex items-center gap-2.5">
               <span class="text-2xl" aria-hidden="true">{{ widget.icon }}</span>
               <div>
-                <p class="text-sm font-semibold text-app-title">{{ widget.title }}</p>
-                <p class="text-xs text-app-text/60 mt-0.5">{{ widget.description }}</p>
+                <p class="text-sm font-semibold text-app-title">{{ $t(widget.titleKey) }}</p>
+                <p class="text-xs text-app-text/60 mt-0.5">{{ $t(widget.descKey) }}</p>
               </div>
             </div>
             <span
@@ -80,7 +80,7 @@
             <!-- Reservas del mes -->
             <div v-if="widget.id === 'reservas-mes'" class="flex items-end justify-between">
               <div>
-                <p class="text-[10px] font-medium text-brand-accent uppercase tracking-wider">Reservas del mes</p>
+                <p class="text-[10px] font-medium text-brand-accent uppercase tracking-wider">{{ $t(widget.titleKey) }}</p>
                 <p class="mt-1 text-xl font-bold text-brand-accent tabular-nums">42</p>
               </div>
               <div class="flex items-end gap-0.5 h-8">
@@ -91,7 +91,7 @@
             <!-- Reservas de la semana -->
             <div v-else-if="widget.id === 'reservas-semana'" class="flex items-end justify-between">
               <div>
-                <p class="text-[10px] font-medium text-brand-accent uppercase tracking-wider">Reservas de la semana</p>
+                <p class="text-[10px] font-medium text-brand-accent uppercase tracking-wider">{{ $t(widget.titleKey) }}</p>
                 <p class="mt-1 text-xl font-bold text-brand-accent tabular-nums">12</p>
               </div>
               <div class="flex items-end gap-0.5 h-8">
@@ -101,7 +101,7 @@
 
             <!-- Beneficio diario -->
             <div v-else-if="widget.id === 'beneficio-diario'">
-              <p class="text-[10px] font-medium text-brand-accent uppercase tracking-wider">Beneficio diario</p>
+              <p class="text-[10px] font-medium text-brand-accent uppercase tracking-wider">{{ $t(widget.titleKey) }}</p>
               <div class="flex items-baseline gap-1 mt-1">
                 <p class="text-xl font-bold text-brand-accent tabular-nums">185,00 €</p>
                 <span class="text-[10px] font-medium text-emerald-500">+12%</span>
@@ -110,7 +110,7 @@
 
             <!-- Ingresos del mes -->
             <div v-else-if="widget.id === 'ingresos-mes'">
-              <p class="text-[10px] font-medium text-brand-accent uppercase tracking-wider">Ingresos del mes</p>
+              <p class="text-[10px] font-medium text-brand-accent uppercase tracking-wider">{{ $t(widget.titleKey) }}</p>
               <p class="mt-1 text-xl font-bold text-brand-accent tabular-nums">3.420,00 €</p>
               <div class="mt-1.5 flex items-end gap-0.5 h-6">
                 <span v-for="(h, i) in [30, 45, 55, 40, 65, 50, 70, 80, 60, 75, 85, 90]" :key="i" class="flex-1 rounded-sm bg-brand-accent/30" :style="{ height: h + '%' }" />
@@ -119,7 +119,7 @@
 
             <!-- Reservas canceladas -->
             <div v-else-if="widget.id === 'reservas-canceladas'">
-              <p class="text-[10px] font-medium text-app-text/60 uppercase tracking-wider">Reservas canceladas</p>
+              <p class="text-[10px] font-medium text-app-text/60 uppercase tracking-wider">{{ $t(widget.titleKey) }}</p>
               <p class="mt-1 text-xl font-bold text-app-title tabular-nums">3</p>
               <div class="mt-1.5 flex gap-1">
                 <span v-for="i in 5" :key="i" class="h-1 flex-1 rounded-full" :class="i <= 3 ? 'bg-red-400/60' : 'bg-app-border-subtle'" />
@@ -128,7 +128,7 @@
 
             <!-- Tasa de cancelación -->
             <div v-else-if="widget.id === 'tasa-cancelacion'">
-              <p class="text-[10px] font-medium text-app-text/60 uppercase tracking-wider">Tasa de cancelación</p>
+              <p class="text-[10px] font-medium text-app-text/60 uppercase tracking-wider">{{ $t(widget.titleKey) }}</p>
               <p class="mt-1 text-xl font-bold text-emerald-500 tabular-nums">7%</p>
               <div class="mt-1.5 h-1.5 rounded-full bg-app-border-subtle overflow-hidden">
                 <div class="h-full rounded-full bg-emerald-400/70 w-[7%]" />
@@ -137,7 +137,7 @@
 
             <!-- Reservas por persona -->
             <div v-else-if="widget.id === 'grafica-reservas-persona'">
-              <p class="text-[10px] font-medium text-brand-accent uppercase tracking-wider mb-2">Reservas por persona</p>
+              <p class="text-[10px] font-medium text-brand-accent uppercase tracking-wider mb-2">{{ $t(widget.titleKey) }}</p>
               <div class="space-y-1.5">
                 <div v-for="(person, i) in SAMPLE_PEOPLE" :key="i" class="flex items-center gap-2">
                   <span class="text-[11px] text-app-title truncate w-14">{{ person.name }}</span>
@@ -151,19 +151,19 @@
 
             <!-- Empleado con más reservas -->
             <div v-else-if="widget.id === 'empleado-mas-reservas'">
-              <p class="text-[10px] font-medium text-brand-accent uppercase tracking-wider">Empleado con más reservas</p>
+              <p class="text-[10px] font-medium text-brand-accent uppercase tracking-wider">{{ $t(widget.titleKey) }}</p>
               <div class="mt-2 flex items-center gap-3">
                 <span class="text-2xl" aria-hidden="true">🏆</span>
                 <div>
                   <p class="text-base font-bold text-app-title">María</p>
-                  <p class="text-sm font-semibold text-brand-accent tabular-nums">24 reservas</p>
+                  <p class="text-sm font-semibold text-brand-accent tabular-nums">24 {{ $t('dashboardWidgets.reservasSuffix') }}</p>
                 </div>
               </div>
             </div>
 
             <!-- Ventas por empleado -->
             <div v-else-if="widget.id === 'ventas-por-empleado'">
-              <p class="text-[10px] font-medium text-brand-accent uppercase tracking-wider mb-2">Ventas por empleado</p>
+              <p class="text-[10px] font-medium text-brand-accent uppercase tracking-wider mb-2">{{ $t(widget.titleKey) }}</p>
               <div class="space-y-1.5">
                 <div v-for="(emp, i) in SAMPLE_VENTAS_EMPLEADO" :key="i" class="flex items-center gap-2">
                   <span class="text-[10px] font-semibold text-app-text/40 w-3 shrink-0">{{ i + 1 }}</span>
@@ -178,7 +178,7 @@
 
             <!-- Servicios más solicitados -->
             <div v-else-if="widget.id === 'servicios-populares'">
-              <p class="text-[10px] font-medium text-brand-accent uppercase tracking-wider mb-2">Servicios más solicitados</p>
+              <p class="text-[10px] font-medium text-brand-accent uppercase tracking-wider mb-2">{{ $t(widget.titleKey) }}</p>
               <div class="space-y-1.5">
                 <div v-for="(srv, i) in SAMPLE_SERVICES" :key="i" class="flex items-center gap-2">
                   <span class="text-[10px] font-semibold text-app-text/40 w-3 shrink-0">{{ i + 1 }}</span>
@@ -193,10 +193,10 @@
 
             <!-- Clientes nuevos -->
             <div v-else-if="widget.id === 'clientes-nuevos'">
-              <p class="text-[10px] font-medium text-brand-accent uppercase tracking-wider">Clientes nuevos</p>
+              <p class="text-[10px] font-medium text-brand-accent uppercase tracking-wider">{{ $t(widget.titleKey) }}</p>
               <div class="flex items-baseline gap-1 mt-1">
                 <p class="text-xl font-bold text-brand-accent tabular-nums">8</p>
-                <span class="text-[10px] text-app-text/50">este mes</span>
+                <span class="text-[10px] text-app-text/50">{{ $t('dashboardWidgets.thisMonth') }}</span>
               </div>
               <div class="mt-1.5 flex gap-0.5">
                 <span v-for="i in 8" :key="i" class="h-2 w-2 rounded-full bg-brand-accent/50" />
@@ -206,7 +206,7 @@
 
             <!-- Próximas citas de hoy -->
             <div v-else-if="widget.id === 'proximas-citas-hoy'">
-              <p class="text-[10px] font-medium text-brand-accent uppercase tracking-wider mb-2">Próximas citas</p>
+              <p class="text-[10px] font-medium text-brand-accent uppercase tracking-wider mb-2">{{ $t(widget.titleKey) }}</p>
               <div class="space-y-1.5">
                 <div v-for="(cita, i) in SAMPLE_CITAS" :key="i" class="flex items-center gap-2">
                   <span class="text-[10px] font-bold text-brand-accent tabular-nums shrink-0 w-10">{{ cita.hour }}</span>
@@ -218,7 +218,7 @@
 
             <!-- Ocupación semanal -->
             <div v-else-if="widget.id === 'ocupacion-semanal'">
-              <p class="text-[10px] font-medium text-brand-accent uppercase tracking-wider">Ocupación semanal</p>
+              <p class="text-[10px] font-medium text-brand-accent uppercase tracking-wider">{{ $t(widget.titleKey) }}</p>
               <p class="mt-1 text-xl font-bold text-brand-accent tabular-nums">68%</p>
               <div class="mt-1.5 h-2 rounded-full bg-app-border-subtle overflow-hidden">
                 <div class="h-full rounded-full bg-brand-accent/70 w-[68%]" />
@@ -227,10 +227,10 @@
 
             <!-- Horas trabajadas -->
             <div v-else-if="widget.id === 'horas-trabajadas'">
-              <p class="text-[10px] font-medium text-brand-accent uppercase tracking-wider">Horas trabajadas</p>
+              <p class="text-[10px] font-medium text-brand-accent uppercase tracking-wider">{{ $t(widget.titleKey) }}</p>
               <div class="flex items-baseline gap-1 mt-1">
                 <p class="text-xl font-bold text-brand-accent tabular-nums">32.5</p>
-                <span class="text-[10px] text-app-text/50">h esta semana</span>
+                <span class="text-[10px] text-app-text/50">{{ $t('dashboardWidgets.hThisWeek') }}</span>
               </div>
               <div class="mt-1.5 flex items-end gap-0.5 h-6">
                 <span v-for="(h, i) in [80, 90, 70, 85, 60]" :key="i" class="flex-1 rounded-sm bg-brand-accent/40" :style="{ height: h + '%' }" />
@@ -240,7 +240,7 @@
 
             <!-- Productos bajo stock -->
             <div v-else-if="widget.id === 'productos-bajo-stock'">
-              <p class="text-[10px] font-medium text-amber-500 uppercase tracking-wider mb-2">Productos bajo stock</p>
+              <p class="text-[10px] font-medium text-amber-500 uppercase tracking-wider mb-2">{{ $t(widget.titleKey) }}</p>
               <div class="space-y-1.5">
                 <div v-for="(prod, i) in SAMPLE_PRODUCTS" :key="i" class="flex items-center gap-2">
                   <span class="text-[11px] text-app-title truncate flex-1">{{ prod.name }}</span>
@@ -256,7 +256,7 @@
       </div>
 
       <p class="mt-6 text-xs text-app-text/50 transition-colors duration-200">
-        Los datos de las previews son solo de ejemplo. Pulsa una tarjeta para activar o desactivar el widget.
+        {{ $t('configDashboard.previewHint') }}
       </p>
     </div>
   </div>

@@ -189,8 +189,8 @@
     },
   );
 
-  const openModal = () => {
-    teamStore.initialize();
+  const openModal = async () => {
+    await teamStore.initialize();
     isModalOpen.value = true;
   };
 

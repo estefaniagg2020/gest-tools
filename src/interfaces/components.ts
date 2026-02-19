@@ -49,6 +49,7 @@ export interface ActivityTimelineProps {
 export interface ModalProps {
   isOpen: boolean;
   variant?: "default" | "modern";
+  title?: string;
 }
 
 export interface BlockEditorModalProps {

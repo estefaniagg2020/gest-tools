@@ -1,3 +1,7 @@
+import type { ComputedRef } from "vue";
+import { computed } from "vue";
+import { useBillingConfig } from "@/composables/useBillingConfig";
+
 export interface ConfigHubCardItem {
   id: string;
   to: string;
@@ -8,6 +12,14 @@ export interface ConfigHubCardItem {
 }
 
 const CONFIG_CARDS: readonly ConfigHubCardItem[] = [
+  {
+    id: "modules",
+    to: "/config/modules",
+    titleKey: "config.modules.title",
+    descriptionKey: "config.modules.description",
+    icon: "▦",
+    accent: "amber",
+  },
   {
     id: "datos",
     to: "/config/data",
@@ -72,8 +84,28 @@ const CONFIG_CARDS: readonly ConfigHubCardItem[] = [
     icon: "🌐",
     accent: "teal",
   },
+  {
+    id: "bonos",
+    to: "/config/bonos",
+    titleKey: "config.bonos.title",
+    descriptionKey: "config.bonos.description",
+    icon: "🎫",
+    accent: "violet",
+  },
+  {
+    id: "billing",
+    to: "/config/billing",
+    titleKey: "config.billing.title",
+    descriptionKey: "config.billing.description",
+    icon: "🧾",
+    accent: "teal",
+  },
 ];
 
-export const useConfigHub = () => ({
-  cards: CONFIG_CARDS,
-});
+export const useConfigHub = (): { cards: ComputedRef<ConfigHubCardItem[]> } => {
+  const { bonosEnabled } = useBillingConfig();
+  const cards = computed(() =>
+    CONFIG_CARDS.filter((card) => (card.id === "bonos" ? bonosEnabled.value : true))
+  );
+  return { cards };
+};

@@ -71,6 +71,7 @@ export const dashboardRouter = (prisma: PrismaClient) => {
         appointmentsWeekForHours,
         clientesNuevos,
         proximasCitasHoy,
+        waitlistEntries,
       ] = await Promise.all([
         prisma.appointment.count({
           where: {
@@ -149,6 +150,15 @@ export const dashboardRouter = (prisma: PrismaClient) => {
           },
           orderBy: { start: "asc" },
           take: 5,
+        }),
+        prisma.slotWaitlistEntry.findMany({
+          where: { businessId },
+          include: {
+            user: { select: { name: true, username: true } },
+            service: { select: { name: true } },
+          },
+          orderBy: { createdAt: "asc" },
+          take: 8,
         }),
       ]);
 
@@ -266,6 +276,13 @@ export const dashboardRouter = (prisma: PrismaClient) => {
         ocupacionSemanal,
         horasTrabajadasSemana: Math.round(horasTrabajadasSemana * 10) / 10,
         productosBajoStock: [],
+        listaEspera: waitlistEntries.map((e) => ({
+          id: e.id,
+          clientName: e.user.name ?? e.user.username,
+          serviceName: e.service.name,
+          preferredStart: e.preferredStart.toISOString(),
+          createdAt: e.createdAt.toISOString(),
+        })),
       });
     } catch (err) {
       res.status(500).json({ error: "Error al obtener estadísticas" });

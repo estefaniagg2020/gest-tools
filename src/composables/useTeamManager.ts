@@ -1,28 +1,30 @@
 import { ref, reactive, computed, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import { useTeamStore } from "@/stores/team";
-import { useSpaStore } from "@/stores/spa";
+import { useConfirmDialog } from "@/composables/useConfirmDialog";
+import { useToast } from "@/composables/useToast";
 import { useGestorConfigStore } from "@/stores/gestorConfig";
 import type { TeamMember, WizardTeamMember } from "@/interfaces";
 import { TEAM_MANAGER } from "@/data/constants";
 import { getRandomAnimalAvatarUrl } from "@/utils/avatar";
 import { generatePastelColor } from "@/utils/color";
 
-const DEFAULT_IDS_ORDER = ["1", "2", "3", "4", "5", "6", "7", "8"];
-
-export const syncWizardTeamMembers = (wizardMembers: WizardTeamMember[]) => {
+export const syncWizardTeamMembers = async (wizardMembers: WizardTeamMember[]): Promise<void> => {
   const store = useTeamStore();
-  const existingIds = new Set(store.members.map((m) => m.id));
+  await store.initialize();
+  const byName = new Map(store.members.map((m) => [m.name.trim().toLowerCase(), m]));
 
   for (const wm of wizardMembers) {
-    if (existingIds.has(wm.id)) {
-      const existing = store.members.find((m) => m.id === wm.id);
-      if (existing && existing.name !== wm.name) {
-        store.updateMember(wm.id, { name: wm.name });
+    const name = wm.name?.trim() || "";
+    if (!name) continue;
+    const existing = byName.get(name.toLowerCase());
+    if (existing) {
+      if (existing.name !== wm.name) {
+        await store.updateMember(existing.id, { name: wm.name });
       }
     } else {
-      store.insertMember({
-        id: wm.id,
+      await store.insertMember({
+        id: "",
         name: wm.name,
         specialty: wm.specialty || undefined,
         photoUrl: "",
@@ -31,7 +33,6 @@ export const syncWizardTeamMembers = (wizardMembers: WizardTeamMember[]) => {
         weeklyHours: 40,
         color: generatePastelColor(),
         role: "member",
-        spaId: "",
         defaultWorkStartHour: TEAM_MANAGER.DEFAULT_WORK_START_HOUR,
         defaultWorkEndHour: TEAM_MANAGER.DEFAULT_WORK_END_HOUR,
       });
@@ -47,7 +48,6 @@ export type TeamFormState = {
   photoUrl: string;
   linkedInUrl: string | undefined;
   role: "member" | "manager";
-  spaId: string;
   defaultWorkStartHour: number;
   defaultWorkEndHour: number;
   birthDate: string;
@@ -61,7 +61,6 @@ const getInitialForm = (): TeamFormState => ({
   photoUrl: "",
   linkedInUrl: undefined,
   role: "member",
-  spaId: "",
   defaultWorkStartHour: TEAM_MANAGER.DEFAULT_WORK_START_HOUR,
   defaultWorkEndHour: TEAM_MANAGER.DEFAULT_WORK_END_HOUR,
   birthDate: "",
@@ -70,25 +69,20 @@ const getInitialForm = (): TeamFormState => ({
 export const useTeamManager = () => {
   const { t } = useI18n();
   const store = useTeamStore();
-  const spaStore = useSpaStore();
+  const { show: showConfirm } = useConfirmDialog();
+  const { addToast } = useToast();
 
   const isModalOpen = ref(false);
   const isEditing = ref(false);
   const editingId = ref<string | null>(null);
   const form = reactive<TeamFormState>(getInitialForm());
 
-  const orderedMembers = computed(() => {
-    const orderIndex = new Map(DEFAULT_IDS_ORDER.map((id, i) => [id, i]));
-    return [...store.members].sort((a, b) => {
-      const ia = orderIndex.get(a.id) ?? Number.MAX_SAFE_INTEGER;
-      const ib = orderIndex.get(b.id) ?? Number.MAX_SAFE_INTEGER;
-      return ia - ib;
-    });
-  });
+  const orderedMembers = computed(() =>
+    [...store.members].sort((a, b) => a.name.localeCompare(b.name)),
+  );
 
   const resetForm = () => {
     Object.assign(form, getInitialForm());
-    form.spaId = spaStore.spas[0]?.id ?? "";
   };
 
   const openCreateModal = () => {
@@ -109,7 +103,6 @@ export const useTeamManager = () => {
     form.photoUrl = member.photoUrl;
     form.linkedInUrl = member.linkedInUrl ?? "";
     form.role = member.role;
-    form.spaId = member.spaId || (spaStore.spas[0]?.id ?? "");
     form.defaultWorkStartHour = member.defaultWorkStartHour ?? TEAM_MANAGER.DEFAULT_WORK_START_HOUR;
     form.defaultWorkEndHour = member.defaultWorkEndHour ?? TEAM_MANAGER.DEFAULT_WORK_END_HOUR;
     form.birthDate = member.birthDate ?? "";
@@ -120,10 +113,7 @@ export const useTeamManager = () => {
     isModalOpen.value = false;
   };
 
-  const saveMember = () => {
-    if (!form.spaId && spaStore.spas.length > 0) {
-      form.spaId = spaStore.spas[0].id;
-    }
+  const saveMember = async () => {
     const startH = form.defaultWorkStartHour;
     const endH = form.defaultWorkEndHour <= startH ? startH + 1 : form.defaultWorkEndHour;
     const payload = {
@@ -133,49 +123,64 @@ export const useTeamManager = () => {
       defaultWorkEndHour: Math.min(24, endH),
       birthDate: form.birthDate?.trim() || undefined,
     };
-    if (isEditing.value && editingId.value) {
-      store.updateMember(editingId.value, payload);
-    } else {
-      store.addMember(payload);
+    try {
+      if (isEditing.value && editingId.value) {
+        await store.updateMember(editingId.value, payload);
+      } else {
+        await store.addMember(payload);
+      }
+      closeModal();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Error al guardar";
+      addToast(msg, "error");
     }
-    closeModal();
   };
 
-  const deleteMember = (id: string) => {
-    if (confirm(t("team.deleteConfirm"))) {
-      store.deleteMember(id);
+  const deleteMember = async (id: string) => {
+    const ok = await showConfirm({
+      title: t("team.deleteConfirm").split("?")[0] + "?",
+      message: t("team.deleteConfirm"),
+      confirmLabel: "Eliminar",
+      variant: "danger",
+    });
+    if (ok) {
+      try {
+        await store.deleteMember(id);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Error al eliminar";
+        addToast(msg, "error");
+      }
     }
   };
 
-  const getLocationName = (id: string) => {
-    const spa = spaStore.getSpaById(id);
-    return spa ? spa.name : t("team.noAssignment");
-  };
-
-  onMounted(() => {
-    store.initialize();
-    spaStore.initialize();
+  onMounted(async () => {
+    await store.initialize();
     const gestorConfigStore = useGestorConfigStore();
     const configMembers = gestorConfigStore.teamMembers;
     if (store.members.length === 0 && configMembers.length > 0) {
-      syncWizardTeamMembers(configMembers);
+      await syncWizardTeamMembers(configMembers);
     }
   });
 
-  const clearMembers = () => store.clearMembers();
+  const clearMembers = async () => {
+    try {
+      await store.clearMembers();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Error al limpiar equipo";
+      addToast(msg, "error");
+    }
+  };
 
   return {
     orderedMembers,
     isModalOpen,
     isEditing,
     form,
-    spaStore,
     openCreateModal,
     editMember,
     closeModal,
     saveMember,
     deleteMember,
     clearMembers,
-    getLocationName,
   };
 };

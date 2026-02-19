@@ -109,30 +109,27 @@
         {{ editor.error }}
       </div>
 
-      <div class="pt-4 flex flex-wrap justify-end gap-3 border-t border-gray-100">
-        <template v-if="editor.isEditing">
+      <div class="pt-4 flex items-center justify-between gap-3 border-t border-gray-100">
+        <div v-if="editor.isEditing">
           <button
             type="button"
-            class="mr-auto text-amber-600 hover:text-amber-700 font-medium text-sm px-2"
-            @click="onCancelBlockClick"
-          >
-            {{ editor.labels.BTN_CANCEL_BLOCK }}
-          </button>
-          <button
-            type="button"
-            class="text-red-400 hover:text-red-600 font-medium text-sm px-2"
+            class="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-red-100 text-red-400 text-sm font-medium hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-colors"
             @click="onDeleteBlockClick"
           >
-            {{ editor.labels.BTN_DELETE }}
+            🗑 {{ editor.labels.BTN_DELETE }}
           </button>
-        </template>
-        <BaseButton
-          variant="ghost"
-          type="button"
-          @click="$emit('close')"
-          >{{ editor.labels.BTN_CANCEL }}</BaseButton
-        >
-        <BaseButton type="submit">{{ editor.submitLabel }}</BaseButton>
+        </div>
+        <div v-else class="w-0" />
+        <div class="flex gap-2">
+          <BaseButton
+            variant="ghost"
+            type="button"
+            @click="$emit('close')"
+          >
+            {{ editor.labels.BTN_CANCEL }}
+          </BaseButton>
+          <BaseButton type="submit">{{ editor.submitLabel }}</BaseButton>
+        </div>
       </div>
     </form>
   </Modal>
@@ -193,15 +190,6 @@
         emit("update:date", next);
       }
     }
-  };
-
-  const onCancelBlockClick = () => {
-    const id = props.editBlock?.id;
-    if (id) {
-      scheduleStore.cancelBlock(id);
-      emit("cancel");
-    }
-    emit("close");
   };
 
   const onDeleteBlockClick = () => {

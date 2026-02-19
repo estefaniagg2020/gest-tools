@@ -3,8 +3,15 @@ import { apiFetch } from "./apiClient";
 export interface BusinessConfig {
   id?: string;
   businessId?: string;
+  professionId?: string | null;
   whatsappRemindersEnabled?: boolean;
   whatsappPhoneNumberId?: string | null;
+  defaultVatPercent?: number;
+  cartEnabled?: boolean;
+  bonosEnabled?: boolean;
+  serviciosEnabled?: boolean;
+  inventarioEnabled?: boolean;
+  hiddenSystemServiceNames?: string[];
   [key: string]: unknown;
 }
 

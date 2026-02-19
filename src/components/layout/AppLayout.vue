@@ -22,7 +22,8 @@
 
       <main class="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden relative">
         <header
-          class="layout-header shrink-0 md:hidden bg-(--chrome-surface) border-b border-(--chrome-border) p-4 flex items-center justify-between z-20 transition-colors duration-200"
+          class="layout-header shrink-0 md:hidden p-4 flex items-center justify-between z-20 transition-colors duration-200"
+          :class="hasThemeSelected ? 'header-themed' : 'bg-(--chrome-surface) border-b border-(--chrome-border)'"
         >
           <AppBrand
             size="sm"
@@ -46,35 +47,65 @@
 
         <nav
           v-if="showNavbarDesktop"
-          class="layout-header shrink-0 hidden md:flex items-center gap-6 px-6 py-3 border-b border-(--chrome-border) bg-(--chrome-surface)"
+          class="shrink-0 flex md:hidden gap-2 px-4 py-3 overflow-x-auto border-b border-(--chrome-border) bg-(--chrome-surface) scrollbar-hide"
+          :class="hasThemeSelected ? 'header-themed' : ''"
+          :aria-label="$t('nav.aria')"
         >
           <RouterLink
-            v-for="item in orderedNavItems"
+            v-for="item in mobileNavItems"
             :key="item.to"
             :to="item.to"
-            :title="item.iconOnly ? item.label : undefined"
-            class="flex items-center gap-2 text-app-text/80 hover:text-brand-accent font-medium transition-colors"
+            class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap"
+            :class="isActiveNav(item.to)
+              ? 'bg-brand-accent text-white shadow-sm'
+              : 'bg-app-bg/80 text-app-text/80 hover:bg-app-border-subtle hover:text-app-title'"
           >
-            <span>{{ item.icon }}</span>
-            <span v-if="!item.iconOnly">{{ item.label }}</span>
+            <span aria-hidden="true">{{ item.icon }}</span>
+            <span>{{ item.label }}</span>
           </RouterLink>
         </nav>
 
         <div
-          class="flex-1 min-h-0 flex flex-col overflow-y-auto px-4 py-5 sm:px-5 sm:py-6 md:px-6 md:py-6 lg:p-8 bg-app-bg"
+          class="flex-1 min-h-0 flex flex-col overflow-y-auto bg-app-bg"
           :class="[
-            showSidebar && !layoutSidebarRight && 'md:pl-0',
-            showSidebar && layoutSidebarRight && 'md:pr-0',
+            showSidebar && !layoutSidebarRight && 'md:pl-4',
+            showSidebar && layoutSidebarRight && 'md:pr-4',
           ]"
         >
-          <RouterView v-slot="{ Component }">
-            <transition
-              name="fade"
-              mode="out-in"
+          <nav
+            v-if="showNavbarDesktop"
+            class="layout-header shrink-0 hidden md:flex items-center gap-4 md:gap-4 lg:gap-6 px-4 md:px-5 lg:px-6 py-3"
+            :class="hasThemeSelected ? 'header-themed' : 'border-b border-(--chrome-border) bg-(--chrome-surface)'"
+          >
+            <RouterLink
+              v-for="item in orderedNavItems"
+              :key="item.to"
+              :to="item.to"
+              :title="item.iconOnly ? item.label : undefined"
+              class="flex items-center gap-2 text-app-text/80 hover:text-brand-accent font-medium transition-colors"
             >
-              <component :is="Component" />
-            </transition>
+              <span>{{ item.icon }}</span>
+              <span v-if="!item.iconOnly">{{ item.label }}</span>
+            </RouterLink>
+          </nav>
+          <div class="flex-1 min-h-0 min-w-0">
+          <RouterView v-slot="{ Component, route: currentRoute }">
+            <Suspense>
+              <transition
+                :key="currentRoute.path"
+                name="fade"
+                mode="out-in"
+              >
+                <component :is="Component" />
+              </transition>
+              <template #fallback>
+                <div class="flex flex-1 min-h-48 items-center justify-center text-app-text/60 text-sm">
+                  {{ $t('common.loading') }}
+                </div>
+              </template>
+            </Suspense>
           </RouterView>
+          </div>
         </div>
       </main>
     </div>
@@ -92,7 +123,10 @@
   import { useLayoutStore } from "@/stores/layout";
   import { useModuleIconsStore } from "@/stores/moduleIcons";
   import { useAgendaColorsStore } from "@/stores/agendaColors";
+  import { useThemeStore } from "@/stores/theme";
+  import { DEFAULT_THEME_ID } from "@/data/themes";
   import { useResolvedLayoutModules } from "@/composables/useResolvedModuleIcons";
+  import { useBillingConfig } from "@/composables/useBillingConfig";
   import { setFavicon } from "@/utils/favicon";
   import AppBrand from "@/components/common/AppBrand.vue";
   import AppFooter from "./AppFooter.vue";
@@ -104,7 +138,7 @@
   const gestorConfigStore = useGestorConfigStore();
   const layoutStore = useLayoutStore();
   const { user } = storeToRefs(authStore);
-  const { displayLogoUrl } = storeToRefs(gestorConfigStore);
+  const { displayLogoUrl, displayCompanyName } = storeToRefs(gestorConfigStore);
   const { sidebarPosition, showNavbar } = storeToRefs(layoutStore);
 
   const isConfigArea = computed(() => route.path.startsWith("/config"));
@@ -123,20 +157,34 @@
       iconOnly: m.iconOnly ?? false,
     }))
   );
+
+  const mobileNavItems = computed(() =>
+    resolvedLayoutModules.value
+      .filter((m) => m.id !== "config")
+      .map((m) => ({ to: m.to, icon: m.icon, label: m.label }))
+  );
+
+  const isActiveNav = (to: string) => {
+    if (to === "/") return route.path === "/";
+    return route.path.startsWith(to);
+  };
   const isMobileMenuOpen = ref(false);
 
   const agendaColorsStore = useAgendaColorsStore();
-
+  const themeStore = useThemeStore();
   const resolvedLayoutModules = useResolvedLayoutModules();
+
+  const hasThemeSelected = computed(() => themeStore.themeId !== DEFAULT_THEME_ID);
 
   watch(
     user,
-    (u) => {
+    async (u) => {
       if (u) {
-        gestorConfigStore.initialize(u.id);
+        await gestorConfigStore.initialize(u.id, u.businessId ?? null);
         layoutStore.initialize(u.id);
         useModuleIconsStore().initialize(u.id);
         agendaColorsStore.initialize();
+        useBillingConfig().load();
       }
     },
     { immediate: true }
@@ -145,6 +193,15 @@
   watch(
     displayLogoUrl,
     (url) => setFavicon(url || null),
+    { immediate: true }
+  );
+
+  watch(
+    () => displayCompanyName.value,
+    (name) => {
+      const base = "Bokio";
+      document.title = name ? `${name} – ${base}` : base;
+    },
     { immediate: true }
   );
 

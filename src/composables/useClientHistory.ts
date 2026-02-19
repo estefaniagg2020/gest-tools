@@ -10,6 +10,7 @@ export interface ClientHistoryEntry {
   appointment: Appointment;
   serviceName: string;
   memberName: string;
+  clientName: string;
   startDate: Date;
   isPast: boolean;
 }
@@ -48,10 +49,14 @@ export const useClientHistory = () => {
         const member = apt.memberId
           ? teamStore.getMemberById(apt.memberId)
           : null;
+        const client = apt.clientId
+          ? clientStore.getClientById(apt.clientId)
+          : null;
         return {
           appointment: apt,
           serviceName: service?.name ?? "—",
           memberName: member?.name ?? "—",
+          clientName: client?.name ?? apt.clientName ?? "—",
           startDate,
           isPast: startDate < now,
         };

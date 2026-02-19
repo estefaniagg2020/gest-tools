@@ -22,6 +22,7 @@ export const useLayoutStore = defineStore("layout", () => {
 
   const initialize = (userId: string) => {
     const stored = layoutStorage.loadLayoutConfig(userId);
+    
     if (stored) {
       sidebarPosition.value = stored.sidebarPosition;
       showNavbar.value = stored.showNavbar;

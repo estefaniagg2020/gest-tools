@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-full py-6 px-4 sm:px-6 lg:px-8">
     <div class="mx-auto max-w-4xl">
-      <header class="mb-10 flex items-start justify-between gap-4">
+      <header class="mb-8 md:mb-10 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
           <h1 class="text-2xl font-bold tracking-tight text-app-title sm:text-3xl transition-colors duration-200">
             {{ $t('config.title') }}
@@ -20,9 +20,9 @@
         </RouterLink>
       </header>
 
-      <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="grid gap-5 grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
         <ConfigHubCard
-          v-for="card in hub.cards"
+          v-for="card in configCards"
           :key="card.id"
           :to="card.to"
           :title="$t(card.titleKey)"
@@ -41,7 +41,7 @@
   import { useGestorConfigStore } from "@/stores/gestorConfig";
   import ConfigHubCard from "@/components/config/ConfigHubCard.vue";
 
-  const hub = useConfigHub();
+  const { cards: configCards } = useConfigHub();
   const authStore = useAuthStore();
   const gestorConfigStore = useGestorConfigStore();
 

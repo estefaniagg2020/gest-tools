@@ -1,65 +1,70 @@
 <template>
-  <div class="flex-1 min-h-0 flex flex-col overflow-hidden">
-    <TeamManagerHeader
-      class="shrink-0"
-      :show-clear-button="orderedMembers.length > 0"
-      :search-query="searchQuery"
-      @create="openCreateModal"
-      @clear="handleClearTeam"
-      @update:search-query="searchQuery = $event"
-    />
+  <div class="min-h-full overflow-y-auto">
+    <div class="relative px-6 pt-8 pb-10">
+      <div
+        class="absolute inset-0 bg-linear-to-br from-app-bg via-app-surface to-brand-soft/30 dark:from-app-bg dark:via-app-bg dark:to-app-border-subtle/50 pointer-events-none"
+        aria-hidden="true"
+      />
 
-    <div class="min-h-0 flex-1 overflow-y-auto md:hidden flex flex-col">
-      <div class="grid grid-cols-3 sm:grid-cols-4 gap-3 pb-4 flex-1 content-start">
-        <TeamAvatarTile
-          v-for="member in paginatedMembers"
-          :key="member.id"
-          :member="member"
-          @edit="editMember(member)"
-          @delete="deleteMember(member.id)"
+      <TeamManagerHeader
+        class="relative mb-8"
+        :show-clear-button="orderedMembers.length > 0"
+        :search-query="searchQuery"
+        @create="openCreateModal"
+        @clear="handleClearTeam"
+        @update:search-query="searchQuery = $event"
+      />
+
+      <div class="relative md:hidden">
+        <div class="grid grid-cols-3 sm:grid-cols-4 gap-3 pb-4">
+          <TeamAvatarTile
+            v-for="member in paginatedMembers"
+            :key="member.id"
+            :member="member"
+            @edit="editMember(member)"
+            @delete="deleteMember(member.id)"
+          />
+        </div>
+        <TeamPagination
+          v-if="totalPages > 1"
+          :current-page="currentPage"
+          :total-pages="totalPages"
+          :total="filteredMembers.length"
+          :page-size="PAGE_SIZE"
+          class="py-3"
+          @page="currentPage = $event"
         />
       </div>
-      <TeamPagination
-        v-if="totalPages > 1"
-        :current-page="currentPage"
-        :total-pages="totalPages"
-        :total="filteredMembers.length"
-        :page-size="PAGE_SIZE"
-        class="shrink-0 py-3 md:hidden"
-        @page="currentPage = $event"
-      />
-    </div>
 
-    <div class="hidden md:flex flex-1 min-h-0 overflow-y-auto flex-col">
-      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 pb-4 w-full self-start">
-        <TeamCard
-          v-for="member in paginatedMembers"
-          :key="member.id"
-          :member="member"
-          :location-name="getLocationName(member.spaId)"
-          @edit="editMember(member)"
-          @delete="deleteMember(member.id)"
+      <div class="relative hidden md:block">
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 pb-4 w-full">
+          <TeamCard
+            v-for="member in paginatedMembers"
+            :key="member.id"
+            :member="member"
+            @edit="editMember(member)"
+            @delete="deleteMember(member.id)"
+          />
+        </div>
+        <TeamPagination
+          v-if="totalPages > 1"
+          :current-page="currentPage"
+          :total-pages="totalPages"
+          :total="filteredMembers.length"
+          :page-size="PAGE_SIZE"
+          class="py-4"
+          @page="currentPage = $event"
         />
       </div>
-      <TeamPagination
-        v-if="totalPages > 1"
-        :current-page="currentPage"
-        :total-pages="totalPages"
-        :total="filteredMembers.length"
-        :page-size="PAGE_SIZE"
-        class="shrink-0 py-4 hidden md:block"
-        @page="currentPage = $event"
+
+      <TeamEditorModal
+        :is-open="isModalOpen"
+        :is-editing="isEditing"
+        :form="form"
+        @close="closeModal"
+        @save="saveMember"
       />
     </div>
-
-    <TeamEditorModal
-      :is-open="isModalOpen"
-      :is-editing="isEditing"
-      :form="form"
-      :spas="spaStore.spas"
-      @close="closeModal"
-      @save="saveMember"
-    />
   </div>
 </template>
 
@@ -72,6 +77,7 @@
   import TeamEditorModal from "@/components/team/TeamEditorModal.vue";
   import TeamPagination from "@/components/team/TeamPagination.vue";
   import { useTeamManager } from "@/composables/useTeamManager";
+  import { useConfirmDialog } from "@/composables/useConfirmDialog";
 
   const PAGE_SIZE = 10;
 
@@ -80,22 +86,25 @@
     isModalOpen,
     isEditing,
     form,
-    spaStore,
     openCreateModal,
     editMember,
     closeModal,
     saveMember,
     deleteMember,
     clearMembers,
-    getLocationName,
   } = useTeamManager();
 
   const { t } = useI18n();
+  const { show: showConfirm } = useConfirmDialog();
 
-  const handleClearTeam = () => {
-    if (window.confirm(t("team.clearTeamConfirm"))) {
-      clearMembers();
-    }
+  const handleClearTeam = async () => {
+    const ok = await showConfirm({
+      title: "Limpiar equipo",
+      message: t("team.clearTeamConfirm"),
+      confirmLabel: "Eliminar todos",
+      variant: "danger",
+    });
+    if (ok) await clearMembers();
   };
 
   const searchQuery = ref("");

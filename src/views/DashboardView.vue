@@ -1,6 +1,6 @@
 <template>
   <div class="h-full flex flex-col min-h-0">
-    <header class="shrink-0 flex items-center justify-between gap-4 p-4 md:p-6 border-b border-app-border-subtle bg-app-surface">
+    <header class="shrink-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 md:p-5 lg:p-6 border-b border-app-border-subtle bg-app-surface">
       <div>
         <h1 class="text-lg font-semibold text-app-title">{{ $t('dashboard.title') }}</h1>
         <p class="text-sm text-app-text/60 mt-0.5">{{ currentDate }}</p>
@@ -11,12 +11,12 @@
         class="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-brand-accent text-white shadow-sm hover:opacity-95 active:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2"
       >
         <span aria-hidden="true">⚙️</span>
-        Configuración
+        {{ $t('nav.config') }}
       </RouterLink>
     </header>
 
     <div class="flex-1 min-h-0 overflow-auto">
-      <div class="p-4 md:p-6 max-w-5xl mx-auto space-y-8">
+      <div class="p-4 md:p-5 lg:p-6 space-y-6 md:space-y-8">
         <section class="rounded-2xl bg-app-surface border border-app-border-subtle shadow-card p-5 md:p-6">
           <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
             <h2 class="text-base font-semibold text-app-title">{{ $t('dashboard.tomorrow') }}</h2>
@@ -30,7 +30,7 @@
           <p class="text-sm text-app-text/70 mb-4">
             {{ agendaStats.tomorrowLabel }}
           </p>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3">
             <div class="rounded-xl bg-app-bg/60 border border-app-border-subtle p-4">
               <p class="text-[11px] font-medium text-brand-accent uppercase tracking-wider">{{ $t('dashboard.occupation') }}</p>
               <p class="mt-1 text-xl font-bold text-brand-accent tabular-nums">{{ agendaStats.occupancyPercent }}%</p>
@@ -65,75 +65,87 @@
           </div>
         </section>
 
-        <section v-if="orderedReservaWidgets.length > 0" class="rounded-2xl bg-app-surface border border-app-border-subtle shadow-card p-5 md:p-6">
+        <!-- Metric widgets (small + medium) -->
+        <section v-if="metricWidgets.length > 0" class="rounded-2xl bg-app-surface border border-app-border-subtle shadow-card p-5 md:p-6">
           <h2 class="text-base font-semibold text-app-title mb-4">{{ $t('dashboard.bookings') }}</h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
             <div
-              v-for="widget in orderedReservaWidgets"
+              v-for="widget in metricWidgets"
               :key="widget.id"
-              :class="getWidgetColSpan(widget.size ?? 'small')"
+              :class="widget.size === 'medium' ? 'col-span-2 sm:col-span-2' : 'col-span-1'"
             >
-              <DashboardWidgetReservasMes
+              <DashboardWidgetMonthlyBookings
                 v-if="widget.id === 'reservas-mes'"
                 :count="bookingStats.stats.value?.reservasMes ?? 0"
               />
-              <DashboardWidgetReservasSemana
+              <DashboardWidgetWeeklyBookings
                 v-else-if="widget.id === 'reservas-semana'"
                 :count="bookingStats.stats.value?.reservasSemana ?? 0"
               />
-              <DashboardWidgetBeneficioDiario
+              <DashboardWidgetDailyProfit
                 v-else-if="widget.id === 'beneficio-diario'"
                 :amount="bookingStats.stats.value?.beneficioHoy ?? 0"
               />
-              <DashboardWidgetIngresosMes
+              <DashboardWidgetMonthlyIncome
                 v-else-if="widget.id === 'ingresos-mes'"
                 :amount="bookingStats.stats.value?.ingresosMes ?? 0"
               />
-              <DashboardWidgetReservasCanceladas
+              <DashboardWidgetCancelledBookings
                 v-else-if="widget.id === 'reservas-canceladas'"
                 :count="bookingStats.stats.value?.reservasCanceladas ?? 0"
               />
-              <DashboardWidgetTasaCancelacion
+              <DashboardWidgetCancellationRate
                 v-else-if="widget.id === 'tasa-cancelacion'"
                 :rate="bookingStats.stats.value?.tasaCancelacion ?? 0"
               />
-              <DashboardWidgetClientesNuevos
+              <DashboardWidgetNewClients
                 v-else-if="widget.id === 'clientes-nuevos'"
                 :count="bookingStats.stats.value?.clientesNuevos ?? 0"
               />
-              <DashboardWidgetOcupacionSemanal
+              <DashboardWidgetWeeklyOccupancy
                 v-else-if="widget.id === 'ocupacion-semanal'"
                 :rate="bookingStats.stats.value?.ocupacionSemanal ?? 0"
               />
-              <DashboardWidgetHorasTrabajadas
+              <DashboardWidgetHoursWorked
                 v-else-if="widget.id === 'horas-trabajadas'"
                 :hours="bookingStats.stats.value?.horasTrabajadasSemana ?? 0"
               />
-              <DashboardWidgetEmpleadoMasReservas
+              <DashboardWidgetTopBookingsEmployee
                 v-else-if="widget.id === 'empleado-mas-reservas'"
                 :data="bookingStats.stats.value?.empleadoMasReservas ?? null"
               />
-              <DashboardWidgetGraficaReservasPersona
-                v-else-if="widget.id === 'grafica-reservas-persona'"
-                :data="graficaReservasPersonaData"
-              />
-              <DashboardWidgetVentasPorEmpleado
-                v-else-if="widget.id === 'ventas-por-empleado'"
-                :data="bookingStats.stats.value?.ventasPorEmpleado ?? []"
-              />
-              <DashboardWidgetServiciosPopulares
-                v-else-if="widget.id === 'servicios-populares'"
-                :data="bookingStats.stats.value?.serviciosPopulares ?? []"
-              />
-              <DashboardWidgetProximasCitasHoy
+              <DashboardWidgetTodayAppointments
                 v-else-if="widget.id === 'proximas-citas-hoy'"
                 :data="bookingStats.stats.value?.proximasCitasHoy ?? []"
               />
-              <DashboardWidgetProductosBajoStock
+              <DashboardWidgetLowStockProducts
                 v-else-if="widget.id === 'productos-bajo-stock'"
                 :data="bookingStats.stats.value?.productosBajoStock ?? []"
               />
+              <DashboardWidgetListaEspera
+                v-else-if="widget.id === 'lista-espera'"
+                :data="bookingStats.stats.value?.listaEspera ?? []"
+              />
             </div>
+          </div>
+        </section>
+
+        <!-- Chart widgets (large) — own prominent section -->
+        <section v-if="chartWidgets.length > 0" class="rounded-2xl bg-app-surface border border-app-border-subtle shadow-card p-5 md:p-6">
+          <h2 class="text-base font-semibold text-app-title mb-4">📊 Analytics</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <DashboardWidgetBookingsPerPerson
+              v-if="chartWidgets.some((w) => w.id === 'grafica-reservas-persona')"
+              :data="graficaReservasPersonaData"
+            />
+            <DashboardWidgetSalesPerEmployee
+              v-if="chartWidgets.some((w) => w.id === 'ventas-por-empleado')"
+              :data="bookingStats.stats.value?.ventasPorEmpleado ?? []"
+            />
+            <DashboardWidgetPopularServices
+              v-if="chartWidgets.some((w) => w.id === 'servicios-populares')"
+              :data="bookingStats.stats.value?.serviciosPopulares ?? []"
+            />
           </div>
         </section>
       </div>
@@ -146,7 +158,7 @@
   import { useI18n } from "vue-i18n";
   import { storeToRefs } from "pinia";
   import { RouterLink, useRoute } from "vue-router";
-  import { orderDashboardWidgetsByIds, getWidgetColSpan } from "@/data/dashboardWidgetModules";
+  import { orderDashboardWidgetsByIds } from "@/data/dashboardWidgetModules";
   import { DEFAULT_DASHBOARD_MODULE_IDS } from "@/interfaces/layoutConfig";
   import { useDashboardAgendaStats } from "@/composables/useDashboardAgendaStats";
   import { useDashboardBookingStats } from "@/composables/useDashboardBookingStats";
@@ -155,21 +167,22 @@
   import { useScheduleStore } from "@/stores/schedule";
   import { useTeamStore } from "@/stores/team";
   import { useSchedulerSettingsStore } from "@/stores/schedulerSettings";
-  import DashboardWidgetReservasMes from "@/components/dashboard/DashboardWidgetReservasMes.vue";
-  import DashboardWidgetReservasSemana from "@/components/dashboard/DashboardWidgetReservasSemana.vue";
-  import DashboardWidgetBeneficioDiario from "@/components/dashboard/DashboardWidgetBeneficioDiario.vue";
-  import DashboardWidgetIngresosMes from "@/components/dashboard/DashboardWidgetIngresosMes.vue";
-  import DashboardWidgetReservasCanceladas from "@/components/dashboard/DashboardWidgetReservasCanceladas.vue";
-  import DashboardWidgetTasaCancelacion from "@/components/dashboard/DashboardWidgetTasaCancelacion.vue";
-  import DashboardWidgetGraficaReservasPersona from "@/components/dashboard/DashboardWidgetGraficaReservasPersona.vue";
-  import DashboardWidgetEmpleadoMasReservas from "@/components/dashboard/DashboardWidgetEmpleadoMasReservas.vue";
-  import DashboardWidgetVentasPorEmpleado from "@/components/dashboard/DashboardWidgetVentasPorEmpleado.vue";
-  import DashboardWidgetServiciosPopulares from "@/components/dashboard/DashboardWidgetServiciosPopulares.vue";
-  import DashboardWidgetClientesNuevos from "@/components/dashboard/DashboardWidgetClientesNuevos.vue";
-  import DashboardWidgetProximasCitasHoy from "@/components/dashboard/DashboardWidgetProximasCitasHoy.vue";
-  import DashboardWidgetOcupacionSemanal from "@/components/dashboard/DashboardWidgetOcupacionSemanal.vue";
-  import DashboardWidgetHorasTrabajadas from "@/components/dashboard/DashboardWidgetHorasTrabajadas.vue";
-  import DashboardWidgetProductosBajoStock from "@/components/dashboard/DashboardWidgetProductosBajoStock.vue";
+  import DashboardWidgetMonthlyBookings from "@/components/dashboard/DashboardWidgetMonthlyBookings.vue";
+  import DashboardWidgetWeeklyBookings from "@/components/dashboard/DashboardWidgetWeeklyBookings.vue";
+  import DashboardWidgetDailyProfit from "@/components/dashboard/DashboardWidgetDailyProfit.vue";
+  import DashboardWidgetMonthlyIncome from "@/components/dashboard/DashboardWidgetMonthlyIncome.vue";
+  import DashboardWidgetCancelledBookings from "@/components/dashboard/DashboardWidgetCancelledBookings.vue";
+  import DashboardWidgetCancellationRate from "@/components/dashboard/DashboardWidgetCancellationRate.vue";
+  import DashboardWidgetBookingsPerPerson from "@/components/dashboard/DashboardWidgetBookingsPerPerson.vue";
+  import DashboardWidgetTopBookingsEmployee from "@/components/dashboard/DashboardWidgetTopBookingsEmployee.vue";
+  import DashboardWidgetSalesPerEmployee from "@/components/dashboard/DashboardWidgetSalesPerEmployee.vue";
+  import DashboardWidgetPopularServices from "@/components/dashboard/DashboardWidgetPopularServices.vue";
+  import DashboardWidgetNewClients from "@/components/dashboard/DashboardWidgetNewClients.vue";
+  import DashboardWidgetTodayAppointments from "@/components/dashboard/DashboardWidgetTodayAppointments.vue";
+  import DashboardWidgetWeeklyOccupancy from "@/components/dashboard/DashboardWidgetWeeklyOccupancy.vue";
+  import DashboardWidgetHoursWorked from "@/components/dashboard/DashboardWidgetHoursWorked.vue";
+  import DashboardWidgetLowStockProducts from "@/components/dashboard/DashboardWidgetLowStockProducts.vue";
+  import DashboardWidgetListaEspera from "@/components/dashboard/DashboardWidgetListaEspera.vue";
 
   const { locale } = useI18n();
   const LOCALE_MAP: Record<string, string> = {
@@ -196,6 +209,14 @@
 
   const orderedReservaWidgets = computed(() =>
     orderDashboardWidgetsByIds(widgetIdsForDisplay.value),
+  );
+
+  const metricWidgets = computed(() =>
+    orderedReservaWidgets.value.filter((w) => (w.size ?? "small") !== "large"),
+  );
+
+  const chartWidgets = computed(() =>
+    orderedReservaWidgets.value.filter((w) => w.size === "large"),
   );
 
   const syncLayoutFromStorage = () => {

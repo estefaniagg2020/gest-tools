@@ -17,6 +17,14 @@ export interface ProximaCitaItem {
   start: string;
 }
 
+export interface ListaEsperaItem {
+  id: string;
+  clientName: string;
+  serviceName: string;
+  preferredStart: string;
+  createdAt: string;
+}
+
 export interface ProductoBajoStockItem {
   id: string;
   name: string;
@@ -52,4 +60,5 @@ export interface DashboardStats {
   ocupacionSemanal: number;
   horasTrabajadasSemana: number;
   productosBajoStock: ProductoBajoStockItem[];
+  listaEspera: ListaEsperaItem[];
 }

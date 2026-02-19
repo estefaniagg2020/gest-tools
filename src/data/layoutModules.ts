@@ -23,6 +23,7 @@ export const LAYOUT_MODULES: readonly LayoutModule[] = [
   { id: "agenda", labelKey: "nav.agenda", icon: "📅", to: "/scheduler", activeClass: "bg-orange-50 text-orange-600", section: "principal" },
   { id: "equipo", labelKey: "nav.team", icon: "👥", to: "/team", activeClass: "bg-teal-50 text-teal-600", section: "gestion" },
   { id: "clientes", labelKey: "nav.clients", icon: "👤", to: "/clients", activeClass: "bg-rose-50 text-rose-600", section: "gestion" },
+  { id: "bonos", labelKey: "nav.bonos", icon: "🎫", to: "/bonos", activeClass: "bg-violet-50 text-violet-600", section: "gestion" },
   { id: "servicios", labelKey: "nav.services", icon: "📋", to: "/services", activeClass: "bg-sky-50 text-sky-600", section: "gestion" },
   { id: "inventario", labelKey: "nav.inventory", icon: "📦", to: "/inventory", activeClass: "bg-amber-50 text-amber-600", section: "gestion" },
   { id: "config", labelKey: "nav.config", icon: "⚙️", to: "/config", activeClass: "bg-slate-100 text-slate-700", section: "gestion", iconOnly: true },

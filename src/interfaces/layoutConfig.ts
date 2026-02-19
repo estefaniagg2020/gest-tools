@@ -15,6 +15,7 @@ export const DEFAULT_SIDEBAR_MODULE_IDS: string[] = [
   "agenda",
   "equipo",
   "clientes",
+  "bonos",
   "servicios",
   "inventario",
   "config",
@@ -36,6 +37,7 @@ export const DEFAULT_DASHBOARD_MODULE_IDS: string[] = [
   "ocupacion-semanal",
   "horas-trabajadas",
   "productos-bajo-stock",
+  "lista-espera",
 ];
 
 export const DEFAULT_LAYOUT_CONFIG: LayoutConfig = {

@@ -1,8 +1,8 @@
 <template>
   <div
-    class="flex flex-wrap items-center justify-between gap-3 sm:gap-4 bg-transparent p-0"
+    class="flex flex-wrap items-center gap-2 sm:gap-3 bg-transparent p-0 min-w-0 max-w-full"
   >
-    <div class="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 sm:flex-initial">
+    <div class="flex items-center gap-1.5 sm:gap-2 min-w-0 shrink-0">
       <button
         @click="$emit('today')"
         class="shrink-0 px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium text-brand-primary bg-brand-primary/10 rounded-lg hover:bg-brand-primary/20 transition-colors"
@@ -33,7 +33,7 @@
         v-for="option in viewOptions"
         :key="option.value"
         @click="$emit('changeView', option.value)"
-        class="px-2.5 sm:px-3 py-1 text-xs sm:text-sm font-medium rounded-md transition-all"
+        class="px-2 sm:px-2.5 md:px-3 py-1 text-xs font-medium rounded-md transition-all whitespace-nowrap"
         :class="currentView === option.value ? 'bg-app-surface text-app-title shadow-sm' : 'text-app-text/80 hover:text-app-title'"
       >
         {{ option.label }}

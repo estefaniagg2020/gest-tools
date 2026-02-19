@@ -19,21 +19,17 @@ const TEMPLATES: Partial<Record<string, BusinessServiceTemplates>> = {
     requiresCabin: false,
     requiresStaff: true,
     categories: [
-      { id: "corte", label: "Corte", icon: "✂️" },
+      { id: "corte", label: "Corte y barbería", icon: "✂️" },
       { id: "color", label: "Color y tratamientos", icon: "🎨" },
       { id: "peinado", label: "Peinado", icon: "💇" },
+      { id: "unas", label: "Uñas", icon: "💅" },
     ],
     services: [
-      { name: "Corte caballero", duration: 30, price: 15, suggestedCategory: "corte", suggestedCategoryIcon: "✂️" },
-      { name: "Corte señora", duration: 45, price: 25, suggestedCategory: "corte", suggestedCategoryIcon: "✂️" },
-      { name: "Corte infantil", duration: 20, price: 12, suggestedCategory: "corte", suggestedCategoryIcon: "✂️" },
-      { name: "Tinte completo", duration: 90, price: 45, suggestedCategory: "color", suggestedCategoryIcon: "🎨" },
-      { name: "Mechas", duration: 120, price: 65, suggestedCategory: "color", suggestedCategoryIcon: "🎨" },
-      { name: "Balayage", duration: 150, price: 85, suggestedCategory: "color", suggestedCategoryIcon: "🎨" },
-      { name: "Lavado y brushing", duration: 45, price: 22, suggestedCategory: "peinado", suggestedCategoryIcon: "💇" },
-      { name: "Permanente", duration: 120, price: 55, suggestedCategory: "color", suggestedCategoryIcon: "🎨" },
-      { name: "Tratamiento capilar", duration: 45, price: 30, description: "Hidratación o reparación intensiva.", suggestedCategory: "color", suggestedCategoryIcon: "🎨" },
-      { name: "Alisado keratina", duration: 180, price: 120, suggestedCategory: "color", suggestedCategoryIcon: "🎨" },
+      { name: "Corte caballero / Barbería", duration: 30, price: 18, suggestedCategory: "corte", suggestedCategoryIcon: "✂️" },
+      { name: "Lavar, cortar y peinar (mujer)", duration: 60, price: 28, suggestedCategory: "peinado", suggestedCategoryIcon: "💇" },
+      { name: "Tinte / Coloración", duration: 90, price: 50, suggestedCategory: "color", suggestedCategoryIcon: "🎨" },
+      { name: "Mechas / Balayage", duration: 165, price: 85, suggestedCategory: "color", suggestedCategoryIcon: "🎨" },
+      { name: "Manicura semi-permanente", duration: 45, price: 25, suggestedCategory: "unas", suggestedCategoryIcon: "💅" },
     ],
   },
   estetica: {
@@ -82,22 +78,6 @@ const TEMPLATES: Partial<Record<string, BusinessServiceTemplates>> = {
       { name: "Envoltura de algas", duration: 60, price: 70, suggestedCategory: "corporal", suggestedCategoryIcon: "🌿" },
     ],
   },
-  fisio: {
-    requiresCabin: true,
-    requiresStaff: true,
-    categories: [
-      { id: "sesiones", label: "Sesiones", icon: "🏥" },
-      { id: "terapias", label: "Terapias manuales", icon: "🤲" },
-    ],
-    services: [
-      { name: "Primera consulta / valoración", duration: 60, price: 55, suggestedCategory: "sesiones", suggestedCategoryIcon: "🏥" },
-      { name: "Sesión de fisioterapia", duration: 45, price: 45, suggestedCategory: "sesiones", suggestedCategoryIcon: "🏥" },
-      { name: "Masaje terapéutico", duration: 45, price: 45, suggestedCategory: "terapias", suggestedCategoryIcon: "🤲" },
-      { name: "Electroterapia", duration: 30, price: 35, suggestedCategory: "sesiones", suggestedCategoryIcon: "🏥" },
-      { name: "Punción seca", duration: 30, price: 40, suggestedCategory: "terapias", suggestedCategoryIcon: "🤲" },
-      { name: "Osteopatía", duration: 60, price: 60, suggestedCategory: "terapias", suggestedCategoryIcon: "🤲" },
-    ],
-  },
   clinica: {
     requiresCabin: true,
     requiresStaff: true,
@@ -140,14 +120,14 @@ const TEMPLATES: Partial<Record<string, BusinessServiceTemplates>> = {
     requiresStaff: true,
     categories: [
       { id: "general", label: "Odontología general", icon: "🦷" },
-      { id: "estetica-dental", label: "Estética dental", icon: "✨" },
+      { id: "revision", label: "Revisión y diagnóstico", icon: "🔍" },
     ],
     services: [
-      { name: "Revisión y limpieza dental", duration: 45, price: 60, suggestedCategory: "general", suggestedCategoryIcon: "🦷" },
-      { name: "Empaste", duration: 45, price: 80, suggestedCategory: "general", suggestedCategoryIcon: "🦷" },
-      { name: "Extracción", duration: 30, price: 70, suggestedCategory: "general", suggestedCategoryIcon: "🦷" },
-      { name: "Blanqueamiento dental", duration: 60, price: 150, suggestedCategory: "estetica-dental", suggestedCategoryIcon: "✨" },
-      { name: "Ortodoncia (revisión)", duration: 30, price: 50, suggestedCategory: "general", suggestedCategoryIcon: "🦷" },
+      { name: "Limpieza bucal (profilaxis)", duration: 45, price: 55, suggestedCategory: "general", suggestedCategoryIcon: "🦷" },
+      { name: "Revisión y diagnóstico", duration: 20, price: 35, suggestedCategory: "revision", suggestedCategoryIcon: "🔍" },
+      { name: "Empaste", duration: 45, price: 75, suggestedCategory: "general", suggestedCategoryIcon: "🦷" },
+      { name: "Endodoncia", duration: 90, price: 180, suggestedCategory: "general", suggestedCategoryIcon: "🦷" },
+      { name: "Ortodoncia (ajuste mensual)", duration: 15, price: 45, suggestedCategory: "revision", suggestedCategoryIcon: "🔍" },
     ],
   },
   taller: {
@@ -155,13 +135,44 @@ const TEMPLATES: Partial<Record<string, BusinessServiceTemplates>> = {
     requiresStaff: true,
     categories: [
       { id: "reparaciones", label: "Reparaciones", icon: "🔧" },
-      { id: "revisiones", label: "Revisiones", icon: "🔍" },
+      { id: "revisiones", label: "Revisiones e ITV", icon: "🔍" },
     ],
     services: [
-      { name: "Cambio de aceite y filtros", duration: 60, price: 60, suggestedCategory: "reparaciones", suggestedCategoryIcon: "🔧" },
-      { name: "Revisión pre-ITV", duration: 90, price: 50, suggestedCategory: "revisiones", suggestedCategoryIcon: "🔍" },
-      { name: "Cambio de neumáticos (4 ruedas)", duration: 45, price: 40, suggestedCategory: "reparaciones", suggestedCategoryIcon: "🔧" },
-      { name: "Diagnosis electrónica", duration: 30, price: 35, suggestedCategory: "revisiones", suggestedCategoryIcon: "🔍" },
+      { name: "Revisión oficial / Mantenimiento", duration: 120, price: 80, suggestedCategory: "revisiones", suggestedCategoryIcon: "🔍" },
+      { name: "Cambio de aceite y filtros", duration: 60, price: 55, suggestedCategory: "reparaciones", suggestedCategoryIcon: "🔧" },
+      { name: "Cambio de pastillas de freno", duration: 90, price: 120, suggestedCategory: "reparaciones", suggestedCategoryIcon: "🔧" },
+      { name: "Diagnosis de avería", duration: 45, price: 40, suggestedCategory: "revisiones", suggestedCategoryIcon: "🔍" },
+      { name: "Preparación para la ITV", duration: 60, price: 50, suggestedCategory: "revisiones", suggestedCategoryIcon: "🔍" },
+    ],
+  },
+  fisio: {
+    requiresCabin: true,
+    requiresStaff: true,
+    categories: [
+      { id: "sesiones", label: "Sesiones", icon: "🏥" },
+      { id: "terapias", label: "Terapias manuales", icon: "🤲" },
+    ],
+    services: [
+      { name: "Sesión de fisioterapia (general)", duration: 50, price: 48, suggestedCategory: "sesiones", suggestedCategoryIcon: "🏥" },
+      { name: "Primera consulta / Valoración", duration: 60, price: 55, suggestedCategory: "sesiones", suggestedCategoryIcon: "🏥" },
+      { name: "Masaje de descarga", duration: 45, price: 45, suggestedCategory: "terapias", suggestedCategoryIcon: "🤲" },
+      { name: "Drenaje linfático", duration: 60, price: 50, suggestedCategory: "terapias", suggestedCategoryIcon: "🤲" },
+    ],
+  },
+  veterinario: {
+    requiresCabin: false,
+    requiresStaff: true,
+    categories: [
+      { id: "consulta", label: "Consulta", icon: "🐾" },
+      { id: "cuidados", label: "Cuidados", icon: "✂️" },
+      { id: "pruebas", label: "Pruebas y cirugía", icon: "🏥" },
+    ],
+    services: [
+      { name: "Consulta general / Vacunación", duration: 20, price: 35, suggestedCategory: "consulta", suggestedCategoryIcon: "🐾" },
+      { name: "Desparasitación interna/externa", duration: 15, price: 25, suggestedCategory: "cuidados", suggestedCategoryIcon: "✂️" },
+      { name: "Corte de uñas", duration: 10, price: 12, suggestedCategory: "cuidados", suggestedCategoryIcon: "✂️" },
+      { name: "Ecografía", duration: 45, price: 55, suggestedCategory: "pruebas", suggestedCategoryIcon: "🏥" },
+      { name: "Cirugía (bloqueo de mañana)", duration: 180, price: 0, description: "Requiere bloqueo de mañana completa. Indicar precio según intervención.", suggestedCategory: "pruebas", suggestedCategoryIcon: "🏥" },
     ],
   },
 };
@@ -178,3 +189,14 @@ export const getBusinessServiceDefaults = (businessType: string) =>
   TEMPLATES[businessType]
     ? { requiresCabin: TEMPLATES[businessType]!.requiresCabin, requiresStaff: TEMPLATES[businessType]!.requiresStaff }
     : { ...DEFAULT_REQUIRES };
+
+export const getSystemServiceNamesOfOtherTypes = (
+  currentBusinessType: string,
+): string[] => {
+  const names: string[] = [];
+  for (const [type, t] of Object.entries(TEMPLATES)) {
+    if (type === currentBusinessType || !t) continue;
+    for (const svc of t.services) names.push(svc.name);
+  }
+  return names;
+};

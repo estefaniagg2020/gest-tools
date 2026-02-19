@@ -1,26 +1,37 @@
 <template>
-  <div class="h-full flex flex-col p-6 overflow-y-auto">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-      <div>
-        <h1 class="text-2xl font-bold text-app-title">{{ $t('clients.title') }}</h1>
-        <p class="text-app-text/70 text-sm mt-1">
-          {{ $t('clients.subtitle') }}
-        </p>
+  <div class="min-h-full overflow-y-auto">
+    <div class="relative px-6 pt-8 pb-10">
+      <div
+        class="absolute inset-0 bg-linear-to-br from-app-bg via-app-surface to-brand-soft/30 dark:from-app-bg dark:via-app-bg dark:to-app-border-subtle/50 pointer-events-none"
+        aria-hidden="true"
+      />
+
+      <div class="relative flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-widest text-brand-accent mb-1">
+            {{ $t('clients.kicker') }}
+          </p>
+          <h1 class="text-3xl font-bold tracking-tight text-app-title sm:text-4xl">
+            {{ $t('clients.title') }}
+          </h1>
+          <p class="mt-2 text-app-text/80 max-w-xl">
+            {{ $t('clients.subtitle') }}
+          </p>
+        </div>
+        <BaseButton
+          variant="primary"
+          @click="openCreateModal"
+        >
+          <template #icon>
+            <span class="text-lg leading-none">+</span>
+          </template>
+          {{ $t('clients.addClient') }}
+        </BaseButton>
       </div>
-      <BaseButton
-        variant="primary"
-        @click="openCreateModal"
-      >
-        <template #icon>
-          <span class="text-lg leading-none">+</span>
-        </template>
-        {{ $t('clients.addClient') }}
-      </BaseButton>
-    </div>
 
     <div
       v-if="clientStore.clients.length > 0"
-      class="mb-6"
+      class="mb-6 space-y-3"
     >
       <label for="clients-search" class="sr-only">{{ $t('clients.searchLabel') }}</label>
       <input
@@ -30,6 +41,14 @@
         :placeholder="$t('clients.searchPlaceholder')"
         class="input-modern w-full max-w-md rounded-xl border border-app-border bg-app-bg/50 px-4 py-2.5 text-app-title placeholder:text-app-text/60 transition-colors focus:border-brand-accent focus:bg-app-surface focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
       />
+      <label class="flex items-center gap-2 cursor-pointer text-sm text-app-title">
+        <input
+          v-model="filterActiveBono"
+          type="checkbox"
+          class="h-4 w-4 rounded border-app-border-subtle text-brand-accent focus:ring-brand-accent"
+        />
+        {{ $t('clients.filterActiveBono') }}
+      </label>
     </div>
 
     <div
@@ -42,7 +61,16 @@
         class="flex items-start justify-between gap-3 p-4 rounded-xl border border-app-border-subtle bg-app-surface shadow-card hover:border-brand-accent/30 transition-colors"
       >
         <div class="min-w-0 flex-1">
-          <h3 class="font-semibold text-app-title truncate">{{ client.name }}</h3>
+          <div class="flex items-center gap-2">
+            <h3 class="font-semibold text-app-title truncate">{{ client.name }}</h3>
+            <span
+              v-if="bonoStore.hasActiveBono(client.id)"
+              class="shrink-0 text-xs font-medium px-2 py-0.5 rounded-full bg-brand-accent/15 text-brand-accent"
+              :title="$t('clientBonos.sectionTitle')"
+            >
+              🎫
+            </span>
+          </div>
           <p v-if="client.email" class="text-sm text-app-text/70 truncate mt-0.5">{{ client.email }}</p>
           <p v-if="client.phone" class="text-sm text-app-text/70 truncate">{{ client.phone }}</p>
         </div>
@@ -64,7 +92,7 @@
           </button>
           <button
             type="button"
-            class="p-2 text-app-text/70 hover:text-red-500 hover:bg-red-500/10 dark:hover:bg-red-500/20 rounded-lg transition-colors"
+            class="p-2 text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-500/20 dark:hover:bg-red-500/30 rounded-lg transition-colors"
             :title="$t('servicios.delete')"
             @click="confirmDelete(client.id)"
           >
@@ -77,7 +105,13 @@
       v-else
       class="text-sm text-app-text/70 py-8 text-center"
     >
-      {{ searchQuery ? $t('clients.noClientsSearch') : $t('clients.noClientsEmpty') }}
+      {{
+        filterActiveBono && !searchQuery
+          ? $t('clients.noClientsWithActiveBono')
+          : searchQuery
+            ? $t('clients.noClientsSearch')
+            : $t('clients.noClientsEmpty')
+      }}
     </p>
 
     <Modal
@@ -143,15 +177,17 @@
         </div>
       </form>
     </Modal>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, computed } from "vue";
+  import { ref, computed, onMounted } from "vue";
   import { RouterLink } from "vue-router";
   import BaseButton from "@/components/common/BaseButton.vue";
   import Modal from "@/components/common/Modal.vue";
   import { useClientsManager } from "@/composables/useClientsManager";
+  import { useBonoStore } from "@/stores/bono";
 
   const {
     clientStore,
@@ -165,16 +201,26 @@
     confirmDelete,
   } = useClientsManager();
 
+  const bonoStore = useBonoStore();
   const searchQuery = ref("");
+  const filterActiveBono = ref(false);
 
   const filteredClients = computed(() => {
+    let list = clientStore.clients;
+    if (filterActiveBono.value) {
+      list = list.filter((c) => bonoStore.hasActiveBono(c.id));
+    }
     const q = searchQuery.value.trim().toLowerCase();
-    if (!q) return clientStore.clients;
-    return clientStore.clients.filter(
+    if (!q) return list;
+    return list.filter(
       (c) =>
         c.name.toLowerCase().includes(q) ||
         (c.email?.toLowerCase().includes(q)) ||
         (c.phone?.replace(/\s/g, "").includes(q)),
     );
+  });
+
+  onMounted(() => {
+    bonoStore.initialize();
   });
 </script>

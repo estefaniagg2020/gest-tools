@@ -6,9 +6,9 @@
       :class="logoBoxClass"
     >
       <img
-        v-if="displayLogoUrl"
-        :src="displayLogoUrl"
-        :alt="displayCompanyName"
+        v-if="effectiveLogoUrl"
+        :src="effectiveLogoUrl"
+        :alt="effectiveCompanyName"
         class="h-full w-full rounded-xl object-contain"
       />
       <svg
@@ -32,7 +32,7 @@
         class="font-bold text-app-title tracking-tight truncate"
         :class="nameClass"
       >
-        {{ displayCompanyName }}
+        {{ effectiveCompanyName }}
       </h1>
       <p
         v-if="showSubtitle"
@@ -55,12 +55,21 @@
       showName?: boolean;
       showSubtitle?: boolean;
       subtitle?: string;
+      companyNameOverride?: string;
+      logoUrlOverride?: string | null;
     }>(),
     { size: "md", showName: true, showSubtitle: false }
   );
 
   const gestorConfigStore = useGestorConfigStore();
   const { displayCompanyName, displayLogoUrl } = storeToRefs(gestorConfigStore);
+
+  const effectiveCompanyName = computed(() =>
+    props.companyNameOverride?.trim() || displayCompanyName.value,
+  );
+  const effectiveLogoUrl = computed(
+    () => props.logoUrlOverride !== undefined ? props.logoUrlOverride : displayLogoUrl.value,
+  );
 
   const logoBoxClass = computed(() => {
     const sizes = { sm: "w-8 h-8 min-w-8", md: "w-10 h-10 min-w-10", lg: "w-12 h-12 min-w-12" };

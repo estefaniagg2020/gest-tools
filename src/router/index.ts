@@ -51,7 +51,7 @@ const router = createRouter({
         {
           path: "services",
           name: "services",
-          component: () => import("../views/ServiciosView.vue"),
+          component: () => import("../views/ServicesView.vue"),
         },
         {
           path: "clients",
@@ -66,7 +66,12 @@ const router = createRouter({
         {
           path: "inventory",
           name: "inventory",
-          component: () => import("../views/InventarioView.vue"),
+          component: () => import("../views/InventoryView.vue"),
+        },
+        {
+          path: "bonos",
+          name: "bonos",
+          component: () => import("../views/BonosView.vue"),
         },
         {
           path: "config",
@@ -81,7 +86,7 @@ const router = createRouter({
         {
           path: "config/themes",
           name: "config-themes",
-          component: () => import("../views/ConfigTemasView.vue"),
+          component: () => import("../views/ConfigThemesView.vue"),
         },
         {
           path: "config/grid",
@@ -101,17 +106,32 @@ const router = createRouter({
         {
           path: "config/notifications",
           name: "config-notifications",
-          component: () => import("../views/ConfigNotificacionesView.vue"),
+          component: () => import("../views/ConfigNotificationsView.vue"),
         },
         {
           path: "config/icons",
           name: "config-icons",
-          component: () => import("../views/ConfigIconosView.vue"),
+          component: () => import("../views/ConfigIconsView.vue"),
         },
         {
           path: "config/language",
           name: "config-language",
-          component: () => import("../views/ConfigIdiomaView.vue"),
+          component: () => import("../views/ConfigLanguageView.vue"),
+        },
+        {
+          path: "config/bonos",
+          name: "config-bonos",
+          component: () => import("../views/ConfigBonosView.vue"),
+        },
+        {
+          path: "config/billing",
+          name: "config-billing",
+          component: () => import("../views/ConfigBillingView.vue"),
+        },
+        {
+          path: "config/modules",
+          name: "config-modules",
+          component: () => import("../views/ConfigModulesView.vue"),
         },
         {
           path: "settings",
@@ -121,24 +141,30 @@ const router = createRouter({
         {
           path: "privacy",
           name: "privacy",
-          component: () => import("../views/PrivacidadView.vue"),
+          component: () => import("../views/PrivacyView.vue"),
         },
         {
           path: "terms",
           name: "terms",
-          component: () => import("../views/TerminosView.vue"),
+          component: () => import("../views/TermsView.vue"),
         },
         {
           path: "legal-notice",
           name: "legal-notice",
-          component: () => import("../views/AvisoLegalView.vue"),
+          component: () => import("../views/LegalNoticeView.vue"),
         },
       ],
+    },
+    {
+      path: "/b/:slug",
+      name: "public-business",
+      component: () => import("../views/public/BusinessProfileView.vue"),
+      meta: { layout: "public" } 
     },
   ],
 });
 
-const PUBLIC_NAMES = ["login", "forgot-password", "setup"] as const;
+const PUBLIC_NAMES = ["login", "forgot-password", "setup", "public-business"] as const;
 
 router.beforeEach(async (to) => {
   const authStore = useAuthStore();
@@ -163,11 +189,12 @@ router.beforeEach(async (to) => {
   }
   if (authStore.isAuthenticated && to.name === "dashboard") {
     const userId = authStore.user?.id;
+    const businessId = authStore.user?.businessId ?? null;
     if (userId) {
       const layoutStore = useLayoutStore();
       layoutStore.initialize(userId);
       const gestorConfigStore = useGestorConfigStore();
-      gestorConfigStore.initialize(userId);
+      await gestorConfigStore.initialize(userId, businessId);
       if (!gestorConfigStore.onboardingComplete) {
         return { name: "config" };
       }

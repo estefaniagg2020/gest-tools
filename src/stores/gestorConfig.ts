@@ -3,6 +3,7 @@ import { ref, computed } from "vue";
 import type { GestorConfig, ContactData, WizardTeamMember } from "@/interfaces";
 import { DEFAULT_COMPANY_NAME, DEFAULT_CONTACT_DATA } from "@/interfaces";
 import * as gestorConfigStorage from "@/infrastructure/gestorConfigStorage";
+import { businessConfigApi } from "@/infrastructure/businessConfigApi";
 
 export const useGestorConfigStore = defineStore("gestorConfig", () => {
   const companyName = ref("");
@@ -12,6 +13,10 @@ export const useGestorConfigStore = defineStore("gestorConfig", () => {
   const contactData = ref<ContactData>({ ...DEFAULT_CONTACT_DATA });
   const onboardingComplete = ref(false);
   const teamMembers = ref<WizardTeamMember[]>([]);
+  const businessAddress = ref("");
+  const businessPopulation = ref("");
+  const isCanarias = ref(false);
+  const taxId = ref("");
 
   const displayCompanyName = computed(() =>
     companyName.value.trim() || DEFAULT_COMPANY_NAME,
@@ -19,7 +24,7 @@ export const useGestorConfigStore = defineStore("gestorConfig", () => {
 
   const displayLogoUrl = computed(() => logoUrl.value);
 
-  const initialize = (userId: string) => {
+  const initialize = async (userId: string, businessId?: string | null) => {
     const stored = gestorConfigStorage.loadGestorConfig(userId);
     if (stored) {
       companyName.value = stored.companyName;
@@ -29,6 +34,10 @@ export const useGestorConfigStore = defineStore("gestorConfig", () => {
       contactData.value = { ...DEFAULT_CONTACT_DATA, ...stored.contactData };
       onboardingComplete.value = stored.onboardingComplete;
       teamMembers.value = stored.teamMembers ?? [];
+      businessAddress.value = stored.businessAddress ?? "";
+      businessPopulation.value = stored.businessPopulation ?? "";
+      isCanarias.value = stored.isCanarias ?? false;
+      taxId.value = stored.taxId ?? "";
     } else {
       companyName.value = "";
       logoUrl.value = null;
@@ -37,10 +46,24 @@ export const useGestorConfigStore = defineStore("gestorConfig", () => {
       contactData.value = { ...DEFAULT_CONTACT_DATA };
       onboardingComplete.value = false;
       teamMembers.value = [];
+      businessAddress.value = "";
+      businessPopulation.value = "";
+      isCanarias.value = false;
+      taxId.value = "";
+    }
+    if (businessId) {
+      try {
+        const apiConfig = await businessConfigApi.getConfig(businessId);
+        if (apiConfig?.professionId != null && apiConfig.professionId !== "") {
+          businessType.value = apiConfig.professionId;
+        }
+      } catch {
+        // keep local values
+      }
     }
   };
 
-  const setConfig = (userId: string, config: GestorConfig) => {
+  const setConfig = async (userId: string, config: GestorConfig, businessId?: string | null) => {
     companyName.value = config.companyName;
     logoUrl.value = config.logoUrl;
     numberOfPeople.value = config.numberOfPeople;
@@ -48,7 +71,18 @@ export const useGestorConfigStore = defineStore("gestorConfig", () => {
     contactData.value = { ...DEFAULT_CONTACT_DATA, ...config.contactData };
     onboardingComplete.value = config.onboardingComplete;
     teamMembers.value = config.teamMembers ?? [];
+    businessAddress.value = config.businessAddress ?? "";
+    businessPopulation.value = config.businessPopulation ?? "";
+    isCanarias.value = config.isCanarias ?? false;
+    taxId.value = config.taxId ?? "";
     gestorConfigStorage.saveGestorConfig(userId, config);
+    if (businessId && config.businessType) {
+      try {
+        await businessConfigApi.updateConfig(businessId, { professionId: config.businessType });
+      } catch {
+        // keep going even if API sync fails
+      }
+    }
   };
 
   const getConfig = (): GestorConfig => ({
@@ -59,6 +93,10 @@ export const useGestorConfigStore = defineStore("gestorConfig", () => {
     contactData: { ...contactData.value },
     onboardingComplete: onboardingComplete.value,
     teamMembers: teamMembers.value.map((m) => ({ ...m })),
+    businessAddress: businessAddress.value || undefined,
+    businessPopulation: businessPopulation.value || undefined,
+    isCanarias: isCanarias.value || undefined,
+    taxId: taxId.value?.trim() || undefined,
   });
 
   const markOnboardingComplete = (userId: string) => {
@@ -74,6 +112,10 @@ export const useGestorConfigStore = defineStore("gestorConfig", () => {
     contactData,
     onboardingComplete,
     teamMembers,
+    businessAddress,
+    businessPopulation,
+    isCanarias,
+    taxId,
     displayCompanyName,
     displayLogoUrl,
     initialize,

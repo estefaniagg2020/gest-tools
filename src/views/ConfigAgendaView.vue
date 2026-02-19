@@ -337,6 +337,7 @@
   import ConfigAgendaPreview from "@/components/config/ConfigAgendaPreview.vue";
   import ColorPickerRow from "@/components/config/ColorPickerRow.vue";
   import BackLink from "@/components/common/BackLink.vue";
+  import { useConfirmDialog } from "@/composables/useConfirmDialog";
 
   const agenda = useConfigAgenda();
   const appointmentStore = useAppointmentStore();
@@ -454,8 +455,16 @@
     }
   };
 
-  const handleClearAllAppointments = () => {
-    if (!window.confirm("¿Borrar todas las citas de las agendas? Esta acción no se puede deshacer.")) return;
+  const { show: showConfirm } = useConfirmDialog();
+
+  const handleClearAllAppointments = async () => {
+    const ok = await showConfirm({
+      title: "Borrar todas las citas",
+      message: "¿Borrar todas las citas de las agendas? Esta acción no se puede deshacer.",
+      confirmLabel: "Borrar todo",
+      variant: "danger",
+    });
+    if (!ok) return;
     appointmentStore.clearAll();
     clearedMessage.value = "Citas borradas. Recarga la agenda para ver el cambio.";
     setTimeout(() => {

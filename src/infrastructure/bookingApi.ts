@@ -1,4 +1,5 @@
 import { apiFetch } from "./apiClient";
+import type { CatalogCategory } from "@/interfaces";
 
 export interface Business {
   id: string;
@@ -55,6 +56,47 @@ export const bookingApi = {
     if (!res.ok) throw new Error("Error al cargar servicios");
     const data = await res.json();
     return Array.isArray(data) ? data : [];
+  },
+
+  getCatalog: async (businessId: string): Promise<CatalogCategory[]> => {
+    const res = await apiFetch(`/api/businesses/${businessId}/catalog`);
+    if (!res.ok) throw new Error("Error al cargar catálogo");
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  },
+
+  createService: async (
+    businessId: string,
+    payload: Omit<Service, "id"> & { categoryId?: string | null },
+  ): Promise<Service> => {
+    const res = await apiFetch(`/api/businesses/${businessId}/services`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error ?? "Error al crear el servicio");
+    return data;
+  },
+
+  updateService: async (
+    businessId: string,
+    serviceId: string,
+    payload: Partial<Omit<Service, "id">>,
+  ): Promise<Service> => {
+    const res = await apiFetch(`/api/businesses/${businessId}/services/${serviceId}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error ?? "Error al actualizar el servicio");
+    return data;
+  },
+
+  deleteService: async (businessId: string, serviceId: string): Promise<void> => {
+    const res = await apiFetch(`/api/businesses/${businessId}/services/${serviceId}`, {
+      method: "DELETE",
+    });
+    if (!res.ok && res.status !== 404) throw new Error("Error al eliminar el servicio");
   },
 
   getAvailability: async (

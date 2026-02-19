@@ -39,7 +39,6 @@
     src?: string;
     name?: string;
     size?: number;
-    /** Si se indica, el avatar es un enlace (p. ej. perfil LinkedIn). */
     href?: string;
   }>();
 
