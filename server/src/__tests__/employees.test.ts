@@ -4,12 +4,13 @@ import { withAuth, mockPrisma } from "./helpers.js";
 import { employeeRouter } from "../routes/employees.js";
 
 const BIZ = "biz-1";
-const fakeEmployee = {
+const fakeMember = {
   id: "emp-1", businessId: BIZ, name: "Ana García", photoUrl: null,
-  linkedInUrl: null, phoneNumber: null, email: null,
-  weeklyHours: 40, color: "#abc", role: "member",
-  defaultWorkStartHour: 9, defaultWorkEndHour: 18,
+  linkedInUrl: null, phone: null, email: null,
+  weeklyHours: 40, color: "#abc", roleId: "role-1",
+  userId: null, position: null, defaultWorkStartHour: 9, defaultWorkEndHour: 18,
   createdAt: new Date(), updatedAt: new Date(),
+  role: { name: "employee" },
 };
 
 describe("Employees CRUD", () => {
@@ -18,12 +19,16 @@ describe("Employees CRUD", () => {
 
   beforeEach(() => {
     prisma = mockPrisma({
-      employee: {
-        findMany: vi.fn().mockResolvedValue([fakeEmployee]),
-        findUnique: vi.fn().mockResolvedValue(fakeEmployee),
-        create: vi.fn().mockResolvedValue({ ...fakeEmployee, id: "emp-new" }),
-        update: vi.fn().mockResolvedValue({ ...fakeEmployee, name: "Updated" }),
-        delete: vi.fn().mockResolvedValue(fakeEmployee),
+      workspaceMember: {
+        findMany: vi.fn().mockResolvedValue([fakeMember]),
+        findUnique: vi.fn().mockResolvedValue(fakeMember),
+        findFirst: vi.fn().mockResolvedValue(fakeMember),
+        create: vi.fn().mockResolvedValue({ ...fakeMember, id: "emp-new", role: { name: "employee" } }),
+        update: vi.fn().mockResolvedValue({ ...fakeMember, name: "Updated", role: { name: "employee" } }),
+        delete: vi.fn().mockResolvedValue(fakeMember),
+      },
+      role: {
+        findUnique: vi.fn().mockResolvedValue({ id: "role-1", name: "employee" }),
       },
     });
     app = withAuth(employeeRouter(prisma));
@@ -37,7 +42,7 @@ describe("Employees CRUD", () => {
   });
 
   it("POST / creates an employee", async () => {
-    const res = await request(app).post("/").send({ name: "Luis", color: "#fff" });
+    const res = await request(app).post("/").send({ name: "Luis", role: "employee", color: "#fff" });
     expect(res.status).toBe(201);
     expect(res.body.id).toBe("emp-new");
   });
@@ -54,7 +59,7 @@ describe("Employees CRUD", () => {
   });
 
   it("PUT /:id returns 404 when employee not found", async () => {
-    prisma.employee.findUnique = vi.fn().mockResolvedValue(null);
+    prisma.workspaceMember.findUnique = vi.fn().mockResolvedValue(null);
     const res = await request(app).put("/emp-999").send({ name: "X" });
     expect(res.status).toBe(404);
   });
@@ -65,7 +70,7 @@ describe("Employees CRUD", () => {
   });
 
   it("DELETE /:id returns 404 when employee not found", async () => {
-    prisma.employee.findUnique = vi.fn().mockResolvedValue(null);
+    prisma.workspaceMember.findUnique = vi.fn().mockResolvedValue(null);
     const res = await request(app).delete("/emp-999");
     expect(res.status).toBe(404);
   });

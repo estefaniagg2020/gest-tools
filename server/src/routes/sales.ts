@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import type { PrismaClient } from "@prisma/client";
-import { requireAuth, requireGestor } from "../middleware/auth.js";
+import { requireAuth, requireStaff } from "../middleware/auth.js";
 
 export const salesRouter = (prisma: PrismaClient) => {
   const router = Router();
@@ -10,7 +10,7 @@ export const salesRouter = (prisma: PrismaClient) => {
     Array.isArray(req.params.id) ? req.params.id[0] : (req.params.id ?? "");
 
   // ─── GET / — List sales for a business ────────────────────────────────────
-  router.get("/", auth, requireGestor, async (req: Request, res: Response) => {
+  router.get("/", auth, requireStaff, async (req: Request, res: Response) => {
     if (!req.user?.businessId) {
       res.status(403).json({ error: "Negocio no asociado" });
       return;
@@ -32,7 +32,7 @@ export const salesRouter = (prisma: PrismaClient) => {
   });
 
   // ─── GET /:id — Get a single sale with items ──────────────────────────────
-  router.get("/:id", auth, requireGestor, async (req: Request, res: Response) => {
+  router.get("/:id", auth, requireStaff, async (req: Request, res: Response) => {
     if (!req.user?.businessId) {
       res.status(403).json({ error: "Negocio no asociado" });
       return;
@@ -58,7 +58,7 @@ export const salesRouter = (prisma: PrismaClient) => {
   });
 
   // ─── POST / — Create a new open sale (ticket) ────────────────────────────
-  router.post("/", auth, requireGestor, async (req: Request, res: Response) => {
+  router.post("/", auth, requireStaff, async (req: Request, res: Response) => {
     if (!req.user?.businessId) {
       res.status(403).json({ error: "Negocio no asociado" });
       return;
@@ -94,7 +94,7 @@ export const salesRouter = (prisma: PrismaClient) => {
   });
 
   // ─── POST /:id/items — Add an item line to an open sale ───────────────────
-  router.post("/:id/items", auth, requireGestor, async (req: Request, res: Response) => {
+  router.post("/:id/items", auth, requireStaff, async (req: Request, res: Response) => {
     if (!req.user?.businessId) {
       res.status(403).json({ error: "Negocio no asociado" });
       return;
@@ -158,7 +158,7 @@ export const salesRouter = (prisma: PrismaClient) => {
   });
 
   // ─── DELETE /:id/items/:itemId — Remove an item from open sale ────────────
-  router.delete("/:id/items/:itemId", auth, requireGestor, async (req: Request, res: Response) => {
+  router.delete("/:id/items/:itemId", auth, requireStaff, async (req: Request, res: Response) => {
     if (!req.user?.businessId) {
       res.status(403).json({ error: "Negocio no asociado" });
       return;
@@ -204,7 +204,7 @@ export const salesRouter = (prisma: PrismaClient) => {
    * 4. Updates Appointment.status = "completed" & paymentStatus = "paid"
    * 5. Updates ClientBono sessions for any bono-paid items
    */
-  router.post("/:id/pay", auth, requireGestor, async (req: Request, res: Response) => {
+  router.post("/:id/pay", auth, requireStaff, async (req: Request, res: Response) => {
     if (!req.user?.businessId) {
       res.status(403).json({ error: "Negocio no asociado" });
       return;
@@ -301,7 +301,7 @@ export const salesRouter = (prisma: PrismaClient) => {
   });
 
   // ─── POST /:id/void — Void/cancel an open sale ────────────────────────────
-  router.post("/:id/void", auth, requireGestor, async (req: Request, res: Response) => {
+  router.post("/:id/void", auth, requireStaff, async (req: Request, res: Response) => {
     if (!req.user?.businessId) {
       res.status(403).json({ error: "Negocio no asociado" });
       return;

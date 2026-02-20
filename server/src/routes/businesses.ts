@@ -38,8 +38,11 @@ export const businessRouter = (prisma: PrismaClient) => {
   };
 
   const buildServiceCatalog = async (businessId: string) => {
-    const config = await prisma.gestorConfig.findUnique({ where: { businessId } });
-    const professionId = config?.professionId ?? "";
+    const [config, business] = await Promise.all([
+      prisma.gestorConfig.findUnique({ where: { businessId } }),
+      prisma.business.findUnique({ where: { id: businessId }, select: { professionId: true } }),
+    ]);
+    const professionId = business?.professionId ?? "";
     const hiddenNames = new Set(
       (config?.hiddenSystemServiceNames ?? []).map((n: string) => n.toLowerCase()),
     );
@@ -363,36 +366,66 @@ export const businessRouter = (prisma: PrismaClient) => {
     const businessId = getId(req);
     try {
       const [config, business] = await Promise.all([
-        prisma.gestorConfig.findUnique({
-          where: { businessId },
-          include: { profession: { select: { code: true, label: true } } } as any,
+        prisma.gestorConfig.findUnique({ where: { businessId } }),
+        prisma.business.findUnique({
+          where: { id: businessId },
+          select: {
+            name: true,
+            logoUrl: true,
+            email: true,
+            phone: true,
+            address: true,
+            professionId: true,
+            taxId: true,
+            businessAddress: true,
+            businessPopulation: true,
+            isCanarias: true,
+            description: true,
+            publicPhoneNumber: true,
+            slug: true,
+            socialLinks: true,
+          },
         }),
-        prisma.business.findUnique({ where: { id: businessId }, select: { name: true } }),
       ]);
       if (!config) {
         res.status(404).json({ error: "Config not found" });
         return;
       }
-      res.json({ ...config, companyName: business?.name ?? "" });
+      res.json({
+        ...config,
+        companyName: business?.name ?? "",
+        logoUrl: business?.logoUrl ?? null,
+        email: business?.email ?? null,
+        phone: business?.phone ?? null,
+        address: business?.address ?? null,
+        professionId: business?.professionId ?? null,
+        taxId: business?.taxId ?? null,
+        businessAddress: business?.businessAddress ?? null,
+        businessPopulation: business?.businessPopulation ?? null,
+        isCanarias: business?.isCanarias ?? false,
+        description: business?.description ?? null,
+        publicPhoneNumber: business?.publicPhoneNumber ?? null,
+        slug: business?.slug ?? null,
+        socialLinks: business?.socialLinks ?? null,
+      });
     } catch (error) {
-      res.status(500).json({ error: "Server error" });
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error("[businesses/:id/config GET]", msg);
+      res.status(500).json({ error: msg });
     }
   });
 
+  // Fields that belong to Business identity (not GestorConfig)
+  const BUSINESS_IDENTITY_KEYS = new Set([
+    "logoUrl", "email", "phone", "address", "professionId",
+    "taxId", "businessAddress", "businessPopulation", "isCanarias",
+    "description", "publicPhoneNumber", "slug", "socialLinks",
+  ]);
+
   const CONFIG_UPDATE_KEYS = [
-    "professionId",
-    // Contact & identity
-    "logoUrl",
+    // GestorConfig operational fields
     "numberOfPeople",
-    "email",
-    "phone",
-    "address",
     "onboardingComplete",
-    // Fiscal & location
-    "taxId",
-    "businessAddress",
-    "businessPopulation",
-    "isCanarias",
     // Features
     "defaultVatPercent",
     "cartEnabled",
@@ -436,21 +469,30 @@ export const businessRouter = (prisma: PrismaClient) => {
     "bookingEnabled",
     "depositPercent",
     "depositRequired",
-    "description",
-    "publicPhoneNumber",
-    "slug",
-    "socialLinks",
   ] as const;
 
   router.put("/:id/config", async (req: Request, res: Response) => {
     const businessId = getId(req);
     const body = req.body ?? {};
-    const configData: Record<string, unknown> = {};
-    for (const key of CONFIG_UPDATE_KEYS) {
-      if (key in body) configData[key] = body[key];
+
+    // Separate incoming fields: Business identity vs GestorConfig operational
+    const businessData: Record<string, unknown> = {};
+    const gestorConfigData: Record<string, unknown> = {};
+
+    if (typeof body.companyName === "string") {
+      businessData.name = body.companyName.trim();
     }
-    const newCompanyName =
-      typeof body.companyName === "string" ? body.companyName.trim() : null;
+
+    // Identity fields go to Business
+    for (const key of BUSINESS_IDENTITY_KEYS) {
+      if (key in body) businessData[key] = body[key];
+    }
+
+    // Operational fields go to GestorConfig
+    for (const key of CONFIG_UPDATE_KEYS) {
+      if (key in body) gestorConfigData[key] = body[key];
+    }
+
     try {
       const business = await prisma.business.findUnique({ where: { id: businessId } });
       if (!business) {
@@ -458,23 +500,22 @@ export const businessRouter = (prisma: PrismaClient) => {
         return;
       }
 
-      const currentConfig = await prisma.gestorConfig.findUnique({ where: { businessId } });
       const professionChanging =
-        "professionId" in configData &&
-        configData.professionId !== currentConfig?.professionId;
+        "professionId" in businessData &&
+        businessData.professionId !== business.professionId;
 
       const config = await prisma.$transaction(async (tx) => {
-        if (newCompanyName) {
+        if (Object.keys(businessData).length > 0) {
           await tx.business.update({
             where: { id: businessId },
-            data: { name: newCompanyName },
+            data: businessData,
           });
         }
 
         const saved = await tx.gestorConfig.upsert({
           where: { businessId },
-          update: configData,
-          create: { ...configData, businessId },
+          update: gestorConfigData,
+          create: { ...gestorConfigData, businessId },
         });
 
         if (professionChanging) {
@@ -490,7 +531,24 @@ export const businessRouter = (prisma: PrismaClient) => {
         return saved;
       });
 
-      res.json({ ...config, companyName: newCompanyName ?? business.name });
+      const updatedBusiness = await prisma.business.findUnique({ where: { id: businessId } });
+      res.json({
+        ...config,
+        companyName: updatedBusiness?.name ?? business.name,
+        logoUrl: updatedBusiness?.logoUrl ?? null,
+        email: updatedBusiness?.email ?? null,
+        phone: updatedBusiness?.phone ?? null,
+        address: updatedBusiness?.address ?? null,
+        professionId: updatedBusiness?.professionId ?? null,
+        taxId: updatedBusiness?.taxId ?? null,
+        businessAddress: updatedBusiness?.businessAddress ?? null,
+        businessPopulation: updatedBusiness?.businessPopulation ?? null,
+        isCanarias: updatedBusiness?.isCanarias ?? false,
+        description: updatedBusiness?.description ?? null,
+        publicPhoneNumber: updatedBusiness?.publicPhoneNumber ?? null,
+        slug: updatedBusiness?.slug ?? null,
+        socialLinks: updatedBusiness?.socialLinks ?? null,
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to update config";
       console.error("Error updating config:", error);

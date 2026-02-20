@@ -87,9 +87,8 @@ async function runTests() {
   });
   console.log("✅ [UPDATE] Product Stock decremented to:", product.stockLevel);
 
-  // 3. CRM & PETS CRUD
-  console.log("\n--- TESTING CRM & PETS ---");
-  // Create Client
+  // 3. CRM CRUD
+  console.log("\n--- TESTING CRM ---");
   const client = await prisma.client.create({
     data: {
       businessId: testBusiness.id,
@@ -98,37 +97,6 @@ async function runTests() {
     }
   });
   console.log("✅ [CREATE] Client:", client.name);
-
-  // Create Pet
-  let pet = await prisma.pet.create({
-    data: {
-      ownerId: testUser.id, // Using the User as Owner for now (schema links Pet to User, not Client directly yet? Wait, let's check schema. User is Owner. Client is separate entity currently?)
-      // Schema check: Pet -> ownerId (User). Appointment -> clientId (Client) AND petId (Pet). 
-      // This implies 'User' can be a client who owns pets.
-      name: "Firulais",
-      species: "dog",
-      breed: "Labrador",
-      needsMuzzle: true
-    }
-  });
-  console.log("✅ [CREATE] Pet:", pet.name, "| Flag: Needs Muzzle =", pet.needsMuzzle);
-
-  // Update Pet
-  pet = await prisma.pet.update({
-    where: { id: pet.id },
-    data: { weight: 25.5, notes: "Very friendly despite muzzle" }
-  });
-  console.log("✅ [UPDATE] Pet updated. Weight:", pet.weight);
-
-  // Add Technical Note
-  const note = await prisma.clientNote.create({
-    data: {
-        petId: pet.id,
-        content: "Vaccination applied",
-        type: "VETERINARY_HISTORY"
-    }
-  });
-  console.log("✅ [CREATE] Pet Clinical Note:", note.content);
 
   // 4. BOOKING / APPOINTMENTS
   console.log("\n--- TESTING BOOKING ---");
@@ -145,20 +113,18 @@ async function runTests() {
   });
   console.log("✅ [CREATE] Service:", service.name, "| Online Booking:", service.onlineBookingEnabled);
 
-  // Create Appointment
   const appointment = await prisma.appointment.create({
     data: {
         businessId: testBusiness.id,
         serviceId: service.id,
-        petId: pet.id,
-        clientId: client.id, // Linking to client profile
+        clientId: client.id,
         start: new Date(),
         end: new Date(Date.now() + 30*60000),
         status: "confirmed",
         origin: "online"
     }
   });
-  console.log("✅ [CREATE] Appointment for Pet:", pet.name, "| Origin:", appointment.origin);
+  console.log("✅ [CREATE] Appointment | Origin:", appointment.origin);
 
 
   // 5. CLEANUP (DELETE)
@@ -167,18 +133,6 @@ async function runTests() {
   // Delete Appointment
   await prisma.appointment.delete({ where: { id: appointment.id } });
   console.log("✅ [DELETE] Appointment deleted.");
-
-  // Delete Pet (should cascade notes/photos if configured, or fail if restricted. Schema says:
-  // ClientNote -> petId (SetNull). So notes remain orphan or need manual delete.
-  // Wait, ClientNote -> petId relation doesn't have onDelete. Let's see behavior.
-  // Actually, usually we want cascade for notes. Let's try deleting Pet.)
-  
-  // First delete notes manually if cascade not set (Prisma default is SetNull for optional relations often, but let's check).
-  // Schema: pet Pet? @relation(...)
-  // If we delete pet, note.petId becomes null.
-  await prisma.clientNote.deleteMany({ where: { petId: pet.id } });
-  await prisma.pet.delete({ where: { id: pet.id } });
-  console.log("✅ [DELETE] Pet deleted.");
 
   // Delete Product
   await prisma.stockMovement.deleteMany({ where: { productId: product.id } });

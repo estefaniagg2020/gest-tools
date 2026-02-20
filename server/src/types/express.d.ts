@@ -1,7 +1,9 @@
+export type RoleName = "superadmin" | "admin" | "employee" | "client";
+
 export interface AuthUser {
   id: string;
   username: string;
-  role: "gestor" | "client";
+  role: RoleName;
   name: string | null;
   email: string | null;
   phone: string | null;

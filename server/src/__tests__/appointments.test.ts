@@ -7,8 +7,8 @@ const BIZ = "biz-1";
 const now = new Date("2025-01-15T10:00:00Z");
 const end = new Date("2025-01-15T11:00:00Z");
 const fakeAppt = {
-  id: "apt-1", businessId: BIZ, serviceId: null, userId: null,
-  employeeId: "emp-1", clientId: null, clientName: "María",
+  id: "apt-1", businessId: BIZ, serviceId: null,
+  workspaceMemberId: "emp-1", clientId: null, clientName: "María",
   start: now, end, status: "pending", paymentStatus: "pending",
   notes: null, cancellationReason: null, isAtHome: false, isVIP: false,
   cartItems: null, discountPercent: null, createdAt: new Date(), updatedAt: new Date(),
@@ -38,7 +38,7 @@ describe("Appointments CRUD", () => {
     expect(res.body[0].memberId).toBe("emp-1");
   });
 
-  it("GET / maps employeeId to memberId", async () => {
+  it("GET / maps workspaceMemberId to memberId", async () => {
     const res = await request(app).get("/");
     expect(res.body[0]).toHaveProperty("memberId", "emp-1");
   });

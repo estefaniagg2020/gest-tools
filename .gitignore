@@ -1,2 +1,21 @@
 node_modules
 dist
+.env
+.env.*
+
+# client generated
+client/dist
+client/coverage
+client/playwright-report
+client/test-results
+client/playwright/.cache
+client/*.tsbuildinfo
+client/vite.config.js
+client/vite.config.d.ts
+client/vitest.config.js
+client/vitest.config.d.ts
+
+# server generated
+server/dist
+server/coverage
+server/*.tsbuildinfo

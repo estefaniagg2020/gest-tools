@@ -137,7 +137,7 @@ export const bookingsRouter = (prisma: PrismaClient) => {
       res.status(404).json({ error: "Reserva no encontrada" });
       return;
     }
-    if (appointment.userId !== req.user.id && req.user.role !== "gestor") {
+    if (appointment.userId !== req.user.id && req.user.role === "client") {
       res.status(403).json({ error: "No puedes cancelar esta reserva" });
       return;
     }

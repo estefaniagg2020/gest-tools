@@ -4,13 +4,14 @@ import { withAuth, mockPrisma } from "./helpers.js";
 import { bonosRouter } from "../routes/bonos.js";
 
 const BIZ = "biz-1";
-const fakeTemplate = {
+const fakeBonoDef = {
   id: "tmpl-1", businessId: BIZ, name: "Pack 10 sesiones",
-  type: "pack", sessions: 10, price: 90, validDays: 365, serviceId: null,
+  type: "session_pack", sessions: 10, price: 90, validDays: 365, serviceId: null,
+  loyaltyTriggerEvery: null, loyaltyRewardSessions: null,
   createdAt: new Date(), updatedAt: new Date(),
 };
-const fakeBono = {
-  id: "bono-1", clientId: "cli-1", templateId: "tmpl-1",
+const fakeClientBono = {
+  id: "bono-1", clientId: "cli-1", bonoId: "tmpl-1",
   sessionsUsed: 2, sessionsTotal: 10, remainingSessions: 8,
   paidCount: 0, freeSessionsRemaining: null,
   assignedAt: new Date(), expiresAt: null, createdAt: new Date(), updatedAt: new Date(),
@@ -22,30 +23,33 @@ describe("Bonos CRUD", () => {
 
   beforeEach(() => {
     prisma = mockPrisma({
-      bonoTemplate: {
-        findMany: vi.fn().mockResolvedValue([fakeTemplate]),
-        findUnique: vi.fn().mockResolvedValue(fakeTemplate),
-        create: vi.fn().mockResolvedValue({ ...fakeTemplate, id: "tmpl-new" }),
-        update: vi.fn().mockResolvedValue({ ...fakeTemplate, price: 80 }),
-        delete: vi.fn().mockResolvedValue(fakeTemplate),
+      bono: {
+        findMany: vi.fn().mockResolvedValue([fakeBonoDef]),
+        findUnique: vi.fn().mockResolvedValue(fakeBonoDef),
+        create: vi.fn().mockResolvedValue({ ...fakeBonoDef, id: "tmpl-new" }),
+        update: vi.fn().mockResolvedValue({ ...fakeBonoDef, price: 80 }),
+        delete: vi.fn().mockResolvedValue(fakeBonoDef),
       },
       clientBono: {
-        findMany: vi.fn().mockResolvedValue([fakeBono]),
-        findUnique: vi.fn().mockResolvedValue({ ...fakeBono, client: { businessId: BIZ } }),
-        create: vi.fn().mockResolvedValue({ ...fakeBono, id: "bono-new" }),
-        update: vi.fn().mockResolvedValue({ ...fakeBono, sessionsUsed: 3, remainingSessions: 7 }),
-        delete: vi.fn().mockResolvedValue(fakeBono),
+        findMany: vi.fn().mockResolvedValue([fakeClientBono]),
+        findUnique: vi.fn().mockResolvedValue({ ...fakeClientBono, client: { businessId: BIZ } }),
+        create: vi.fn().mockResolvedValue({ ...fakeClientBono, id: "bono-new" }),
+        update: vi.fn().mockResolvedValue({ ...fakeClientBono, sessionsUsed: 3, remainingSessions: 7 }),
+        delete: vi.fn().mockResolvedValue(fakeClientBono),
         deleteMany: vi.fn().mockResolvedValue({ count: 1 }),
       },
       client: {
         findUnique: vi.fn().mockResolvedValue({ id: "cli-1", businessId: BIZ }),
       },
+      business: {
+        findUnique: vi.fn().mockResolvedValue({ id: BIZ }),
+      },
     });
     app = withAuth(bonosRouter(prisma));
   });
 
-  // BonoTemplate tests
-  it("GET /templates returns template list", async () => {
+  // Bono CRUD tests
+  it("GET /templates returns bono list", async () => {
     const res = await request(app).get("/templates");
     expect(res.status).toBe(200);
     expect(res.body[0].name).toBe("Pack 10 sesiones");
@@ -69,15 +73,15 @@ describe("Bonos CRUD", () => {
   });
 
   it("PUT /templates/:id returns 404 when not found", async () => {
-    prisma.bonoTemplate.findUnique = vi.fn().mockResolvedValue(null);
+    prisma.bono.findUnique = vi.fn().mockResolvedValue(null);
     const res = await request(app).put("/templates/x").send({ price: 80 });
     expect(res.status).toBe(404);
   });
 
-  it("DELETE /templates/:id deletes template and its bonos", async () => {
+  it("DELETE /templates/:id deletes bono and its client bonos", async () => {
     const res = await request(app).delete("/templates/tmpl-1");
     expect(res.status).toBe(204);
-    expect(prisma.clientBono.deleteMany).toHaveBeenCalledWith({ where: { templateId: "tmpl-1" } });
+    expect(prisma.clientBono.deleteMany).toHaveBeenCalledWith({ where: { bonoId: "tmpl-1" } });
   });
 
   // ClientBono tests
@@ -88,12 +92,12 @@ describe("Bonos CRUD", () => {
   });
 
   it("POST /client-bonos assigns a bono to client", async () => {
-    const res = await request(app).post("/client-bonos").send({ clientId: "cli-1", templateId: "tmpl-1" });
+    const res = await request(app).post("/client-bonos").send({ clientId: "cli-1", bonoId: "tmpl-1" });
     expect(res.status).toBe(201);
     expect(res.body.id).toBe("bono-new");
   });
 
-  it("POST /client-bonos returns 400 when clientId or templateId missing", async () => {
+  it("POST /client-bonos returns 400 when clientId or bonoId missing", async () => {
     const res = await request(app).post("/client-bonos").send({ clientId: "cli-1" });
     expect(res.status).toBe(400);
   });

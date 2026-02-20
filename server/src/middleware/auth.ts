@@ -1,5 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import type { PrismaClient } from "@prisma/client";
+import type { RoleName } from "../types/express.js";
+
+const STAFF_ROLES: ReadonlySet<RoleName> = new Set(["superadmin", "admin", "employee"]);
 
 export const requireAuth = (prisma: PrismaClient) => {
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -15,7 +18,7 @@ export const requireAuth = (prisma: PrismaClient) => {
       select: {
         id: true,
         username: true,
-        role: true,
+        role: { select: { name: true } },
         name: true,
         email: true,
         phone: true,
@@ -32,7 +35,7 @@ export const requireAuth = (prisma: PrismaClient) => {
     req.user = {
       id: user.id,
       username: user.username,
-      role: user.role,
+      role: user.role.name as RoleName,
       name: user.name,
       email: user.email,
       phone: user.phone,
@@ -42,13 +45,37 @@ export const requireAuth = (prisma: PrismaClient) => {
   };
 };
 
-export const requireGestor = (
+export const requireStaff = (
   _req: Request,
   res: Response,
   next: NextFunction,
 ) => {
-  if (!_req.user || _req.user.role !== "gestor") {
+  if (!_req.user || !STAFF_ROLES.has(_req.user.role)) {
     res.status(403).json({ error: "Acceso denegado" });
+    return;
+  }
+  next();
+};
+
+export const requireAdmin = (
+  _req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  if (!_req.user || (_req.user.role !== "admin" && _req.user.role !== "superadmin")) {
+    res.status(403).json({ error: "Acceso denegado: se requiere rol admin" });
+    return;
+  }
+  next();
+};
+
+export const requireSuperadmin = (
+  _req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  if (!_req.user || _req.user.role !== "superadmin") {
+    res.status(403).json({ error: "Acceso denegado: se requiere rol superadmin" });
     return;
   }
   next();

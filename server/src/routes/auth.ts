@@ -8,6 +8,11 @@ import {
 } from "../utils/password.js";
 import { requireAuth } from "../middleware/auth.js";
 
+const getRoleId = async (prisma: PrismaClient, name: string): Promise<string> => {
+  const role = await prisma.role.findUniqueOrThrow({ where: { name } });
+  return role.id;
+};
+
 export const authRouter = (prisma: PrismaClient) => {
   const router = Router();
   const auth = requireAuth(prisma);
@@ -31,6 +36,7 @@ export const authRouter = (prisma: PrismaClient) => {
       where: {
         username: { equals: trimmed, mode: "insensitive" },
       },
+      include: { role: { select: { name: true } } },
     });
     if (!user || !verifyPassword(password, user.salt, user.passwordHash)) {
       res.status(401).json({ error: "Usuario o contraseña incorrectos" });
@@ -46,13 +52,14 @@ export const authRouter = (prisma: PrismaClient) => {
       select: { businessId: true },
       take: 1,
     });
-    // Gestor with no workspace: auto-create business on first login
-    if (workspaces.length === 0 && user.role === "gestor") {
+    const isStaff = user.role.name !== "client";
+    if (workspaces.length === 0 && isStaff) {
+      const adminRoleId = await getRoleId(prisma, "admin");
       const { businessId } = await prisma.$transaction(async (tx) => {
         const company = await tx.company.create({ data: { name: user.username } });
         const business = await tx.business.create({ data: { name: user.username, companyId: company.id } });
         await tx.workspaceMember.create({
-          data: { userId: user.id, businessId: business.id, role: "admin", name: user.username },
+          data: { userId: user.id, businessId: business.id, roleId: adminRoleId, name: user.username },
         });
         return { businessId: business.id };
       });
@@ -62,7 +69,7 @@ export const authRouter = (prisma: PrismaClient) => {
       user: {
         id: user.id,
         username: user.username,
-        role: user.role,
+        role: user.role.name,
         name: user.name,
         email: user.email,
         phone: user.phone,
@@ -106,10 +113,12 @@ export const authRouter = (prisma: PrismaClient) => {
     }
     const salt = generateSalt();
     const passwordHash = hashPassword(password, salt);
+    const superadminRoleId = await getRoleId(prisma, "superadmin");
+    const adminRoleId = await getRoleId(prisma, "admin");
 
     const { user, businessId } = await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
-        data: { username: trimmed, passwordHash, salt, role: "gestor" },
+        data: { username: trimmed, passwordHash, salt, roleId: superadminRoleId },
       });
       const company = await tx.company.create({
         data: { name: trimmed },
@@ -118,7 +127,7 @@ export const authRouter = (prisma: PrismaClient) => {
         data: { name: trimmed, companyId: company.id },
       });
       await tx.workspaceMember.create({
-        data: { userId: newUser.id, businessId: business.id, role: "admin", name: trimmed },
+        data: { userId: newUser.id, businessId: business.id, roleId: adminRoleId, name: trimmed },
       });
       return { user: newUser, businessId: business.id };
     });
@@ -132,7 +141,7 @@ export const authRouter = (prisma: PrismaClient) => {
       user: {
         id: user.id,
         username: user.username,
-        role: user.role,
+        role: "superadmin",
         name: user.name,
         email: user.email,
         phone: user.phone,
@@ -242,6 +251,7 @@ export const authRouter = (prisma: PrismaClient) => {
     const user = await prisma.user.update({
       where: { id: req.user.id },
       data: data as { name?: string | null; phone?: string | null },
+      include: { role: { select: { name: true } } },
     });
     const workspaces = await prisma.workspaceMember.findMany({
       where: { userId: user.id },
@@ -252,7 +262,7 @@ export const authRouter = (prisma: PrismaClient) => {
       user: {
         id: user.id,
         username: user.username,
-        role: user.role,
+        role: user.role.name,
         name: user.name,
         email: user.email,
         phone: user.phone ?? undefined,

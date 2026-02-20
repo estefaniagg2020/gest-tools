@@ -18,7 +18,6 @@ async function resetDatabase() {
     await prisma.slotWaitlistEntry.deleteMany({});
     await prisma.waitlistNotification.deleteMany({});
     await prisma.clientPhoto.deleteMany({});
-    await prisma.clientNote.deleteMany({});
     await prisma.stockMovement.deleteMany({});
     await prisma.product.deleteMany({});
     await prisma.supplier.deleteMany({});
