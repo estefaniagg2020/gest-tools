@@ -84,9 +84,9 @@ model GestorConfig {
   whatsappPhoneNumberId       String?
   defaultVatPercent           Int                @default(21)
   cartEnabled                 Boolean            @default(false)
-  bonosEnabled                Boolean            @default(true)
+  bonosEnabled                Boolean            @default(false)
   serviciosEnabled            Boolean            @default(true)
-  inventarioEnabled           Boolean            @default(true)
+  inventarioEnabled           Boolean            @default(false)
   hiddenSystemServiceNames    String[]           @default([])
   locale                      String?
   createdAt                   DateTime           @default(now())

@@ -106,7 +106,7 @@
           </p>
         </section>
 
-        <section class="rounded-xl border border-app-border-subtle bg-app-surface p-5">
+        <section v-if="inventarioEnabled" class="rounded-xl border border-app-border-subtle bg-app-surface p-5">
           <h2 class="text-base font-semibold text-app-title flex items-center gap-2">
             <span aria-hidden="true">📦</span>
             Productos próximos a acabar
@@ -177,12 +177,14 @@
 <script setup lang="ts">
   import { ref, onMounted } from "vue";
   import { useAuthStore } from "@/stores/auth";
+  import { useBillingConfig } from "@/composables/useBillingConfig";
   import { useNotificacionesAvisos } from "@/composables/useNotificacionesAvisos";
   import { bookingApi } from "@/infrastructure/bookingApi";
   import { businessConfigApi } from "@/infrastructure/businessConfigApi";
   import ConfigPageHeader from "@/components/config/ConfigPageHeader.vue";
 
   const authStore = useAuthStore();
+  const { inventarioEnabled } = useBillingConfig();
   const whatsappBusinessId = ref<string | null>(null);
   const whatsappConfigLoading = ref(true);
   const whatsappRemindersEnabled = ref(false);

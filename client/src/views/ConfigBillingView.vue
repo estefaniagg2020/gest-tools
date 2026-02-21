@@ -39,21 +39,22 @@
           </div>
         </section>
 
-        <section class="rounded-xl border border-app-border-subtle bg-app-surface p-5">
+        <section class="rounded-xl border border-app-border-subtle bg-app-surface p-5 opacity-75">
           <h2 class="text-base font-semibold text-app-title flex items-center gap-2">
             <span aria-hidden="true">🛒</span>
             {{ $t('configBilling.cartSectionTitle') }}
+            <span class="ml-auto rounded-full bg-app-text/20 px-2.5 py-0.5 text-xs font-medium text-app-text/80">
+              {{ $t('configBilling.comingSoon') }}
+            </span>
           </h2>
           <p class="mt-1 text-sm text-app-text/70">
             {{ $t('configBilling.cartSectionDesc') }}
           </p>
-          <div v-if="loading" class="mt-4 text-sm text-app-text/60">
-            {{ $t('common.loading') }}
-          </div>
-          <div v-else class="mt-4">
+          <div class="mt-4">
             <ToggleSwitch
-              v-model="cartEnabled"
+              :model-value="false"
               :label="$t('configBilling.cartEnabledLabel')"
+              disabled
             />
           </div>
         </section>
@@ -97,7 +98,6 @@
   const saveError = ref("");
   const saveSuccess = ref(false);
   const defaultVatPercent = ref(21);
-  const cartEnabled = ref(false);
   const businessIdRef = ref<string | null>(null);
   const vatOptions = VAT_OPTIONS;
 
@@ -117,7 +117,6 @@
         if (config) {
           defaultVatPercent.value =
             typeof config.defaultVatPercent === "number" ? config.defaultVatPercent : 21;
-          cartEnabled.value = config.cartEnabled ?? false;
         }
       } catch {
         // ignore
@@ -134,7 +133,7 @@
     try {
       await businessConfigApi.updateConfig(businessIdRef.value, {
         defaultVatPercent: Number(defaultVatPercent.value),
-        cartEnabled: cartEnabled.value,
+        cartEnabled: false,
       });
       saveSuccess.value = true;
     } catch (e) {

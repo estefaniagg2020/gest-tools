@@ -22,7 +22,9 @@
     "placeholderCompany": "Mi Gestor",
     "logoHint": "PNG, JPG o SVG. Si no eliges logo se usará el icono por defecto.",
     "removeLogo": "Quitar logo",
-    "back": "Volver"
+    "back": "Volver",
+    "currency": "€",
+    "saveChanges": "Guardar cambios"
   },
   "nav": {
     "aria": "Navegación principal",
@@ -145,7 +147,8 @@
     "defaultVatLabel": "Tipo de IVA",
     "cartSectionTitle": "Carrito en citas",
     "cartSectionDesc": "Permite añadir productos a cada cita (ej. champú, mascarilla) y cobrarlos junto con el servicio.",
-    "cartEnabledLabel": "Habilitar carrito en el editor de citas"
+    "cartEnabledLabel": "Habilitar carrito en el editor de citas",
+    "comingSoon": "Próximamente"
   },
   "configModules": {
     "title": "Módulos del gestor",
@@ -290,6 +293,8 @@
     "proximasCitasHoyDesc": "Las citas más próximas del día en curso.",
     "productosBajoStock": "Productos bajo stock",
     "productosBajoStockDesc": "Productos del inventario que están a punto de acabarse.",
+    "listaEspera": "Lista de espera",
+    "listaEsperaDesc": "Personas esperando hueco para reservar una cita.",
     "noData": "Sin datos",
     "reservasSuffix": "reservas",
     "thisMonth": "este mes",
@@ -670,7 +675,15 @@
     "price": "Precio",
     "noProducts": "No hay productos. Añade el primero.",
     "editProduct": "Editar producto",
-    "newProduct": "Nuevo producto"
+    "newProduct": "Nuevo producto",
+    "productNamePlaceholder": "Ej.: Nombre del producto",
+    "cost": "Coste",
+    "stockLevel": "Stock",
+    "minStockLevel": "Stock mínimo",
+    "description": "Descripción",
+    "isServiceProduct": "Es producto de servicio (no consume stock)",
+    "createProduct": "Crear producto",
+    "stockEditHint": "El stock se actualiza desde el panel de inventario."
   },
   "footer": {
     "legalLinks": "Enlaces legales",

@@ -149,32 +149,40 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import BaseButton from "@/components/common/BaseButton.vue";
 import Modal from "@/components/common/Modal.vue";
 import { useClientStore } from "@/stores/client";
-import { useBonoStore } from "@/stores/bono"; // Assuming store exists
+import { useBonoStore } from "@/stores/bono";
 import { useClientHistory } from "@/composables/useClientHistory";
 import { useClientsManager } from "@/composables/useClientsManager";
 import { useToast } from "@/composables/useToast";
+import { useBillingConfig } from "@/composables/useBillingConfig";
 
-const router = useRouter(); 
+const router = useRouter();
 useI18n();
 const clientStore = useClientStore();
 const bonoStore = useBonoStore();
 const { addToast } = useToast();
+const { bonosEnabled } = useBillingConfig();
 
 const { client, historyEntries, formatHistoryDate } = useClientHistory();
 const { isModalOpen, isEditing, form, editClient, closeModal, saveClient } = useClientsManager();
 
-// TABS
-const tabs = [
-    { id: 'bonos', name: 'Bonos & Packs' },
-    { id: 'history', name: 'Historial' },
-];
-const currentTab = ref('bonos');
+const tabs = computed(() => {
+  const items = [{ id: "history", name: "Historial" }];
+  if (bonosEnabled.value) {
+    items.unshift({ id: "bonos", name: "Bonos & Packs" });
+  }
+  return items;
+});
+const currentTab = ref("history");
+watch(tabs, (t) => {
+  const ids = t.map((x) => x.id);
+  if (!ids.includes(currentTab.value)) currentTab.value = ids[0];
+}, { immediate: true });
 
 // BONOS LOGIC (Kept similar to existing)
 const isAssignBonoOpen = ref(false);

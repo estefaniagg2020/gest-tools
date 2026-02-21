@@ -69,9 +69,9 @@
   const saving = ref(false);
   const saveError = ref("");
   const saveSuccess = ref(false);
-  const bonosEnabled = ref(true);
+  const bonosEnabled = ref(false);
   const serviciosEnabled = ref(true);
-  const inventarioEnabled = ref(true);
+  const inventarioEnabled = ref(false);
   const businessIdRef = ref<string | null>(null);
 
   const resolveBusinessId = async (): Promise<string | null> => {
@@ -88,9 +88,9 @@
       try {
         const config = await businessConfigApi.getConfig(businessIdRef.value);
         if (config) {
-          bonosEnabled.value = config.bonosEnabled ?? true;
+          bonosEnabled.value = config.bonosEnabled ?? false;
           serviciosEnabled.value = config.serviciosEnabled ?? true;
-          inventarioEnabled.value = config.inventarioEnabled ?? true;
+          inventarioEnabled.value = config.inventarioEnabled ?? false;
         }
       } catch {
         // ignore

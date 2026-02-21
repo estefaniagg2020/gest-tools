@@ -22,7 +22,9 @@
     "placeholderCompany": "El meu Gestor",
     "logoHint": "PNG, JPG o SVG. Si no tries logo es farà servir la icona per defecte.",
     "removeLogo": "Treure logo",
-    "back": "Tornar"
+    "back": "Tornar",
+    "currency": "€",
+    "saveChanges": "Desar canvis"
   },
   "nav": {
     "aria": "Navegació principal",
@@ -145,7 +147,8 @@
     "defaultVatLabel": "Tipus d'IVA",
     "cartSectionTitle": "Cistella a les cites",
     "cartSectionDesc": "Permet afegir productes a cada cita (ex. xampú, màscara) i cobrar-los juntament amb el servei.",
-    "cartEnabledLabel": "Activar cistella a l'editor de cites"
+    "cartEnabledLabel": "Activar cistella a l'editor de cites",
+    "comingSoon": "Pròximament"
   },
   "configModules": {
     "title": "Mòduls del gestor",
@@ -290,6 +293,8 @@
     "proximasCitasHoyDesc": "Les cites més properes del dia en curs.",
     "productosBajoStock": "Productes amb estoc baix",
     "productosBajoStockDesc": "Productes de l'inventari que estan a punt d'acabar-se.",
+    "listaEspera": "Llista d'espera",
+    "listaEsperaDesc": "Persones esperant franja per reservar una cita.",
     "noData": "Sense dades",
     "reservasSuffix": "reserves",
     "thisMonth": "aquest mes",
@@ -670,7 +675,15 @@
     "price": "Preu",
     "noProducts": "No hi ha productes. Afegeix el primer.",
     "editProduct": "Editar producte",
-    "newProduct": "Nou producte"
+    "newProduct": "Nou producte",
+    "productNamePlaceholder": "Ex.: Nom del producte",
+    "cost": "Cost",
+    "stockLevel": "Estoc",
+    "minStockLevel": "Estoc mínim",
+    "description": "Descripció",
+    "isServiceProduct": "És producte de servei (no consumeix estoc)",
+    "createProduct": "Crear producte",
+    "stockEditHint": "L'estoc s'actualitza des del panell d'inventari."
   },
   "footer": {
     "legalLinks": "Enllaços legals",

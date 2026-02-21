@@ -55,9 +55,9 @@ export const useGestorConfigStore = defineStore("gestorConfig", () => {
   const whatsappPhoneNumberId = ref<string | null>(null);
   const defaultVatPercent = ref(21);
   const cartEnabled = ref(false);
-  const bonosEnabled = ref(true);
+  const bonosEnabled = ref(false);
   const serviciosEnabled = ref(true);
-  const inventarioEnabled = ref(true);
+  const inventarioEnabled = ref(false);
   const hiddenSystemServiceNames = ref<string[]>([]);
   const locale = ref<string | null>(null);
 

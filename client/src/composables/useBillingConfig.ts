@@ -6,9 +6,9 @@ import { businessConfigApi } from "@/infrastructure/businessConfigApi";
 
 const defaultVatPercent = ref(21);
 const cartEnabled = ref(false);
-const bonosEnabled = ref(true);
+const bonosEnabled = ref(false);
 const serviciosEnabled = ref(true);
-const inventarioEnabled = ref(true);
+const inventarioEnabled = ref(false);
 const loaded = ref(false);
 
 export const useBillingConfig = () => {
@@ -32,10 +32,10 @@ export const useBillingConfig = () => {
       if (config) {
         defaultVatPercent.value =
           typeof config.defaultVatPercent === "number" ? config.defaultVatPercent : 21;
-        cartEnabled.value = config.cartEnabled ?? false;
-        bonosEnabled.value = config.bonosEnabled ?? true;
+        cartEnabled.value = false;
+        bonosEnabled.value = config.bonosEnabled ?? false;
         serviciosEnabled.value = config.serviciosEnabled ?? true;
-        inventarioEnabled.value = config.inventarioEnabled ?? true;
+        inventarioEnabled.value = config.inventarioEnabled ?? false;
       }
     } catch {
       // keep defaults

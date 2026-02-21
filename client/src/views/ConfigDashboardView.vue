@@ -29,7 +29,7 @@
 
       <div class="mt-6 grid gap-4 sm:grid-cols-2">
         <button
-          v-for="widget in DASHBOARD_WIDGET_MODULES"
+          v-for="widget in visibleWidgetModules"
           :key="widget.id"
           type="button"
           class="group relative rounded-2xl border-2 p-5 text-left transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2"
@@ -267,6 +267,7 @@
   import { storeToRefs } from "pinia";
   import { DASHBOARD_WIDGET_MODULES, DASHBOARD_WIDGET_IDS } from "@/data/dashboardWidgetModules";
   import { DEFAULT_DASHBOARD_MODULE_IDS } from "@/interfaces";
+  import { useBillingConfig } from "@/composables/useBillingConfig";
   import { useLayoutStore } from "@/stores/layout";
   import BackLink from "@/components/common/BackLink.vue";
   import BaseButton from "@/components/common/BaseButton.vue";
@@ -303,7 +304,13 @@
   ];
 
   const layoutStore = useLayoutStore();
+  const { inventarioEnabled } = useBillingConfig();
   const { dashboardModuleIds } = storeToRefs(layoutStore);
+
+  const visibleWidgetModules = computed(() => {
+    if (inventarioEnabled.value) return [...DASHBOARD_WIDGET_MODULES];
+    return DASHBOARD_WIDGET_MODULES.filter((w) => w.id !== "productos-bajo-stock");
+  });
 
   const selectedIds = computed(() => new Set(dashboardModuleIds.value));
 
@@ -319,7 +326,10 @@
   };
 
   const selectAll = () => {
-    layoutStore.setDashboardModuleIds([...DASHBOARD_WIDGET_IDS]);
+    const ids = inventarioEnabled.value
+      ? [...DASHBOARD_WIDGET_IDS]
+      : DASHBOARD_WIDGET_IDS.filter((id) => id !== "productos-bajo-stock");
+    layoutStore.setDashboardModuleIds(ids);
   };
 
   const selectNone = () => {
