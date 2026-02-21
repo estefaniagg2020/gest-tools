@@ -9,6 +9,7 @@ Sistema de gestión integral para negocios de salud, belleza y bienestar. Cubre 
 - [Estructura del repositorio](#estructura-del-repositorio)
 - [Requisitos previos](#requisitos-previos)
 - [Instalación y puesta en marcha](#instalación-y-puesta-en-marcha)
+- [Puertos y proxy](#puertos-y-proxy)
 - [Variables de entorno](#variables-de-entorno)
 - [Scripts disponibles](#scripts-disponibles)
 - [Arquitectura](#arquitectura)
@@ -156,6 +157,22 @@ pnpm dev
 Esto arranca en paralelo:
 - **Frontend** → `http://localhost:5173`
 - **Backend** → `http://localhost:3000`
+
+#### Puertos y proxy
+
+El frontend y el backend corren en puertos distintos para evitar conflictos:
+
+| Servicio | Puerto | URL |
+|---|---|---|
+| **Frontend** (Vite) | 5173 | http://localhost:5173 |
+| **Backend** (Express) | 3000 | http://localhost:3000 |
+| **Health check** | 3000 | http://localhost:3000/health |
+
+Las peticiones a `/api/*` desde el frontend se reenvían automáticamente al backend mediante el proxy de Vite (`client/vite.config.ts`). No hace falta configurar `VITE_API_URL` en desarrollo.
+
+Para arrancar por separado:
+- `pnpm dev:client` — solo frontend (puerto 5173)
+- `pnpm dev:server` — solo backend (puerto 3000)
 
 ---
 

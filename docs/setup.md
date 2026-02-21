@@ -119,11 +119,23 @@ Arranca en paralelo:
 - **Frontend** (Vite dev server) → `http://localhost:5173`
 - **Backend** (tsx watch) → `http://localhost:3000`
 
+### Puertos y proxy
+
+El frontend y el backend corren en puertos distintos para evitar conflictos:
+
+| Servicio | Puerto | URL |
+|---|---|---|
+| **Frontend** (Vite) | 5173 | http://localhost:5173 |
+| **Backend** (Express) | 3000 | http://localhost:3000 |
+| **Health check** | 3000 | http://localhost:3000/health |
+
+Las peticiones a `/api/*` desde el frontend se reenvían automáticamente al backend mediante el proxy de Vite (`client/vite.config.ts`). En desarrollo no hace falta configurar `VITE_API_URL`; el proxy gestiona el enrutamiento.
+
 ### Arrancar por separado
 
 ```bash
-pnpm dev:client    # solo frontend
-pnpm dev:server    # solo backend
+pnpm dev:client    # solo frontend (puerto 5173)
+pnpm dev:server    # solo backend (puerto 3000)
 ```
 
 ---
@@ -217,5 +229,5 @@ pnpm --filter server prisma:generate
 ### Puerto 5173 o 3000 ya en uso
 
 Cambia el puerto en la configuración:
-- Frontend: `client/vite.config.ts` → `server.port`
-- Backend: variable de entorno `PORT` en `server/.env`
+- **Frontend**: `client/vite.config.ts` → `server.port` (por defecto 5173). Si cambias el puerto del backend, actualiza también `server.proxy["/api"].target`.
+- **Backend**: variable de entorno `PORT` en `server/.env` (por defecto 3000).

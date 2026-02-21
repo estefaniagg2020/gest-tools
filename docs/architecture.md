@@ -29,6 +29,15 @@ gest-tools es un monorepo con dos paquetes principales: `client` (Vue 3) y `serv
 └──────────────────────────────────────────────────────────────┘
 ```
 
+### Puertos y proxy
+
+| Servicio | Puerto | URL |
+|---|---|---|
+| Frontend (Vite) | 5173 | http://localhost:5173 |
+| Backend (Express) | 3000 | http://localhost:3000 |
+
+Las peticiones a `/api/*` desde el frontend se reenvían al backend mediante el proxy de Vite (`client/vite.config.ts`). Ver [`setup.md`](./setup.md#puertos-y-proxy) para más detalles.
+
 ---
 
 ## Frontend (`client/`)

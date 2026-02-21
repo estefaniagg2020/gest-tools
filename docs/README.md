@@ -7,7 +7,7 @@
 | Documento | Descripción |
 |---|---|
 | [`../README.md`](../README.md) | Resumen del proyecto, stack, instalación rápida |
-| [`setup.md`](./setup.md) | Guía de instalación y configuración detallada |
+| [`setup.md`](./setup.md) | Guía de instalación y configuración detallada (incl. puertos 5173/3000 y proxy) |
 
 ## Arquitectura y diseño
 
