@@ -63,7 +63,7 @@ export const clientsRouter = (prisma: PrismaClient) => {
     }
 
     try {
-      const services = await prisma.service.findMany({
+      const services = await prisma.businessService.findMany({
         where: { businessId },
         select: { id: true, name: true },
       });

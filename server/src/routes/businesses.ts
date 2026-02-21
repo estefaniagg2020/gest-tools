@@ -5,6 +5,7 @@ import {
   getSmartSlots,
   getOccupiedSlots,
 } from "../services/availability.js";
+import { instantiateProfessionTemplate } from "../services/professionService.js";
 
 export const businessRouter = (prisma: PrismaClient) => {
   const router = Router();
@@ -49,74 +50,26 @@ export const businessRouter = (prisma: PrismaClient) => {
   };
 
   const buildServiceCatalog = async (businessId: string) => {
-    const [config, business] = await Promise.all([
-      prisma.gestorConfig.findUnique({ where: { businessId } }),
-      prisma.business.findUnique({ where: { id: businessId }, select: { professionId: true } }),
-    ]);
-    const professionId = business?.professionId ?? "";
-    const hiddenNames = new Set(
-      (config?.hiddenSystemServiceNames ?? []).map((n: string) => n.toLowerCase()),
-    );
+    const categories = await prisma.businessCategory.findMany({
+      where: { businessId },
+      orderBy: { label: "asc" },
+      include: {
+        services: { orderBy: { name: "asc" } },
+      },
+    });
 
-    const [systemCategories, userServices] = await Promise.all([
-      professionId
-        ? prisma.professionCategory.findMany({
-            where: { professionId },
-            orderBy: { label: "asc" },
-            include: {
-              services: { orderBy: { name: "asc" } },
-            },
-          })
-        : Promise.resolve([]),
-      prisma.service.findMany({
-        where: { businessId },
-        orderBy: { name: "asc" },
-        include: { serviceCategory: { select: { id: true, label: true, icon: true } } },
-      }),
-    ]);
-
-    const catalogMap = new Map<string, {
-      id: string; label: string; icon: string; isSystem: boolean;
-      services: { id: string; name: string; duration: number; price: number; description: string | null; isSystemService: boolean }[];
-    }>();
-
-    for (const cat of systemCategories) {
-      catalogMap.set(cat.id, {
-        id: cat.id,
-        label: cat.label,
-        icon: cat.icon ?? "",
-        isSystem: true,
-        services: cat.services
-          .filter((s) => !hiddenNames.has(s.name.toLowerCase()))
-          .map((s) => ({
-            id: s.id,
-            name: s.name,
-            duration: s.duration,
-            price: Number(s.price),
-            description: s.description,
-            isSystemService: true,
-          })),
-      });
-    }
-
-    for (const svc of userServices) {
-      const catId = svc.categoryId;
-      const catLabel = svc.serviceCategory?.label ?? "Sin categoría";
-      const catIcon = svc.serviceCategory?.icon ?? "📋";
-      if (!catalogMap.has(catId as string)) {
-        catalogMap.set(catId as string, { id: catId as string, label: catLabel, icon: catIcon, isSystem: false, services: [] });
-      }
-      catalogMap.get(catId as string)!.services.push({
-        id: svc.id,
-        name: svc.name,
-        duration: svc.duration,
-        price: Number(svc.price),
-        description: svc.description,
-        isSystemService: false,
-      });
-    }
-
-    return Array.from(catalogMap.values());
+    return categories.map((cat) => ({
+      id: cat.id,
+      label: cat.label,
+      icon: cat.icon ?? "📋",
+      services: cat.services.map((s) => ({
+        id: s.id,
+        name: s.name,
+        duration: s.duration,
+        price: Number(s.price),
+        description: s.description,
+      })),
+    }));
   };
 
   router.get("/:id/catalog", async (req: Request, res: Response) => {
@@ -158,7 +111,7 @@ export const businessRouter = (prisma: PrismaClient) => {
       return;
     }
     try {
-      const service = await prisma.service.create({
+      const service = await prisma.businessService.create({
         data: {
           businessId,
           name,
@@ -166,19 +119,18 @@ export const businessRouter = (prisma: PrismaClient) => {
           price: price != null ? Number(price) : 0,
           description: description ?? null,
           categoryId,
-          category: "", // Hack for persistent lint if Prisma types are stale
-        } as any,
-        include: { serviceCategory: true },
+        },
+        include: { businessCategory: true },
       });
       res.status(201).json({
         id: service.id,
         name: service.name,
-        category: (service as any).serviceCategory?.label || "Sin categoría",
+        category: service.businessCategory?.label || "Sin categoría",
         categoryId: service.categoryId,
         duration: service.duration,
         price: service.price,
         description: service.description,
-        serviceCategory: (service as any).serviceCategory,
+        serviceCategory: service.businessCategory,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to create service";
@@ -192,65 +144,12 @@ export const businessRouter = (prisma: PrismaClient) => {
     const serviceId = req.params.serviceId as string;
     const { name, duration, price, description, categoryId } = req.body ?? {};
     try {
-      const systemSvc = await prisma.professionService.findUnique({
-        where: { id: serviceId },
-        include: { category: true },
-      });
-
-      if (systemSvc) {
-        const config = await prisma.gestorConfig.findUnique({ where: { businessId } });
-        const hiddenNames: string[] = config?.hiddenSystemServiceNames ?? [];
-        if (!hiddenNames.map((n) => n.toLowerCase()).includes(systemSvc.name.toLowerCase())) {
-          await prisma.gestorConfig.upsert({
-            where: { businessId },
-            update: { hiddenSystemServiceNames: [...hiddenNames, systemSvc.name] },
-            create: { businessId, hiddenSystemServiceNames: [systemSvc.name] },
-          });
-        }
-
-        const resolvedCategoryId = categoryId ?? await (async () => {
-          const existing = await prisma.serviceCategory.findFirst({
-            where: { businessId, label: systemSvc.category.label },
-          });
-          if (existing) return existing.id;
-          const created = await prisma.serviceCategory.create({
-            data: { businessId, label: systemSvc.category.label, icon: systemSvc.category.icon },
-          });
-          return created.id;
-        })();
-
-        const created = await prisma.service.create({
-          data: {
-            businessId,
-            name: name ?? systemSvc.name,
-            duration: duration != null ? Number(duration) : systemSvc.duration,
-            price: price != null ? Number(price) : systemSvc.price,
-            description: description ?? systemSvc.description ?? null,
-            categoryId: resolvedCategoryId,
-            category: "", // Hack for persistent lint
-          } as any,
-          include: { serviceCategory: true },
-        });
-        res.json({
-          id: created.id,
-          name: created.name,
-          category: (created as any).serviceCategory?.label || "Sin categoría",
-          categoryId: created.categoryId,
-          duration: created.duration,
-          price: created.price,
-          description: created.description,
-          isSystemService: false,
-          serviceCategory: (created as any).serviceCategory,
-        });
-        return;
-      }
-
-      const existing = await prisma.service.findFirst({ where: { id: serviceId, businessId } });
+      const existing = await prisma.businessService.findFirst({ where: { id: serviceId, businessId } });
       if (!existing) {
         res.status(404).json({ error: "Service not found" });
         return;
       }
-      const updated = await prisma.service.update({
+      const updated = await prisma.businessService.update({
         where: { id: serviceId },
         data: {
           ...(name !== undefined && { name }),
@@ -259,18 +158,17 @@ export const businessRouter = (prisma: PrismaClient) => {
           ...(description !== undefined && { description }),
           ...(categoryId !== undefined && { categoryId }),
         },
-        include: { serviceCategory: true },
+        include: { businessCategory: true },
       });
       res.json({
         id: updated.id,
         name: updated.name,
-        category: updated.serviceCategory.label,
+        category: updated.businessCategory.label,
         categoryId: updated.categoryId,
         duration: updated.duration,
         price: updated.price,
         description: updated.description,
-        isSystemService: false,
-        serviceCategory: updated.serviceCategory,
+        serviceCategory: updated.businessCategory,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to update service";
@@ -283,27 +181,12 @@ export const businessRouter = (prisma: PrismaClient) => {
     if (!businessId) return;
     const serviceId = req.params.serviceId as string;
     try {
-      const systemSvc = await prisma.professionService.findUnique({ where: { id: serviceId } });
-      if (systemSvc) {
-        const config = await prisma.gestorConfig.findUnique({ where: { businessId } });
-        const hiddenNames: string[] = config?.hiddenSystemServiceNames ?? [];
-        if (!hiddenNames.map((n) => n.toLowerCase()).includes(systemSvc.name.toLowerCase())) {
-          await prisma.gestorConfig.upsert({
-            where: { businessId },
-            update: { hiddenSystemServiceNames: [...hiddenNames, systemSvc.name] },
-            create: { businessId, hiddenSystemServiceNames: [systemSvc.name] },
-          });
-        }
-        res.status(204).end();
-        return;
-      }
-
-      const existing = await prisma.service.findFirst({ where: { id: serviceId, businessId } });
+      const existing = await prisma.businessService.findFirst({ where: { id: serviceId, businessId } });
       if (!existing) {
         res.status(404).json({ error: "Service not found" });
         return;
       }
-      await prisma.service.delete({ where: { id: serviceId } });
+      await prisma.businessService.delete({ where: { id: serviceId } });
       res.status(204).end();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to delete service";
@@ -539,17 +422,20 @@ export const businessRouter = (prisma: PrismaClient) => {
         });
 
         if (professionChanging) {
-          await tx.serviceCategory.deleteMany({
-            where: { businessId, services: { none: {} } },
-          });
-          await tx.gestorConfig.update({
-            where: { businessId },
-            data: { hiddenSystemServiceNames: [] },
+          // Delete service categories that were copied from a template (cascade deletes their services)
+          await tx.businessCategory.deleteMany({
+            where: { businessId, sourceCategoryId: { not: null } },
           });
         }
 
         return saved;
       });
+
+      // After transaction: instantiate the new profession templates
+      const newProfessionId = businessData.professionId as string | undefined;
+      if (professionChanging && newProfessionId) {
+        await instantiateProfessionTemplate(prisma, businessId, newProfessionId);
+      }
 
       const updatedBusiness = await prisma.business.findUnique({ where: { id: businessId } });
       res.json({

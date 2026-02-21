@@ -14,7 +14,7 @@ export const publicRouter = (prisma: PrismaClient) => {
         include: {
           services: {
             where: { onlineBookingEnabled: true },
-            include: { serviceCategory: true }
+            include: { businessCategory: true }
           },
           workspaceMembers: {
              select: { id: true, name: true, photoUrl: true, role: true, position: true }

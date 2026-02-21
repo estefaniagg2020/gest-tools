@@ -101,7 +101,7 @@ async function runTests() {
   // 4. BOOKING / APPOINTMENTS
   console.log("\n--- TESTING BOOKING ---");
   // Create Service
-  const service = await prisma.service.create({
+  const service = await prisma.businessService.create({
     data: {
         businessId: testBusiness.id,
         name: "General Checkup",
@@ -144,7 +144,7 @@ async function runTests() {
   // Services linked to Business (Appointment already deleted)
   // Wait, Appointment -> Service. If appointment deleted, Service can be deleted.
   // But waitlist/bonos might link to service. Assuming clean state here.
-  await prisma.service.deleteMany({ where: { businessId: testBusiness.id } });
+  await prisma.businessService.deleteMany({ where: { businessId: testBusiness.id } });
   await prisma.supplier.deleteMany({ where: { businessId: testBusiness.id } });
 
   // Clean up User and Business

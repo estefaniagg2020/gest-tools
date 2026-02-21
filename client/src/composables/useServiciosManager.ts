@@ -6,13 +6,7 @@ import { useServiceCategoryStore } from "@/stores/serviceCategory";
 import { useGestorConfigStore } from "@/stores/gestorConfig";
 import { useToast } from "@/composables/useToast";
 import { useAuthStore } from "@/stores/auth";
-import {
-  getServiceTemplates,
-  getBusinessServiceDefaults,
-  type ServiceTemplate,
-} from "@/data/serviceTemplates";
 import type { Service } from "@/interfaces";
-import { markSystemServiceRemoved } from "@/infrastructure/serviceSystemRemovedStorage";
 
 const buildDefaultForm = (firstCategoryId: string) => ({
   name: "",
@@ -82,16 +76,12 @@ export const useServiciosManager = () => {
   };
 
   const saveService = async () => {
-    const businessDefaults = getBusinessServiceDefaults(configStore.businessType);
     const payload = {
       name: form.name.trim(),
       categoryId: form.categoryId,
       duration: form.duration,
       price: form.price,
       description: form.description.trim() || undefined,
-      requiresCabin: businessDefaults.requiresCabin,
-      requiresTherapist: businessDefaults.requiresStaff,
-      employeesCount: businessDefaults.requiresStaff ? 1 : undefined,
     };
     if (isEditing.value && editingId.value) {
       await serviceStore.updateService(editingId.value, payload);
@@ -111,15 +101,6 @@ export const useServiciosManager = () => {
       variant: "danger",
     });
     if (!ok) return;
-    const businessId = authStore.user?.businessId ?? null;
-    if (!businessId) {
-      const service = serviceStore.getServiceById(id);
-      const businessType = configStore.businessType || "estetica";
-      const templates = getServiceTemplates(businessType);
-      if (service && templates?.services.some((t) => t.name.toLowerCase() === service.name.toLowerCase())) {
-        await markSystemServiceRemoved({ businessId: null, businessType, serviceName: service.name });
-      }
-    }
     await serviceStore.deleteService(id);
     addToast("Servicio eliminado", "success");
   };
@@ -146,58 +127,6 @@ export const useServiciosManager = () => {
     addToast("Categoría creada", "success");
     closeCategoryModal();
   };
-
-  const suggestedTemplates = computed(() =>
-    getServiceTemplates(configStore.businessType)
-  );
-
-  const ensureCategoryExists = (id: string, label: string, icon: string): string => {
-    const existing = categoryStore.getCategoryById(id);
-    if (existing) return existing.id;
-    const byLabel = categories.value.find(
-      (c) => c.label.toLowerCase() === label.toLowerCase()
-    );
-    if (byLabel) return byLabel.id;
-    return categoryStore.addCategoryWithId({ id, label, icon }).id;
-  };
-
-  const quickAddFromTemplate = async (template: ServiceTemplate) => {
-    const businessDefaults = getBusinessServiceDefaults(configStore.businessType);
-    const categoryId = ensureCategoryExists(
-      template.suggestedCategory,
-      template.suggestedCategory,
-      template.suggestedCategoryIcon,
-    );
-    await serviceStore.addService({
-      name: template.name,
-      categoryId,
-      duration: template.duration,
-      price: template.price,
-      description: template.description,
-      requiresCabin: businessDefaults.requiresCabin,
-      requiresTherapist: businessDefaults.requiresStaff,
-      employeesCount: businessDefaults.requiresStaff ? 1 : undefined,
-    });
-    addToast(`"${template.name}" añadido`, "success");
-  };
-
-  const quickAddAllTemplates = async () => {
-    const templates = suggestedTemplates.value;
-    if (!templates) return;
-    templates.categories.forEach((cat) => ensureCategoryExists(cat.id, cat.label, cat.icon));
-    for (const template of templates.services) {
-      const alreadyExists = serviceStore.services.some(
-        (s) => s.name.toLowerCase() === template.name.toLowerCase()
-      );
-      if (!alreadyExists) await quickAddFromTemplate(template);
-    }
-    addToast("Servicios sugeridos añadidos", "success");
-  };
-
-  const isTemplateAdded = (template: ServiceTemplate) =>
-    serviceStore.services.some(
-      (s) => s.name.toLowerCase() === template.name.toLowerCase()
-    );
 
   onMounted(async () => {
     const userId = authStore.currentUserId ?? "local";
@@ -232,9 +161,5 @@ export const useServiciosManager = () => {
     openCategoryModal,
     closeCategoryModal,
     saveCategory,
-    suggestedTemplates,
-    quickAddFromTemplate,
-    quickAddAllTemplates,
-    isTemplateAdded,
   };
 };

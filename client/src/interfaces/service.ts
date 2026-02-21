@@ -10,14 +10,12 @@ export interface CatalogService {
   duration: number;
   price: number;
   description?: string | null;
-  isSystemService: boolean;
 }
 
 export interface CatalogCategory {
   id: string;
   label: string;
   icon: string;
-  isSystem: boolean;
   services: CatalogService[];
 }
 
@@ -30,7 +28,6 @@ export interface Service {
   duration: number;
   price: number;
   description?: string;
-  isSystemService?: boolean;
   requiresCabin?: boolean;
   requiresTherapist?: boolean;
   employeesCount?: number;

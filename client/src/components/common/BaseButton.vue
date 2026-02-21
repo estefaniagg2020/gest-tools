@@ -23,7 +23,7 @@
 
   const variants = {
     primary: "bg-brand-accent text-white hover:bg-brand-secondary shadow-md shadow-brand-accent/20",
-    secondary: "bg-brand-soft text-brand-primary hover:bg-[#edb595]",
+    secondary: "bg-brand-soft text-brand-primary hover:brightness-95",
     accent:
       "bg-linear-to-r from-brand-accent to-brand-secondary text-white hover:brightness-[1.03] shadow-lg shadow-brand-accent/25 hover:shadow-xl hover:shadow-brand-accent/30 hover:scale-[1.02] active:scale-[0.98]",
     danger: "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200",

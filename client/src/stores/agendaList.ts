@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { computed, watch } from "vue";
+import { computed } from "vue";
 import { i18n } from "@/i18n";
 import type { AgendaEntry, AgendaListConfig } from "@/interfaces/agendaList";
 import { useGestorConfigStore } from "./gestorConfig";
@@ -8,6 +8,7 @@ import { AGENDA_LIST } from "@/data/constants";
 import {
   clampNumberOfAgendas,
   ensureAgendasLength,
+  normalizeAgendaListConfig,
 } from "@/utils/agendaListValidation";
 
 export const useAgendaListStore = defineStore("agendaList", () => {
@@ -17,7 +18,7 @@ export const useAgendaListStore = defineStore("agendaList", () => {
   const config = computed<AgendaListConfig>(() => {
     const raw = configStore.agendaListConfig;
     if (raw && typeof raw === "object") {
-      return raw as AgendaListConfig;
+      return normalizeAgendaListConfig(raw as Record<string, unknown>);
     }
     return {
       numberOfAgendas: AGENDA_LIST.DEFAULT_AGENDAS,

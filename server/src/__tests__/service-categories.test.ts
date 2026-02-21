@@ -50,7 +50,7 @@ describe("Service Categories CRUD", () => {
   });
 
   it("PUT /:id returns 404 when not found", async () => {
-    prisma.serviceCategory.findUnique = vi.fn().mockResolvedValue(null);
+    prisma.businessCategory.findUnique = vi.fn().mockResolvedValue(null);
     const res = await request(app).put("/cat-999").send({ label: "X" });
     expect(res.status).toBe(404);
   });
@@ -61,7 +61,7 @@ describe("Service Categories CRUD", () => {
   });
 
   it("DELETE /:id returns 404 when not found", async () => {
-    prisma.serviceCategory.findUnique = vi.fn().mockResolvedValue(null);
+    prisma.businessCategory.findUnique = vi.fn().mockResolvedValue(null);
     const res = await request(app).delete("/cat-999");
     expect(res.status).toBe(404);
   });

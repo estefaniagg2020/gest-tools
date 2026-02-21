@@ -16,7 +16,6 @@ const catalogServiceToService = (
   duration: svc.duration,
   price: svc.price,
   description: svc.description ?? undefined,
-  isSystemService: svc.isSystemService,
 });
 
 const mapApiService = (s: {
@@ -28,7 +27,6 @@ const mapApiService = (s: {
   duration: number;
   price: number;
   description?: string | null;
-  isSystemService?: boolean;
 }): Service => ({
   id: s.id,
   name: s.name,
@@ -38,7 +36,6 @@ const mapApiService = (s: {
   duration: s.duration,
   price: s.price,
   description: s.description ?? undefined,
-  isSystemService: s.isSystemService ?? false,
 });
 
 export const useServiceStore = defineStore("service", () => {

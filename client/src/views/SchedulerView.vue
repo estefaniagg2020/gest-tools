@@ -215,6 +215,8 @@
   import { useTeamStore } from "@/stores/team";
   import { useScheduleStore } from "@/stores/schedule";
   import { useAuthStore } from "@/stores/auth";
+  import { useGestorConfigStore } from "@/stores/gestorConfig";
+  import { useAgendaColorsStore } from "@/stores/agendaColors";
   import { useSchedulerSettingsStore } from "@/stores/schedulerSettings";
   import { useAgendaListStore } from "@/stores/agendaList";
   import { useRejectedRequestsStore } from "@/stores/rejectedRequests";
@@ -254,6 +256,7 @@
   const serviceStore = useServiceStore();
   const authStore = useAuthStore();
   const themeStore = useThemeStore();
+  const gestorConfigStore = useGestorConfigStore();
   const schedulerSettingsStore = useSchedulerSettingsStore();
   const agendaListStore = useAgendaListStore();
   const rejectedRequestsStore = useRejectedRequestsStore();
@@ -263,10 +266,16 @@
   const { blocks } = storeToRefs(scheduleStore);
   const { saveBlock: saveScheduleBlock } = useScheduleActions();
 
-  const { currentDate, view, weekDays, next, prev, setToday } = useCalendar();
-
   const ALL_MEMBERS_ID = "__all__";
   const selectedAgendaIndex = ref(0);
+
+  const workDaysPerWeekForCalendar = computed(() => {
+    const agenda = agendaListStore.getAgenda(selectedAgendaIndex.value);
+    return agenda?.workDaysPerWeek ?? schedulerSettings.workDaysPerWeek.value;
+  });
+  const { currentDate, view, weekDays, next, prev, setToday } = useCalendar({
+    workDaysPerWeek: workDaysPerWeekForCalendar,
+  });
   const scheduleDrag = useScheduleDrag();
   const isModalOpen = ref(false);
   const modalOpenKey = ref(0);
@@ -301,10 +310,16 @@
     if (window.innerWidth < 768) isRightPanelVisible.value = false;
   };
 
-  onMounted(() => {
+  onMounted(async () => {
     document.addEventListener("click", handleClickOutsideAddMenu);
     window.addEventListener("resize", handleResize);
     if (window.innerWidth < 768) isRightPanelVisible.value = false;
+    const userId = authStore.user?.id;
+    const businessId = authStore.user?.businessId ?? null;
+    if (userId && businessId) {
+      await gestorConfigStore.initialize(userId, businessId);
+      await useAgendaColorsStore().initialize(businessId);
+    }
     void teamStore.initialize();
     scheduleStore.initialize();
     clientStore.initialize();
@@ -329,12 +344,15 @@
   });
 
   const PIXELS_PER_HOUR_FIXED = 70;
-  const gridSettings = computed(() => ({
-    startHour: schedulerSettings.startHour.value,
-    endHour: schedulerSettings.endHour.value,
-    pixelsPerHour: PIXELS_PER_HOUR_FIXED,
-    slotDurationMinutes: 60 as const,
-  }));
+  const gridSettings = computed(() => {
+    const agenda = agendaListStore.getAgenda(selectedAgendaIndex.value);
+    return {
+      startHour: agenda?.startHour ?? schedulerSettings.startHour.value,
+      endHour: agenda?.endHour ?? schedulerSettings.endHour.value,
+      pixelsPerHour: PIXELS_PER_HOUR_FIXED,
+      slotDurationMinutes: schedulerSettings.slotDurationMinutes.value,
+    };
+  });
 
   watch(
     () => agendaListStore.agendas.length,

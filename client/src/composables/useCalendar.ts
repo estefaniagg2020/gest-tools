@@ -14,11 +14,18 @@ const getDaysBackToWeekStart = (dayOfWeek: number, weekStartsOn: 0 | 1) =>
 
 const getDaysInMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
 
-export const useCalendar = (opts?: { weekStart?: MaybeRefOrGetter<WeekStartOption> }) => {
+export const useCalendar = (opts?: {
+  weekStart?: MaybeRefOrGetter<WeekStartOption>;
+  workDaysPerWeek?: MaybeRefOrGetter<number | undefined>;
+}) => {
   const currentDate = ref(new Date());
   const view = ref<ViewType>(VIEW_WEEK);
   const weekStart = computed<WeekStartOption>(() => toValue(opts?.weekStart) ?? "locale");
   const weekStartsOn = computed<0 | 1>(() => resolveWeekStartsOn(weekStart.value, getI18nLocaleCode()));
+  const workDaysPerWeek = computed(() => {
+    const v = toValue(opts?.workDaysPerWeek);
+    return typeof v === "number" && v >= 1 && v <= 7 ? Math.floor(v) : DAYS_PER_WEEK;
+  });
 
   const startOfWeek = computed(() => {
     const d = new Date(currentDate.value.getTime());
@@ -33,7 +40,8 @@ export const useCalendar = (opts?: { weekStart?: MaybeRefOrGetter<WeekStartOptio
     const y = start.getFullYear();
     const m = start.getMonth();
     const d = start.getDate();
-    return Array.from({ length: DAYS_PER_WEEK }, (_, i) => new Date(y, m, d + i));
+    const count = workDaysPerWeek.value;
+    return Array.from({ length: count }, (_, i) => new Date(y, m, d + i));
   });
 
   const monthDays = computed(() => {

@@ -327,6 +327,8 @@
 <script setup lang="ts">
   import { ref, computed, watch, onMounted } from "vue";
   import type { DefaultViewType } from "@/interfaces";
+  import { useGestorConfigStore } from "@/stores/gestorConfig";
+  import { useAuthStore } from "@/stores/auth";
   import { useConfigAgenda } from "@/composables/useConfigAgenda";
   import { useAgendaList } from "@/composables/useAgendaList";
   import { useAgendaColors } from "@/composables/useAgendaColors";
@@ -339,6 +341,8 @@
   import BackLink from "@/components/common/BackLink.vue";
   import { useConfirmDialog } from "@/composables/useConfirmDialog";
 
+  const authStore = useAuthStore();
+  const gestorConfigStore = useGestorConfigStore();
   const agenda = useConfigAgenda();
   const appointmentStore = useAppointmentStore();
   const clearedMessage = ref("");
@@ -356,9 +360,14 @@
     { value: "month" as DefaultViewType, label: CONFIG_AGENDA.LABEL_VISTA_MES },
   ];
 
-  onMounted(() => {
+  onMounted(async () => {
+    const userId = authStore.user?.id;
+    const businessId = authStore.user?.businessId ?? null;
+    if (userId && businessId) {
+      await gestorConfigStore.initialize(userId, businessId);
+    }
+    await agendaColors.initialize(businessId ?? null);
     agendas.initialize();
-    agendaColors.initialize();
     if (selectedAgendaIndex.value >= agendas.numberOfAgendas.value) {
       selectedAgendaIndex.value = Math.max(0, agendas.numberOfAgendas.value - 1);
     }

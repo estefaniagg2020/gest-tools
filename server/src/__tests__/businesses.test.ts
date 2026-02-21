@@ -141,7 +141,7 @@ describe("Businesses routes", () => {
   });
 
   it("should_return_404_when_updating_service_not_found", async () => {
-    prisma.service.findFirst = vi.fn().mockResolvedValue(null);
+    prisma.businessService.findFirst = vi.fn().mockResolvedValue(null);
     const res = await request(app).put(`/${BIZ}/services/no-svc`).send({ name: "X" });
     expect(res.status).toBe(404);
   });
@@ -158,17 +158,17 @@ describe("Businesses routes", () => {
     const res = await request(app).put(`/${BIZ}/services/sys-svc-1`).send({ price: 25 });
     expect(res.status).toBe(200);
     expect(prisma.gestorConfig.upsert).toHaveBeenCalled();
-    expect(prisma.service.create).toHaveBeenCalled();
+    expect(prisma.businessService.create).toHaveBeenCalled();
   });
 
   it("should_delete_user_service_when_DELETE_id_services_serviceId", async () => {
     const res = await request(app).delete(`/${BIZ}/services/svc-1`);
     expect(res.status).toBe(204);
-    expect(prisma.service.delete).toHaveBeenCalled();
+    expect(prisma.businessService.delete).toHaveBeenCalled();
   });
 
   it("should_return_404_when_deleting_service_not_found", async () => {
-    prisma.service.findFirst = vi.fn().mockResolvedValue(null);
+    prisma.businessService.findFirst = vi.fn().mockResolvedValue(null);
     const res = await request(app).delete(`/${BIZ}/services/no-svc`);
     expect(res.status).toBe(404);
   });
@@ -178,7 +178,7 @@ describe("Businesses routes", () => {
     const res = await request(app).delete(`/${BIZ}/services/sys-svc-1`);
     expect(res.status).toBe(204);
     expect(prisma.gestorConfig.upsert).toHaveBeenCalled();
-    expect(prisma.service.delete).not.toHaveBeenCalled();
+    expect(prisma.businessService.delete).not.toHaveBeenCalled();
   });
 
   it("should_return_400_when_availability_missing_required_query_params", async () => {

@@ -28,7 +28,7 @@
     <template #footer>
       <button
         type="button"
-        class="px-4 py-2 bg-brand-accent text-white text-sm font-bold rounded-lg hover:bg-[#005a5d] transition-colors cursor-pointer"
+        class="px-4 py-2 bg-brand-accent text-white text-sm font-bold rounded-lg hover:brightness-95 transition-colors cursor-pointer"
         @click="dismissCurrent"
       >
         {{ $t('scheduler.rejectionBtn') }}
