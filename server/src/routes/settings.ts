@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import type { PrismaClient } from "@prisma/client";
-import { requireAuth, requireGestor } from "../middleware/auth.js";
+import { requireAuth, requireStaff } from "../middleware/auth.js";
 
 const SETTINGS_KEYS = [
   // Layout
@@ -37,7 +37,7 @@ export const settingsRouter = (prisma: PrismaClient) => {
   const router = Router();
   const auth = requireAuth(prisma);
 
-  router.get("/", auth, requireGestor, async (req: Request, res: Response) => {
+  router.get("/", auth, requireStaff, async (req: Request, res: Response) => {
     const businessId = req.user?.businessId;
     if (!businessId) { res.status(403).json({ error: "Negocio no asociado" }); return; }
     try {
@@ -48,7 +48,7 @@ export const settingsRouter = (prisma: PrismaClient) => {
     }
   });
 
-  router.patch("/", auth, requireGestor, async (req: Request, res: Response) => {
+  router.patch("/", auth, requireStaff, async (req: Request, res: Response) => {
     const businessId = req.user?.businessId;
     if (!businessId) { res.status(403).json({ error: "Negocio no asociado" }); return; }
     const body = req.body ?? {};

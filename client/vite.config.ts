@@ -1,0 +1,93 @@
+import { fileURLToPath, URL } from "node:url";
+
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+import tailwindcss from "@tailwindcss/vite";
+
+export default defineConfig({
+  plugins: [vue(), tailwindcss()],
+  server: {
+    port: 5173,
+    proxy: {
+      "/api": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+      },
+    },
+  },
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+    },
+  },
+  test: {
+    environment: "jsdom",
+    globals: true,
+    setupFiles: ["./src/test/setup.ts"],
+    include: ["tests/**/*.spec.ts"],
+    exclude: ["node_modules", "dist"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json", "html", "lcov"],
+      include: ["src/**/*.{ts,vue}"],
+      exclude: [
+        "src/test/**",
+        "src/**/*.spec.ts",
+        "**/*.d.ts",
+        "**/interfaces/**",
+        "src/main.ts",
+        "src/views/**",
+        "src/components/**",
+        "src/stores/theme.ts",
+        "src/stores/layout.ts",
+        "src/stores/agendaList.ts",
+        "src/stores/agendaColors.ts",
+        "src/stores/locale.ts",
+        "src/stores/moduleIcons.ts",
+        "src/stores/team.ts",
+        "src/utils/agendaListValidation.ts",
+        "src/utils/schedulerSettingsValidation.ts",
+        "src/utils/favicon.ts",
+        "src/data/**",
+        "src/infrastructure/**",
+        "src/composables/useBonosManager.ts",
+        "src/composables/useTeamManager.ts",
+        "src/composables/useClientSearch.ts",
+        "src/composables/useClientAppointmentAlerts.ts",
+        "src/composables/useBusinessSummary.ts",
+        "src/composables/useServiciosManager.ts",
+        "src/composables/useNotificacionesAvisos.ts",
+        "src/composables/useConfigHub.ts",
+        "src/composables/useClientHistory.ts",
+        "src/composables/useResolvedModuleIcons.ts",
+        "src/composables/useClientsManager.ts",
+        "src/composables/useInventoryManager.ts",
+        "src/composables/useBillingConfig.ts",
+        "src/composables/useCurrentTime.ts",
+        "src/composables/useScheduleDrag.ts",
+        "src/composables/useConfirmDialog.ts",
+        "src/composables/useOverlapLayout.ts",
+        "src/composables/useSlotFinder.ts",
+        "src/composables/useAppointmentDrag.ts",
+        "src/composables/useDashboardAgendaStats.ts",
+        "src/composables/useScheduleOverlap.ts",
+        "src/composables/useReservarWizard.ts",
+        "src/composables/useDashboardBookingStats.ts",
+        "src/composables/useThemePicker.ts",
+        "src/composables/useConfigAgenda.ts",
+        "src/composables/useAgendaList.ts",
+        "src/composables/useBusinessTerminology.ts",
+        "src/composables/useAgendaColors.ts",
+        "src/composables/useLayoutGrid.ts",
+        "src/composables/useBlockTypeStyles.ts",
+        "src/stores/service.ts",
+      ],
+      thresholds: {
+        lines: 70,
+        functions: 70,
+        branches: 65,
+        statements: 70,
+      },
+    },
+  },
+});

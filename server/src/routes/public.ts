@@ -10,9 +10,8 @@ export const publicRouter = (prisma: PrismaClient) => {
       const { slug } = req.params;
       
       const business = await prisma.business.findFirst({
-        where: { gestorConfig: { slug } },
+        where: { slug },
         include: {
-          gestorConfig: true,
           services: {
             where: { onlineBookingEnabled: true },
             include: { serviceCategory: true }
@@ -28,18 +27,16 @@ export const publicRouter = (prisma: PrismaClient) => {
         return;
       }
 
-      const config = business.gestorConfig; 
-      
       const publicData = {
         id: business.id,
         name: business.name,
-        slug: config?.slug,
-        description: config?.description,
+        slug: business.slug,
+        description: business.description,
         contact: {
-            phone: config?.publicPhoneNumber,
-            socials: config?.socialLinks,
-            address: config?.address,
-            email: config?.email 
+            phone: business.publicPhoneNumber,
+            socials: business.socialLinks,
+            address: business.address,
+            email: business.email
         },
         services: business.services,
         team: business.workspaceMembers

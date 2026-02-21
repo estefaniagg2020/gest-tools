@@ -5,11 +5,11 @@ export const TEST_TOKEN = "test-token-12345";
 export const TEST_USER = {
   id: "user-1",
   username: "admin",
-  role: "gestor",
+  role: { name: "admin" },
   name: "Admin",
   email: null,
   phone: null,
-  businessId: "biz-1",
+  workspaces: [{ businessId: "biz-1" }],
 };
 
 type ModelMock = Record<string, ReturnType<typeof vi.fn>>;
@@ -42,11 +42,21 @@ export function mockPrisma(overrides: Record<string, Partial<ModelMock>> = {}): 
     return base;
   };
 
-  return new Proxy({} as PrismaClient, {
+  const proxyHandler: ProxyHandler<object> = {
     get(_target, prop: string) {
+      if (prop === "$transaction") {
+        return vi.fn().mockImplementation(
+          async (cbOrArray: ((tx: PrismaClient) => Promise<unknown>) | Promise<unknown>[]) => {
+            if (typeof cbOrArray === "function") return cbOrArray(proxy as PrismaClient);
+            return Promise.all(cbOrArray);
+          },
+        );
+      }
       return makeModel(prop);
     },
-  });
+  };
+  const proxy = new Proxy({} as PrismaClient, proxyHandler);
+  return proxy;
 }
 
 // Creates an Express app from a router, injecting the auth Bearer token on every request

@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import type { PrismaClient } from "@prisma/client";
-import { requireAuth, requireGestor } from "../middleware/auth.js";
+import { requireAuth, requireStaff } from "../middleware/auth.js";
 import {
   addToWaitlist,
   addClientToWaitlist,
@@ -14,7 +14,7 @@ export const waitlistRouter = (prisma: PrismaClient) => {
   const router = Router();
   const auth = requireAuth(prisma);
 
-  router.get("/by-business", auth, requireGestor, async (req: Request, res: Response) => {
+  router.get("/by-business", auth, requireStaff, async (req: Request, res: Response) => {
     if (!req.user?.businessId) {
       res.status(403).json({ error: "Negocio no asociado" });
       return;
@@ -23,7 +23,7 @@ export const waitlistRouter = (prisma: PrismaClient) => {
     res.json(entries);
   });
 
-  router.post("/for-client", auth, requireGestor, async (req: Request, res: Response) => {
+  router.post("/for-client", auth, requireStaff, async (req: Request, res: Response) => {
     if (!req.user?.businessId) {
       res.status(403).json({ error: "Negocio no asociado" });
       return;

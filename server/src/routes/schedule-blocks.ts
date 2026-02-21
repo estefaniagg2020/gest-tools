@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import type { PrismaClient } from "@prisma/client";
-import { requireAuth, requireGestor } from "../middleware/auth.js";
+import { requireAuth, requireStaff } from "../middleware/auth.js";
 
 export const scheduleBlocksRouter = (prisma: PrismaClient) => {
   const router = Router();
@@ -8,7 +8,7 @@ export const scheduleBlocksRouter = (prisma: PrismaClient) => {
 
   const getBizId = (req: Request): string => req.user?.businessId ?? "";
 
-  router.get("/", auth, requireGestor, async (req: Request, res: Response) => {
+  router.get("/", auth, requireStaff, async (req: Request, res: Response) => {
     const businessId = getBizId(req);
     if (!businessId) { res.status(403).json({ error: "Negocio no asociado" }); return; }
     try {
@@ -22,7 +22,7 @@ export const scheduleBlocksRouter = (prisma: PrismaClient) => {
     }
   });
 
-  router.post("/", auth, requireGestor, async (req: Request, res: Response) => {
+  router.post("/", auth, requireStaff, async (req: Request, res: Response) => {
     const businessId = getBizId(req);
     if (!businessId) { res.status(403).json({ error: "Negocio no asociado" }); return; }
     const body = req.body ?? {};
@@ -50,7 +50,7 @@ export const scheduleBlocksRouter = (prisma: PrismaClient) => {
     }
   });
 
-  router.put("/:id", auth, requireGestor, async (req: Request, res: Response) => {
+  router.put("/:id", auth, requireStaff, async (req: Request, res: Response) => {
     const businessId = getBizId(req);
     if (!businessId) { res.status(403).json({ error: "Negocio no asociado" }); return; }
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id ?? "";
@@ -79,7 +79,7 @@ export const scheduleBlocksRouter = (prisma: PrismaClient) => {
     }
   });
 
-  router.delete("/:id", auth, requireGestor, async (req: Request, res: Response) => {
+  router.delete("/:id", auth, requireStaff, async (req: Request, res: Response) => {
     const businessId = getBizId(req);
     if (!businessId) { res.status(403).json({ error: "Negocio no asociado" }); return; }
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id ?? "";

@@ -12,11 +12,15 @@
     "prisma:seed": "prisma db seed",
     "setup": "tsx scripts/setup-db.ts",
     "reset-db": "tsx scripts/reset-db.ts",
+    "clear-db-keep-categories": "tsx scripts/clear-db-keep-categories.ts",
     "clear-user-data": "tsx scripts/clearUserData.ts",
     "clear-appointments": "tsx scripts/clearAppointments.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "keywords": [],
   "author": "",

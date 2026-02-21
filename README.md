@@ -1,58 +1,287 @@
-# Base Vue
+# gest-tools
 
-Proyecto base con Vue 3 + Vite + TypeScript.
+Sistema de gestión integral para negocios de salud, belleza y bienestar. Cubre agenda, equipo, clientes, servicios, bonos, inventario, ventas y configuración avanzada del negocio.
 
-## Requisitos
+## Tabla de contenidos
 
-- Node.js (recomendado 20+)
-- pnpm
+- [Stack tecnológico](#stack-tecnológico)
+- [Características principales](#características-principales)
+- [Estructura del repositorio](#estructura-del-repositorio)
+- [Requisitos previos](#requisitos-previos)
+- [Instalación y puesta en marcha](#instalación-y-puesta-en-marcha)
+- [Puertos y proxy](#puertos-y-proxy)
+- [Variables de entorno](#variables-de-entorno)
+- [Scripts disponibles](#scripts-disponibles)
+- [Arquitectura](#arquitectura)
+- [Documentación](#documentación)
+- [Testing](#testing)
 
-## Instalacion
+---
 
-1. Instala dependencias:
+## Stack tecnológico
+
+### Frontend (`client/`)
+| Tecnología | Rol |
+|---|---|
+| Vue 3 (Composition API) | Framework UI |
+| TypeScript | Tipado estático |
+| Vite | Bundler y dev server |
+| Pinia | Estado global reactivo |
+| Vue Router | Enrutamiento SPA |
+| TanStack Vue Query | Fetching y caché de datos del servidor |
+| Tailwind CSS 4 | Estilos utilitarios |
+| vue-i18n | Internacionalización |
+| Vitest | Tests unitarios |
+| Playwright | Tests E2E |
+
+### Backend (`server/`)
+| Tecnología | Rol |
+|---|---|
+| Node.js + TypeScript | Runtime y lenguaje |
+| Express.js 5 | Framework HTTP |
+| Prisma 7 | ORM |
+| PostgreSQL 15 | Base de datos relacional |
+| `@prisma/adapter-pg` | Driver adapter para pg |
+| Vitest + Supertest | Tests de integración |
+
+### Infraestructura
+| Tecnología | Rol |
+|---|---|
+| Docker / Docker Compose | PostgreSQL en contenedor |
+| pnpm workspaces | Monorepo y gestión de paquetes |
+
+---
+
+## Características principales
+
+| Módulo | Descripción |
+|---|---|
+| **Autenticación** | Login, registro, sesiones con token, roles (superadmin, admin, employee, client) |
+| **Dashboard** | Métricas KPI, gráficos de ingresos, widgets configurables |
+| **Agenda** | Vista día/semana/mes, bloques de horario, flujo de aprobación manager/empleado |
+| **Equipo** | CRUD de miembros del equipo, roles, perfiles |
+| **Clientes** | CRUD, historial, fotos, gestión de bonos del cliente |
+| **Servicios** | Catálogo de servicios por categoría, duración, precio, plantillas por profesión (IA) |
+| **Bonos** | Packs de sesiones, tiempo, ilimitados y fidelización |
+| **Inventario** | Productos, stock, movimientos, proveedores, alertas de stock mínimo |
+| **Ventas** | TPV (carrito), múltiples métodos de pago, historial de ventas |
+| **Citas** | Creación manual y online, estados, pagos parciales y depósitos |
+| **Lista de espera** | Entradas de waitlist con notificación automática al liberar hueco |
+| **Reserva online** | Widget público en `/b/:slug` para reservas de clientes |
+| **Configuración** | Hub de configuración: tema, agenda, dashboard, módulos, notificaciones WhatsApp, facturación |
+| **IA** | Detección automática de profesión, parsing de franjas horarias |
+
+---
+
+## Estructura del repositorio
+
+```
+gest-tools/
+├── client/                    # Frontend Vue 3
+│   ├── src/
+│   │   ├── components/        # Componentes reutilizables
+│   │   ├── composables/       # Lógica de negocio (hooks)
+│   │   ├── infrastructure/    # Adapters HTTP y storage
+│   │   ├── stores/            # Estado global (Pinia)
+│   │   ├── views/             # Páginas / vistas
+│   │   ├── router/            # Vue Router
+│   │   ├── interfaces/        # Tipos TypeScript
+│   │   └── main.ts            # Punto de entrada
+│   └── package.json
+├── server/                    # Backend Express
+│   ├── src/
+│   │   ├── routes/            # Rutas de la API (19 módulos)
+│   │   ├── middleware/        # Auth middleware
+│   │   └── services/          # Servicios de dominio
+│   ├── prisma/
+│   │   └── schema.prisma      # Esquema de base de datos
+│   └── package.json
+├── docs/                      # Documentación técnica y funcional
+├── docker-compose.yml         # PostgreSQL en Docker
+├── pnpm-workspace.yaml        # Configuración monorepo
+├── AGENTS.md                  # Reglas de arquitectura y desarrollo
+└── package.json               # Scripts raíz del workspace
+```
+
+---
+
+## Requisitos previos
+
+- **Node.js** 20 o superior
+- **pnpm** 9 o superior (`npm install -g pnpm`)
+- **Docker** y **Docker Compose** (para la base de datos)
+
+---
+
+## Instalación y puesta en marcha
+
+### 1. Clonar e instalar dependencias
 
 ```bash
+git clone <repo-url> gest-tools
+cd gest-tools
 pnpm install
 ```
 
-2. Inicia el entorno de desarrollo:
+### 2. Variables de entorno
+
+Crea el fichero `server/.env` a partir del ejemplo:
+
+```bash
+cp server/.env.example server/.env
+```
+
+> Si no existe `.env.example`, crea `server/.env` con el contenido indicado en la sección [Variables de entorno](#variables-de-entorno).
+
+### 3. Levantar la base de datos
+
+```bash
+docker compose up -d
+```
+
+Levanta PostgreSQL en `localhost:5432` (usuario: `user`, contraseña: `password`, base de datos: `gest_tools`).
+
+### 4. Migraciones y seed
+
+```bash
+pnpm --filter server prisma:migrate    # aplica las migraciones
+pnpm --filter server prisma:seed       # datos iniciales (roles, plantillas de profesión)
+```
+
+### 5. Iniciar el entorno de desarrollo
 
 ```bash
 pnpm dev
 ```
 
-La app estara disponible en la URL que Vite indique en consola (por defecto `http://localhost:5173`).
+Esto arranca en paralelo:
+- **Frontend** → `http://localhost:5173`
+- **Backend** → `http://localhost:3000`
 
-## Scripts utiles
+#### Puertos y proxy
 
-```bash
-pnpm dev        # servidor de desarrollo
-pnpm build      # build de produccion
-pnpm preview    # previsualizar build
-pnpm test       # ejecutar tests con Vitest
-pnpm test:ui    # UI de Vitest
-pnpm typecheck  # verificacion de tipos
+El frontend y el backend corren en puertos distintos para evitar conflictos:
+
+| Servicio | Puerto | URL |
+|---|---|---|
+| **Frontend** (Vite) | 5173 | http://localhost:5173 |
+| **Backend** (Express) | 3000 | http://localhost:3000 |
+| **Health check** | 3000 | http://localhost:3000/health |
+
+Las peticiones a `/api/*` desde el frontend se reenvían automáticamente al backend mediante el proxy de Vite (`client/vite.config.ts`). No hace falta configurar `VITE_API_URL` en desarrollo.
+
+Para arrancar por separado:
+- `pnpm dev:client` — solo frontend (puerto 5173)
+- `pnpm dev:server` — solo backend (puerto 3000)
+
+---
+
+## Variables de entorno
+
+### `server/.env`
+
+```env
+# Base de datos
+DATABASE_URL="postgresql://user:password@localhost:5432/gest_tools"
+
+# Puerto del servidor (opcional, por defecto 3000)
+PORT=3000
 ```
 
-## Estructura basica
+### `client/.env` (opcional)
 
-- `src/main.ts`: punto de entrada
-- `src/App.vue`: componente raiz
-- `src/router`: rutas
-- `src/stores`: stores (Pinia)
-- `src/test`: configuracion y tests
+```env
+# URL base de la API (por defecto http://localhost:3000)
+VITE_API_BASE_URL=http://localhost:3000
+```
 
-## Prueba / Demostración (sin backend)
+---
 
-La aplicación incluye un flujo de **cambio de rol** (Manager / Empleado) con un popup de contraseña solo para simular la autenticación. No hay backend real.
+## Scripts disponibles
 
-- **Contraseña demo para cambiar de rol:** `demo`
-- En la barra lateral, haz clic en el bloque de usuario (nombre + "Cambiar Rol ⚡"). Se abre un modal donde puedes elegir rol (Manager o Empleado), si eres empleado seleccionar qué empleado eres en la lista, y escribir la contraseña. Con la contraseña `demo` se confirma el cambio.
-- Los datos (agenda, terapeutas, spas, peticiones rechazadas) se persisten en `localStorage`.
+### Raíz del monorepo
 
-Para más detalle por pantalla (qué hace cada vista, roles, persistencia), ver la carpeta **[docs/](./docs/)** (índice en `docs/README.md`).
+```bash
+pnpm dev              # Frontend + Backend en paralelo
+pnpm dev:client       # Solo frontend
+pnpm dev:server       # Solo backend
+pnpm build            # Build de producción (cliente + servidor)
+pnpm test             # Todos los tests (cliente + servidor)
+pnpm test:client      # Tests del frontend
+pnpm test:server      # Tests del backend
+pnpm test:coverage    # Cobertura completa
+pnpm test:e2e         # Tests E2E (Playwright)
+pnpm typecheck        # Verificación de tipos TypeScript
+pnpm format           # Formateo de código (Prettier)
+```
 
-## Notas
+### Backend (`server/`)
 
-- Usa `pnpm` porque el repo incluye `pnpm-lock.yaml`.
-- Si necesitas variables de entorno, crea un `.env` siguiendo la convencion de Vite (prefijo `VITE_`).
+```bash
+pnpm --filter server dev              # Servidor con hot-reload (tsx watch)
+pnpm --filter server prisma:migrate   # Ejecutar migraciones de BD
+pnpm --filter server prisma:seed      # Seed de datos iniciales
+pnpm --filter server prisma:generate  # Regenerar cliente Prisma
+```
+
+---
+
+## Arquitectura
+
+El proyecto sigue **Arquitectura Hexagonal (Ports & Adapters)**:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                     FRONTEND (Vue 3)                    │
+│                                                         │
+│  Views → Composables → Stores → Infrastructure (adapters) │
+│                                    ↓                    │
+│              HTTP (REST API)                            │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│                    BACKEND (Express)                    │
+│                                                         │
+│  Routes → Middleware → Prisma ORM → PostgreSQL          │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Capas del frontend:**
+
+| Capa | Responsabilidad |
+|---|---|
+| `views/` | Composición de componentes, sin lógica propia |
+| `composables/` | Lógica de negocio y orquestación de estado |
+| `stores/` | Estado reactivo global (Pinia); usa adapters para persistencia |
+| `infrastructure/` | Adapters HTTP (API calls) y storage (localStorage) |
+| `components/` | Componentes presentacionales puros (props + emits) |
+
+Ver [`AGENTS.md`](./AGENTS.md) para el conjunto completo de reglas de arquitectura y código.
+
+---
+
+## Documentación
+
+La carpeta [`docs/`](./docs/) contiene documentación técnica y funcional detallada:
+
+| Documento | Contenido |
+|---|---|
+| [`docs/README.md`](./docs/README.md) | Índice de documentación |
+| [`docs/setup.md`](./docs/setup.md) | Guía de instalación detallada |
+| [`docs/architecture.md`](./docs/architecture.md) | Arquitectura completa (frontend + backend) |
+| [`docs/api-reference.md`](./docs/api-reference.md) | Referencia de todos los endpoints de la API |
+| [`docs/database.md`](./docs/database.md) | Esquema de base de datos y relaciones |
+| [`docs/features.md`](./docs/features.md) | Descripción detallada de cada módulo |
+| [`docs/backend-architecture.md`](./docs/backend-architecture.md) | Decisiones técnicas del backend |
+
+---
+
+## Testing
+
+```bash
+pnpm test             # Todos los tests
+pnpm test:coverage    # Con reporte de cobertura
+pnpm test:e2e         # Tests end-to-end (Playwright)
+```
+
+Los tests siguen la convención **AAA (Arrange / Act / Assert)** y el patrón de nombres `should_<expected>_when_<context>`.

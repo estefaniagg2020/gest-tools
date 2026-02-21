@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import type { PrismaClient } from "@prisma/client";
-import { requireAuth, requireGestor } from "../middleware/auth.js";
+import { requireAuth, requireStaff } from "../middleware/auth.js";
 
 const CANCELLED_STATUS = "cancelled";
 
@@ -44,7 +44,7 @@ export const dashboardRouter = (prisma: PrismaClient) => {
   const router = Router();
   const auth = requireAuth(prisma);
 
-  router.get("/stats", auth, requireGestor, async (req: Request, res: Response) => {
+  router.get("/stats", auth, requireStaff, async (req: Request, res: Response) => {
     if (!req.user?.businessId) {
       res.status(403).json({ error: "Negocio no asociado" });
       return;

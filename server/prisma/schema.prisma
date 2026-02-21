@@ -17,16 +17,29 @@ model Company {
 model Business {
   id                  String              @id @default(uuid())
   name                String
-  themeColor          String?
+  logoUrl             String?
+  email               String?
+  phone               String?
+  address             String?
+  professionId        String?
+  taxId               String?
+  businessAddress     String?
+  businessPopulation  String?
+  isCanarias          Boolean             @default(false)
+  description         String?
+  publicPhoneNumber   String?
+  slug                String?             @unique
+  socialLinks         Json?
   companyId           String
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
   appointments        Appointment[]
-  bonoTemplates       BonoTemplate[]
+  bonos               Bono[]
   company             Company             @relation(fields: [companyId], references: [id])
   clients             Client[]
   gestorConfig        GestorConfig?
   products            Product[]
+  profession          Profession?         @relation(fields: [professionId], references: [id])
   sales               Sale[]
   scheduleBlocks      ScheduleBlock[]
   services            Service[]
@@ -39,11 +52,7 @@ model Business {
 model GestorConfig {
   id                          String             @id @default(uuid())
   businessId                  String             @unique
-  logoUrl                     String?
   numberOfPeople              Int                @default(0)
-  email                       String?
-  phone                       String?
-  address                     String?
   onboardingComplete          Boolean            @default(false)
   sidebarPosition             SidebarPosition    @default(left)
   showNavbar                  Boolean            @default(false)
@@ -85,17 +94,7 @@ model GestorConfig {
   bookingEnabled              Boolean            @default(false)
   depositPercent              Int                @default(0)
   depositRequired             Boolean            @default(false)
-  description                 String?
-  publicPhoneNumber           String?
-  slug                        String?            @unique
-  socialLinks                 Json?
-  professionId                String?
-  taxId                       String?
-  businessAddress             String?
-  businessPopulation          String?
-  isCanarias                  Boolean            @default(false)
   business                    Business           @relation(fields: [businessId], references: [id])
-  profession                  Profession?        @relation(fields: [professionId], references: [id])
 }
 
 model Service {
@@ -120,22 +119,31 @@ model Service {
   slotWaitlistEntries  SlotWaitlistEntry[]
 }
 
+model Role {
+  id               String            @id @default(uuid())
+  name             String            @unique
+  description      String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  users            User[]
+  workspaceMembers WorkspaceMember[]
+}
+
 model User {
   id                    String                 @id @default(uuid())
   username              String                 @unique
   passwordHash          String
   salt                  String
-  role                  UserRole               @default(gestor)
+  roleId                String
   name                  String?
   email                 String?
   phone                 String?
   sessionToken          String?
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
+  role                  Role                   @relation(fields: [roleId], references: [id])
   appointments          Appointment[]
-  clientNotes           ClientNote[]
   clientPhotos          ClientPhoto[]
-  pets                  Pet[]
   slotWaitlistEntries   SlotWaitlistEntry[]
   waitlistNotifications WaitlistNotification[]
   workspaces            WorkspaceMember[]
@@ -147,7 +155,6 @@ model Appointment {
   serviceId          String?
   userId             String?
   clientId           String?
-  petId              String?
   clientName         String?
   start              DateTime
   end                DateTime
@@ -165,7 +172,6 @@ model Appointment {
   workspaceMemberId  String?
   business           Business          @relation(fields: [businessId], references: [id])
   client             Client?           @relation(fields: [clientId], references: [id])
-  pet                Pet?              @relation(fields: [petId], references: [id])
   service            Service?          @relation(fields: [serviceId], references: [id])
   user               User?             @relation(fields: [userId], references: [id])
   workspaceMember    WorkspaceMember?  @relation(fields: [workspaceMemberId], references: [id])
@@ -212,30 +218,35 @@ model ServiceCategory {
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
   sourceCategoryId String?
+  bonos            Bono[]
   services         Service[]
   business         Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
   sourceCategory   ProfessionCategory? @relation(fields: [sourceCategoryId], references: [id])
 }
 
-model BonoTemplate {
-  id          String       @id @default(uuid())
-  businessId  String
-  name        String
-  sessions    Int?
-  price       Float?
-  validDays   Int?
-  serviceId   String?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  type        BonoType
-  business    Business     @relation(fields: [businessId], references: [id])
-  clientBonos ClientBono[]
+model Bono {
+  id                     String       @id @default(uuid())
+  businessId             String
+  name                   String
+  sessions               Int?
+  price                  Float?
+  validDays              Int?
+  serviceId              String?
+  serviceCategoryId      String?
+  loyaltyTriggerEvery    Int?
+  loyaltyRewardSessions   Int?
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+  type                   BonoType
+  business               Business     @relation(fields: [businessId], references: [id])
+  serviceCategory        ServiceCategory? @relation(fields: [serviceCategoryId], references: [id])
+  clientBonos            ClientBono[]
 }
 
 model ClientBono {
   id                    String       @id @default(uuid())
   clientId              String
-  templateId            String
+  bonoId                String
   sessionsUsed          Int          @default(0)
   sessionsTotal         Int?
   remainingSessions     Int?
@@ -246,7 +257,7 @@ model ClientBono {
   createdAt             DateTime     @default(now())
   updatedAt             DateTime     @updatedAt
   client                Client       @relation(fields: [clientId], references: [id])
-  template              BonoTemplate @relation(fields: [templateId], references: [id])
+  bono                  Bono         @relation(fields: [bonoId], references: [id])
 }
 
 model SlotWaitlistEntry {
@@ -255,13 +266,11 @@ model SlotWaitlistEntry {
   clientId       String?
   businessId     String
   serviceId      String
-  petId          String?
   preferredStart DateTime
   preferredEnd   DateTime
   createdAt      DateTime @default(now())
   business       Business @relation(fields: [businessId], references: [id])
   client         Client?  @relation(fields: [clientId], references: [id])
-  pet            Pet?     @relation(fields: [petId], references: [id])
   service        Service  @relation(fields: [serviceId], references: [id])
   user           User?    @relation(fields: [userId], references: [id])
 }
@@ -276,27 +285,6 @@ model WaitlistNotification {
   readAt     DateTime?
   createdAt  DateTime  @default(now())
   user       User      @relation(fields: [userId], references: [id])
-}
-
-model Pet {
-  id                  String              @id @default(uuid())
-  ownerId             String
-  name                String
-  breed               String?
-  species             String?             @default("dog")
-  birthDate           DateTime?
-  weight              Float?
-  needsMuzzle         Boolean             @default(false)
-  allowsOtherPets     Boolean             @default(true)
-  needsSedation       Boolean             @default(false)
-  notes               String?
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
-  appointments        Appointment[]
-  medicalNotes        ClientNote[]
-  photos              ClientPhoto[]
-  owner               User                @relation(fields: [ownerId], references: [id])
-  slotWaitlistEntries SlotWaitlistEntry[]
 }
 
 model Product {
@@ -346,34 +334,20 @@ model StockMovement {
 model ClientPhoto {
   id          String   @id @default(uuid())
   userId      String?
-  petId       String?
   url         String
   description String?
   createdAt   DateTime @default(now())
-  pet         Pet?     @relation(fields: [petId], references: [id])
   user        User?    @relation(fields: [userId], references: [id])
 }
 
-model ClientNote {
-  id        String         @id @default(uuid())
-  userId    String?
-  petId     String?
-  content   String
-  type      ClientNoteType @default(GENERAL)
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
-  pet       Pet?           @relation(fields: [petId], references: [id])
-  user      User?          @relation(fields: [userId], references: [id])
-}
-
 model Profession {
-  label         String
-  code          String               @unique
-  id            String               @id @default(uuid())
-  sector        String?
-  gestorConfigs GestorConfig[]
-  categories    ProfessionCategory[]
-  synonyms      ProfessionSynonym[]
+  label      String
+  code       String               @unique
+  id         String               @id @default(uuid())
+  sector     String?
+  businesses Business[]
+  categories ProfessionCategory[]
+  synonyms   ProfessionSynonym[]
 }
 
 model ProfessionSynonym {
@@ -416,7 +390,7 @@ model WorkspaceMember {
   id                   String        @id @default(uuid())
   userId               String?
   businessId           String
-  role                 WorkspaceRole @default(member)
+  roleId               String
   position             String?
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
@@ -431,6 +405,7 @@ model WorkspaceMember {
   defaultWorkEndHour   Int?
   appointments         Appointment[]
   business             Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  role                 Role          @relation(fields: [roleId], references: [id])
   user                 User?         @relation(fields: [userId], references: [id])
 
   @@unique([userId, businessId])
@@ -490,10 +465,6 @@ enum CalendarAppearance {
   spacious
 }
 
-enum UserRole {
-  gestor
-  client
-}
 
 enum AppointmentStatus {
   pending
@@ -525,12 +496,9 @@ enum BonoType {
   session_pack
   time_pack
   unlimited
+  loyalty
 }
 
-enum WorkspaceRole {
-  admin
-  member
-}
 
 enum SaleStatus {
   open
@@ -558,18 +526,4 @@ enum StockMovementType {
   PURCHASE
   USAGE
   RETURN
-}
-
-enum ClientNoteType {
-  GENERAL
-  FORMULA
-  ALLERGY
-  TREATMENT
-  VETERINARY_HISTORY
-}
-
-enum EmployeeRole {
-  manager
-  member
-  admin
 }

@@ -1,14 +1,35 @@
-# Documentación por vista
+# Documentación — gest-tools
 
-Documentación de cada pantalla de la aplicación SpaGest para pruebas y desarrollo.
+Índice de toda la documentación técnica y funcional del proyecto.
 
-| Vista | Ruta | Documento |
-|-------|------|-----------|
-| Inicio / Dashboard | `/` | [dashboard.md](./dashboard.md) |
-| Agenda | `/scheduler` | [scheduler.md](./scheduler.md) |
-| Equipo (Terapeutas) | `/therapists` | [therapists.md](./therapists.md) |
-| Centros Spa | `/spas` | [spas.md](./spas.md) |
+## Guías de inicio
 
-## Contraseña demo
+| Documento | Descripción |
+|---|---|
+| [`../README.md`](../README.md) | Resumen del proyecto, stack, instalación rápida |
+| [`setup.md`](./setup.md) | Guía de instalación y configuración detallada (incl. puertos 5173/3000 y proxy) |
 
-Para el popup de **cambio de rol** (barra lateral): contraseña **`demo`**.
+## Arquitectura y diseño
+
+| Documento | Descripción |
+|---|---|
+| [`architecture.md`](./architecture.md) | Arquitectura completa del sistema (frontend + backend) |
+| [`backend-architecture.md`](./backend-architecture.md) | Decisiones técnicas del backend (Express, Prisma, PostgreSQL) |
+| [`database.md`](./database.md) | Esquema de base de datos, modelos, relaciones y enums |
+| [`../AGENTS.md`](../AGENTS.md) | Reglas de código, SOLID, Clean Code, convenciones del proyecto |
+
+## Referencia de API
+
+| Documento | Descripción |
+|---|---|
+| [`api-reference.md`](./api-reference.md) | Todos los endpoints REST de la API (rutas, métodos, autenticación) |
+
+## Funcionalidades
+
+| Documento | Descripción |
+|---|---|
+| [`features.md`](./features.md) | Descripción detallada de todos los módulos del sistema |
+| [`dashboard.md`](./dashboard.md) | Vista Dashboard: métricas y widgets |
+| [`scheduler.md`](./scheduler.md) | Vista Agenda: vistas, roles y flujo de aprobación |
+| [`therapists.md`](./therapists.md) | Vista Equipo: gestión de miembros |
+| [`spas.md`](./spas.md) | Vista Negocios/Centros |

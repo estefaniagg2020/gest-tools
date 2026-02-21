@@ -6,19 +6,15 @@ const prisma = new PrismaClient();
 
 async function main() {
   const businesses = await prisma.business.findMany({
-    include: { 
-      gestorConfig: {
-        include: { profession: true }
-      }
-    }
+    include: { profession: true }
   });
 
   console.log(JSON.stringify(businesses.map(b => ({
     id: b.id,
     name: b.name,
-    profession: b.gestorConfig?.profession?.label,
-    professionCode: b.gestorConfig?.profession?.code,
-    professionId: b.gestorConfig?.professionId
+    profession: b.profession?.label,
+    professionCode: b.profession?.code,
+    professionId: b.professionId
   })), null, 2));
 }
 
