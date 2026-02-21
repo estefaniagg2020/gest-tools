@@ -274,6 +274,7 @@
     return agenda?.workDaysPerWeek ?? schedulerSettings.workDaysPerWeek.value;
   });
   const { currentDate, view, weekDays, next, prev, setToday } = useCalendar({
+    weekStart: computed(() => schedulerSettings.weekStart.value),
     workDaysPerWeek: workDaysPerWeekForCalendar,
   });
   const scheduleDrag = useScheduleDrag();

@@ -37,20 +37,27 @@
             </span>
           </button>
         </div>
+        <p v-if="saveError" class="mt-4 text-sm text-amber-600">{{ saveError }}</p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { computed } from "vue";
+  import { computed, ref } from "vue";
   import { useI18n } from "vue-i18n";
+  import { storeToRefs } from "pinia";
   import type { LocaleCode } from "@/infrastructure/localeStorage";
   import { useLocaleStore } from "@/stores/locale";
+  import { useAuthStore } from "@/stores/auth";
+  import { businessConfigApi } from "@/infrastructure/businessConfigApi";
   import ConfigPageHeader from "@/components/config/ConfigPageHeader.vue";
 
   const localeStore = useLocaleStore();
+  const authStore = useAuthStore();
+  const { user } = storeToRefs(authStore);
   const { t } = useI18n();
+  const saveError = ref("");
 
   const localeOptions = computed(() => [
     { code: "es" as LocaleCode, label: t("configIdioma.spanish"), native: "Español", flag: "🇪🇸" },
@@ -59,7 +66,18 @@
     { code: "de" as LocaleCode, label: t("configIdioma.german"), native: "Deutsch", flag: "🇩🇪" },
   ]);
 
-  const selectLocale = (code: LocaleCode) => {
+  const selectLocale = async (code: LocaleCode) => {
+    const previousLocale = localeStore.locale;
     localeStore.setLocale(code);
+    saveError.value = "";
+    const businessId = user.value?.businessId ?? null;
+    if (businessId) {
+      try {
+        await businessConfigApi.updateConfig(businessId, { locale: code });
+      } catch {
+        localeStore.setLocale(previousLocale);
+        saveError.value = "No se pudo guardar el idioma.";
+      }
+    }
   };
 </script>

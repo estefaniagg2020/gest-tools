@@ -78,7 +78,6 @@
   import { ref, onMounted } from "vue";
   import { storeToRefs } from "pinia";
   import { useAuthStore } from "@/stores/auth";
-  import { bookingApi } from "@/infrastructure/bookingApi";
   import { businessConfigApi } from "@/infrastructure/businessConfigApi";
   import ConfigPageHeader from "@/components/config/ConfigPageHeader.vue";
   import SaveButton from "@/components/common/SaveButton.vue";
@@ -101,16 +100,13 @@
   const businessIdRef = ref<string | null>(null);
   const vatOptions = VAT_OPTIONS;
 
-  const resolveBusinessId = async (): Promise<string | null> => {
-    const id = user.value?.businessId ?? null;
-    if (id) return id;
-    const list = await bookingApi.getBusinesses().catch(() => []);
-    const first = Array.isArray(list) && list.length > 0 ? list[0] : null;
-    return first?.id ?? null;
-  };
-
   onMounted(async () => {
-    businessIdRef.value = await resolveBusinessId();
+    businessIdRef.value = user.value?.businessId ?? null;
+    if (!businessIdRef.value) {
+      saveError.value = "No hay negocio asociado al usuario actual.";
+      loading.value = false;
+      return;
+    }
     if (businessIdRef.value) {
       try {
         const config = await businessConfigApi.getConfig(businessIdRef.value);

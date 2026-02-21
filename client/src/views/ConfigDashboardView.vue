@@ -307,6 +307,7 @@
   const { inventarioEnabled } = useBillingConfig();
   const { dashboardModuleIds } = storeToRefs(layoutStore);
 
+  // HIDDEN_FEATURE: inventario - Oculta widget productos-bajo-stock si inventarioEnabled=false
   const visibleWidgetModules = computed(() => {
     if (inventarioEnabled.value) return [...DASHBOARD_WIDGET_MODULES];
     return DASHBOARD_WIDGET_MODULES.filter((w) => w.id !== "productos-bajo-stock");

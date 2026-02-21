@@ -1,12 +1,12 @@
 import { Router, Request, Response } from "express";
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient, AppointmentStatus, PaymentStatus } from "@prisma/client";
 import { requireAuth, requireStaff } from "../middleware/auth.js";
 
-const CANCELLED = "cancelled";
-const NO_SHOW = "no_show";
-const COMPLETED = "completed";
-const EXCLUDED_STATUSES = [CANCELLED, NO_SHOW];
-const UNPAID_STATUSES = ["pending", "partial"];
+const CANCELLED = "cancelled" as AppointmentStatus;
+const NO_SHOW = "no_show" as AppointmentStatus;
+const COMPLETED = "completed" as AppointmentStatus;
+const EXCLUDED_STATUSES: AppointmentStatus[] = [CANCELLED, NO_SHOW];
+const UNPAID_STATUSES: PaymentStatus[] = ["pending", "partial"];
 
 const normalize = (str: string): string =>
   str

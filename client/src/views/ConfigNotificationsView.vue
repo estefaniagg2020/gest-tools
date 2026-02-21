@@ -179,7 +179,6 @@
   import { useAuthStore } from "@/stores/auth";
   import { useBillingConfig } from "@/composables/useBillingConfig";
   import { useNotificacionesAvisos } from "@/composables/useNotificacionesAvisos";
-  import { bookingApi } from "@/infrastructure/bookingApi";
   import { businessConfigApi } from "@/infrastructure/businessConfigApi";
   import ConfigPageHeader from "@/components/config/ConfigPageHeader.vue";
 
@@ -193,16 +192,12 @@
   const whatsappSaveError = ref("");
   const whatsappSaveSuccess = ref(false);
 
-  const resolveBusinessId = async (): Promise<string | null> => {
-    const id = authStore.user?.businessId ?? null;
-    if (id) return id;
-    const list = await bookingApi.getBusinesses().catch(() => []);
-    const first = Array.isArray(list) && list.length > 0 ? list[0] : null;
-    return first?.id ?? null;
-  };
-
   onMounted(async () => {
-    whatsappBusinessId.value = await resolveBusinessId();
+    whatsappBusinessId.value = authStore.user?.businessId ?? null;
+    if (!whatsappBusinessId.value) {
+      whatsappConfigLoading.value = false;
+      return;
+    }
     if (whatsappBusinessId.value) {
       try {
         const config = await businessConfigApi.getConfig(whatsappBusinessId.value);

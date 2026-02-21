@@ -128,6 +128,7 @@ const searchQuery = ref("");
 
 onMounted(async () => {
     await loadBillingConfig();
+    // HIDDEN_FEATURE: inventario - Redirige a config si inventarioEnabled=false
     if (!inventarioEnabled.value) {
         router.replace({ name: "config" });
         return;

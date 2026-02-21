@@ -54,7 +54,7 @@ export const businessRouter = (prisma: PrismaClient) => {
       where: { businessId },
       orderBy: { label: "asc" },
       include: {
-        services: { orderBy: { name: "asc" } },
+        businessServices: { orderBy: { name: "asc" } },
       },
     });
 
@@ -62,7 +62,7 @@ export const businessRouter = (prisma: PrismaClient) => {
       id: cat.id,
       label: cat.label,
       icon: cat.icon ?? "📋",
-      services: cat.services.map((s) => ({
+      services: cat.businessServices.map((s) => ({
         id: s.id,
         name: s.name,
         duration: s.duration,

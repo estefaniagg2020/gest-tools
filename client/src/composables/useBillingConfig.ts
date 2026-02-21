@@ -1,7 +1,6 @@
 import { ref, readonly } from "vue";
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
-import { bookingApi } from "@/infrastructure/bookingApi";
 import { businessConfigApi } from "@/infrastructure/businessConfigApi";
 
 const defaultVatPercent = ref(21);
@@ -16,13 +15,7 @@ export const useBillingConfig = () => {
   const { user } = storeToRefs(authStore);
 
   const load = async (): Promise<void> => {
-    const businessId = user.value?.businessId ?? null;
-    const id = businessId
-      ? businessId
-      : await bookingApi.getBusinesses().then((list) => {
-          const first = Array.isArray(list) && list.length > 0 ? list[0] : null;
-          return first?.id ?? null;
-        });
+    const id = user.value?.businessId ?? null;
     if (!id) {
       loaded.value = true;
       return;

@@ -210,6 +210,7 @@
   const widgetIdsForDisplay = computed(() => {
     const ids = dashboardModuleIds.value;
     const base = ids.length > 0 ? ids : [...DEFAULT_DASHBOARD_MODULE_IDS];
+    // HIDDEN_FEATURE: inventario - Oculta widget productos-bajo-stock si inventarioEnabled=false
     if (!inventarioEnabled.value) {
       return base.filter((id) => id !== "productos-bajo-stock");
     }

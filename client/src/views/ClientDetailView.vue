@@ -47,7 +47,7 @@
 
       <!-- TAB CONTENT -->
       
-      <!-- BONOS TAB -->
+      <!-- HIDDEN_FEATURE: bonos - Pestaña Bonos en detalle de cliente (oculta si bonosEnabled=false) -->
       <section v-if="currentTab === 'bonos'">
         <div class="flex items-center justify-between gap-4 mb-4">
           <h2 class="text-lg font-semibold text-app-title">{{ $t('clientBonos.sectionTitle') }}</h2>
@@ -173,6 +173,7 @@ const { isModalOpen, isEditing, form, editClient, closeModal, saveClient } = use
 
 const tabs = computed(() => {
   const items = [{ id: "history", name: "Historial" }];
+  // HIDDEN_FEATURE: bonos - Añade pestaña Bonos solo si bonosEnabled=true
   if (bonosEnabled.value) {
     items.unshift({ id: "bonos", name: "Bonos & Packs" });
   }
