@@ -39,6 +39,9 @@
                 Cada {{ template.loyaltyTriggerEvery }} usos → {{ template.loyaltyRewardSessions }} gratis
               </template>
             </p>
+            <p class="text-xs text-app-text/60 mt-1">
+              Aplica a: {{ getAssignmentLabel(template) }}
+            </p>
           </div>
           <div class="flex gap-2 shrink-0">
             <BaseButton
@@ -150,23 +153,50 @@
                 />
               </div>
             </div>
-            <div>
-              <label class="block text-sm font-medium text-app-title mb-1">{{ $t('configBonos.optionalService') }}</label>
-              <select
-                v-model="form.serviceId"
-                class="input-modern w-full rounded-xl border border-app-border bg-app-bg/50 px-4 py-2.5 text-app-title focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
-              >
-                <option :value="null">{{ $t('configBonos.anyService') }}</option>
-                <option
-                  v-for="s in serviceStore.services"
-                  :key="s.id"
-                  :value="s.id"
-                >
-                  {{ s.name }}
-                </option>
-              </select>
-            </div>
           </template>
+          <div>
+            <label class="block text-sm font-medium text-app-title mb-1">Aplicar a</label>
+            <select
+              v-model="form.assignmentMode"
+              class="input-modern w-full rounded-xl border border-app-border bg-app-bg/50 px-4 py-2.5 text-app-title focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
+            >
+              <option value="any">Cualquier servicio</option>
+              <option value="service">Un servicio</option>
+              <option value="category">Una categoría completa</option>
+            </select>
+          </div>
+          <div v-if="form.assignmentMode === 'service'">
+            <label class="block text-sm font-medium text-app-title mb-1">Servicio</label>
+            <select
+              v-model="form.serviceId"
+              class="input-modern w-full rounded-xl border border-app-border bg-app-bg/50 px-4 py-2.5 text-app-title focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
+            >
+              <option :value="null">Selecciona un servicio</option>
+              <option
+                v-for="s in serviceStore.services"
+                :key="s.id"
+                :value="s.id"
+              >
+                {{ s.name }}
+              </option>
+            </select>
+          </div>
+          <div v-if="form.assignmentMode === 'category'">
+            <label class="block text-sm font-medium text-app-title mb-1">Categoría</label>
+            <select
+              v-model="form.serviceCategoryId"
+              class="input-modern w-full rounded-xl border border-app-border bg-app-bg/50 px-4 py-2.5 text-app-title focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
+            >
+              <option :value="null">Selecciona una categoría</option>
+              <option
+                v-for="category in serviceCategoryStore.categories"
+                :key="category.id"
+                :value="category.id"
+              >
+                {{ category.label }}
+              </option>
+            </select>
+          </div>
           <div
             v-if="saveError"
             class="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800"
@@ -196,6 +226,7 @@
 
 <script setup lang="ts">
   import { onMounted } from "vue";
+  import type { Bono } from "@/interfaces/bono";
   import ConfigPageHeader from "@/components/config/ConfigPageHeader.vue";
   import BaseButton from "@/components/common/BaseButton.vue";
   import Modal from "@/components/common/Modal.vue";
@@ -203,9 +234,11 @@
   import { useConfirmDialog } from "@/composables/useConfirmDialog";
   import { useBonoStore } from "@/stores/bono";
   import { useServiceStore } from "@/stores/service";
+  import { useServiceCategoryStore } from "@/stores/serviceCategory";
 
   const bonoStore = useBonoStore();
   const serviceStore = useServiceStore();
+  const serviceCategoryStore = useServiceCategoryStore();
   const {
     isModalOpen,
     isEditing,
@@ -232,8 +265,21 @@
     remove(id);
   };
 
+  const getAssignmentLabel = (template: Bono): string => {
+    if (template.serviceId) {
+      const service = serviceStore.services.find((item) => item.id === template.serviceId);
+      return service ? `Servicio: ${service.name}` : "Servicio";
+    }
+    if (template.serviceCategoryId) {
+      const category = serviceCategoryStore.categories.find((item) => item.id === template.serviceCategoryId);
+      return category ? `Categoría: ${category.label}` : "Categoría";
+    }
+    return "Cualquier servicio";
+  };
+
   onMounted(() => {
     bonoStore.initialize();
     serviceStore.initialize();
+    serviceCategoryStore.initialize();
   });
 </script>

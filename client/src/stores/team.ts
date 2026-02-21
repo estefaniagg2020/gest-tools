@@ -14,7 +14,7 @@ const dtoToMember = (d: EmployeeDto): TeamMember => ({
   name: d.name,
   photoUrl: d.photoUrl ?? "",
   linkedInUrl: d.linkedInUrl ?? undefined,
-  phoneNumber: d.phoneNumber ?? "",
+  phoneNumber: d.phoneNumber ?? (d as { phone?: string }).phone ?? "",
   email: d.email ?? "",
   weeklyHours: d.weeklyHours ?? 40,
   color: d.color ?? generatePastelColor(),

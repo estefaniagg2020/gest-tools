@@ -22,7 +22,7 @@ describe("Employees CRUD", () => {
       workspaceMember: {
         findMany: vi.fn().mockResolvedValue([fakeMember]),
         findUnique: vi.fn().mockResolvedValue(fakeMember),
-        findFirst: vi.fn().mockResolvedValue(fakeMember),
+        findFirst: vi.fn().mockResolvedValue(null),
         create: vi.fn().mockResolvedValue({ ...fakeMember, id: "emp-new", role: { name: "employee" } }),
         update: vi.fn().mockResolvedValue({ ...fakeMember, name: "Updated", role: { name: "employee" } }),
         delete: vi.fn().mockResolvedValue(fakeMember),
@@ -50,6 +50,12 @@ describe("Employees CRUD", () => {
   it("POST / returns 400 when name is missing", async () => {
     const res = await request(app).post("/").send({});
     expect(res.status).toBe(400);
+  });
+
+  it("POST / returns 409 when member with same name exists", async () => {
+    prisma.workspaceMember.findFirst = vi.fn().mockResolvedValue(fakeMember);
+    const res = await request(app).post("/").send({ name: "Ana García", role: "employee" });
+    expect(res.status).toBe(409);
   });
 
   it("PUT /:id updates an employee", async () => {

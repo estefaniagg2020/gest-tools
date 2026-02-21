@@ -9,6 +9,7 @@ export interface BonoDto {
   price: number | null;
   validDays: number | null;
   serviceId: string | null;
+  serviceCategoryId: string | null;
   loyaltyTriggerEvery?: number | null;
   loyaltyRewardSessions?: number | null;
 }
@@ -33,6 +34,7 @@ const dtoToBono = (dto: BonoDto): Bono => ({
   packTotalSessions: dto.sessions ?? undefined,
   packPrice: dto.price ?? undefined,
   serviceId: dto.serviceId ?? undefined,
+  serviceCategoryId: dto.serviceCategoryId ?? undefined,
   loyaltyTriggerEvery: dto.loyaltyTriggerEvery ?? undefined,
   loyaltyRewardSessions: dto.loyaltyRewardSessions ?? undefined,
 });
@@ -43,6 +45,7 @@ const bonoToDto = (b: Omit<Bono, "id">): Record<string, unknown> => ({
   sessions: b.packTotalSessions ?? null,
   price: b.packPrice ?? null,
   serviceId: b.serviceId ?? null,
+  serviceCategoryId: b.serviceCategoryId ?? null,
   validDays: null,
   loyaltyTriggerEvery: b.loyaltyTriggerEvery ?? null,
   loyaltyRewardSessions: b.loyaltyRewardSessions ?? null,
@@ -94,6 +97,7 @@ export const bonosApi = {
     if (payload.packTotalSessions !== undefined) body.sessions = payload.packTotalSessions;
     if (payload.packPrice !== undefined) body.price = payload.packPrice;
     if (payload.serviceId !== undefined) body.serviceId = payload.serviceId;
+    if (payload.serviceCategoryId !== undefined) body.serviceCategoryId = payload.serviceCategoryId;
     if (payload.loyaltyTriggerEvery !== undefined) body.loyaltyTriggerEvery = payload.loyaltyTriggerEvery;
     if (payload.loyaltyRewardSessions !== undefined) body.loyaltyRewardSessions = payload.loyaltyRewardSessions;
     const res = await apiFetch(`/api/bonos/templates/${id}`, {

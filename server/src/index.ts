@@ -24,6 +24,7 @@ import { settingsRouter } from "./routes/settings.js";
 import { professionsRouter } from "./routes/professions.js";
 import { salesRouter } from "./routes/sales.js";
 import { aiRouter } from "./routes/ai.js";
+import { ensureRoleTemplates } from "./services/ensureRoles.js";
 import { ensureProfessionTemplates } from "./services/ensureTemplates.js";
 
 dotenv.config();
@@ -77,7 +78,7 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   res.status(status).json({ error: message });
 });
 
-ensureProfessionTemplates(prisma)
+Promise.all([ensureRoleTemplates(prisma), ensureProfessionTemplates(prisma)])
   .then(() => {
     app.listen(port, () => {
       console.log(`[server]: Server is running at http://localhost:${port}`);
@@ -85,6 +86,6 @@ ensureProfessionTemplates(prisma)
     });
   })
   .catch((err) => {
-    console.error("[server]: Failed to ensure profession templates:", err);
+    console.error("[server]: Failed to ensure templates:", err);
     process.exit(1);
   });

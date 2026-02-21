@@ -54,6 +54,13 @@ export const employeeRouter = (prisma: PrismaClient) => {
         res.status(400).json({ error: "Rol no encontrado" });
         return;
       }
+      const existingByName = await prisma.workspaceMember.findFirst({
+        where: { businessId, name: { equals: name, mode: "insensitive" } },
+      });
+      if (existingByName) {
+        res.status(409).json({ error: "Ya existe un miembro con ese nombre en este negocio" });
+        return;
+      }
       const member = await prisma.workspaceMember.create({
         data: {
           businessId,
@@ -62,7 +69,7 @@ export const employeeRouter = (prisma: PrismaClient) => {
           userId: typeof body.userId === "string" ? body.userId : null,
           photoUrl: typeof body.photoUrl === "string" ? body.photoUrl.trim() || null : null,
           linkedInUrl: typeof body.linkedInUrl === "string" ? body.linkedInUrl.trim() || null : null,
-          phone: typeof body.phone === "string" ? body.phone.trim() || null : null,
+          phone: (typeof (body.phone ?? body.phoneNumber) === "string" ? String(body.phone ?? body.phoneNumber).trim() : null) || null,
           email: typeof body.email === "string" ? body.email.trim() || null : null,
           weeklyHours: typeof body.weeklyHours === "number" ? body.weeklyHours : null,
           color: typeof body.color === "string" ? body.color.trim() || null : null,
@@ -99,11 +106,20 @@ export const employeeRouter = (prisma: PrismaClient) => {
         res.status(400).json({ error: "name es requerido" });
         return;
       }
+      if (name !== existing.name) {
+        const conflict = await prisma.workspaceMember.findFirst({
+          where: { businessId, id: { not: id }, name: { equals: name, mode: "insensitive" } },
+        });
+        if (conflict) {
+          res.status(409).json({ error: "Ya existe un miembro con ese nombre en este negocio" });
+          return;
+        }
+      }
       const data: Record<string, unknown> = {
         name,
         photoUrl: body.photoUrl !== undefined ? (body.photoUrl || null) : existing.photoUrl,
         linkedInUrl: body.linkedInUrl !== undefined ? (body.linkedInUrl || null) : existing.linkedInUrl,
-        phone: body.phone !== undefined ? (body.phone || null) : existing.phone,
+        phone: (body.phone ?? body.phoneNumber) !== undefined ? ((body.phone ?? body.phoneNumber) || null) : existing.phone,
         email: body.email !== undefined ? (body.email || null) : existing.email,
         weeklyHours: body.weeklyHours !== undefined ? (typeof body.weeklyHours === "number" ? body.weeklyHours : null) : existing.weeklyHours,
         color: body.color !== undefined ? (body.color || null) : existing.color,

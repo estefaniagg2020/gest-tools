@@ -8,6 +8,9 @@ import {
 
 export const businessRouter = (prisma: PrismaClient) => {
   const router = Router();
+  const UUID_REGEX =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const isUuid = (value: string): boolean => UUID_REGEX.test(value);
 
   router.get("/", async (req: Request, res: Response) => {
     try {
@@ -35,6 +38,14 @@ export const businessRouter = (prisma: PrismaClient) => {
   const getId = (req: Request): string => {
     const id = req.params.id;
     return Array.isArray(id) ? id[0] ?? "" : id ?? "";
+  };
+  const requireValidBusinessId = (req: Request, res: Response): string | null => {
+    const businessId = getId(req);
+    if (!isUuid(businessId)) {
+      res.status(400).json({ error: "businessId inválido" });
+      return null;
+    }
+    return businessId;
   };
 
   const buildServiceCatalog = async (businessId: string) => {
@@ -109,7 +120,8 @@ export const businessRouter = (prisma: PrismaClient) => {
   };
 
   router.get("/:id/catalog", async (req: Request, res: Response) => {
-    const businessId = getId(req);
+    const businessId = requireValidBusinessId(req, res);
+    if (!businessId) return;
     try {
       const catalog = await buildServiceCatalog(businessId);
       res.json(catalog);
@@ -119,7 +131,8 @@ export const businessRouter = (prisma: PrismaClient) => {
   });
 
   router.get("/:id/services", async (req: Request, res: Response) => {
-    const businessId = getId(req);
+    const businessId = requireValidBusinessId(req, res);
+    if (!businessId) return;
     try {
       const catalog = await buildServiceCatalog(businessId);
       const flat = catalog.flatMap((cat) =>
@@ -137,7 +150,8 @@ export const businessRouter = (prisma: PrismaClient) => {
   });
 
   router.post("/:id/services", async (req: Request, res: Response) => {
-    const businessId = getId(req);
+    const businessId = requireValidBusinessId(req, res);
+    if (!businessId) return;
     const { name, duration, price, description, categoryId } = req.body ?? {};
     if (!name || !duration || !categoryId) {
       res.status(400).json({ error: "name, duration and categoryId are required" });
@@ -173,7 +187,8 @@ export const businessRouter = (prisma: PrismaClient) => {
   });
 
   router.put("/:id/services/:serviceId", async (req: Request, res: Response) => {
-    const businessId = getId(req);
+    const businessId = requireValidBusinessId(req, res);
+    if (!businessId) return;
     const serviceId = req.params.serviceId as string;
     const { name, duration, price, description, categoryId } = req.body ?? {};
     try {
@@ -264,7 +279,8 @@ export const businessRouter = (prisma: PrismaClient) => {
   });
 
   router.delete("/:id/services/:serviceId", async (req: Request, res: Response) => {
-    const businessId = getId(req);
+    const businessId = requireValidBusinessId(req, res);
+    if (!businessId) return;
     const serviceId = req.params.serviceId as string;
     try {
       const systemSvc = await prisma.professionService.findUnique({ where: { id: serviceId } });
@@ -296,7 +312,8 @@ export const businessRouter = (prisma: PrismaClient) => {
   });
 
   router.get("/:id/availability", async (req: Request, res: Response) => {
-    const businessId = getId(req);
+    const businessId = requireValidBusinessId(req, res);
+    if (!businessId) return;
     const dateStr = req.query.date as string | undefined;
     const serviceId = req.query.serviceId as string | undefined;
     const smart = req.query.smart === "1" || req.query.smart === "true";
@@ -335,7 +352,8 @@ export const businessRouter = (prisma: PrismaClient) => {
   });
 
   router.get("/:id/occupied-slots", async (req: Request, res: Response) => {
-    const businessId = getId(req);
+    const businessId = requireValidBusinessId(req, res);
+    if (!businessId) return;
     const dateStr = req.query.date as string | undefined;
     const serviceId = req.query.serviceId as string | undefined;
     if (!dateStr || !serviceId) {
@@ -363,7 +381,8 @@ export const businessRouter = (prisma: PrismaClient) => {
   });
 
   router.get("/:id/config", async (req: Request, res: Response) => {
-    const businessId = getId(req);
+    const businessId = requireValidBusinessId(req, res);
+    if (!businessId) return;
     try {
       const [config, business] = await Promise.all([
         prisma.gestorConfig.findUnique({ where: { businessId } }),
@@ -472,7 +491,8 @@ export const businessRouter = (prisma: PrismaClient) => {
   ] as const;
 
   router.put("/:id/config", async (req: Request, res: Response) => {
-    const businessId = getId(req);
+    const businessId = requireValidBusinessId(req, res);
+    if (!businessId) return;
     const body = req.body ?? {};
 
     // Separate incoming fields: Business identity vs GestorConfig operational

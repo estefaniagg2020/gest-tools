@@ -9,6 +9,7 @@ export interface Bono {
   loyaltyTriggerEvery?: number;
   loyaltyRewardSessions?: number;
   serviceId?: string | null;
+  serviceCategoryId?: string | null;
 }
 
 export interface ClientBono {

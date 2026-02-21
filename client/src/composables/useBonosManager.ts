@@ -18,7 +18,9 @@ export const useBonosManager = () => {
     packPrice: 20,
     loyaltyTriggerEvery: 10,
     loyaltyRewardSessions: 1,
+    assignmentMode: "any" as "any" | "service" | "category",
     serviceId: null as string | null,
+    serviceCategoryId: null as string | null,
   });
 
   const templates = computed(() => bonoStore.templates);
@@ -34,7 +36,9 @@ export const useBonosManager = () => {
       packPrice: 20,
       loyaltyTriggerEvery: 10,
       loyaltyRewardSessions: 1,
+      assignmentMode: "any",
       serviceId: null,
+      serviceCategoryId: null,
     };
     isModalOpen.value = true;
   };
@@ -50,7 +54,9 @@ export const useBonosManager = () => {
       packPrice: template.packPrice ?? 20,
       loyaltyTriggerEvery: template.loyaltyTriggerEvery ?? 10,
       loyaltyRewardSessions: template.loyaltyRewardSessions ?? 1,
+      assignmentMode: template.serviceId ? "service" : template.serviceCategoryId ? "category" : "any",
       serviceId: template.serviceId ?? null,
+      serviceCategoryId: template.serviceCategoryId ?? null,
     };
     isModalOpen.value = true;
   };
@@ -71,7 +77,9 @@ export const useBonosManager = () => {
         form.value.type === "loyalty" ? form.value.loyaltyTriggerEvery : undefined,
       loyaltyRewardSessions:
         form.value.type === "loyalty" ? form.value.loyaltyRewardSessions : undefined,
-      serviceId: form.value.serviceId || null,
+      serviceId: form.value.assignmentMode === "service" ? form.value.serviceId || null : null,
+      serviceCategoryId:
+        form.value.assignmentMode === "category" ? form.value.serviceCategoryId || null : null,
     };
     saveError.value = null;
     try {

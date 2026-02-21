@@ -235,6 +235,37 @@ export const authRouter = (prisma: PrismaClient) => {
     res.json({ ok: true });
   });
 
+  router.get("/me", auth, async (req: Request, res: Response) => {
+    if (!req.user) {
+      res.status(401).json({ error: "No autorizado" });
+      return;
+    }
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      include: { role: { select: { name: true } } },
+    });
+    if (!user) {
+      res.status(401).json({ error: "Sesión inválida o expirada" });
+      return;
+    }
+    const workspaces = await prisma.workspaceMember.findMany({
+      where: { userId: user.id },
+      select: { businessId: true },
+      take: 1,
+    });
+    res.json({
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role.name,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        businessId: workspaces[0]?.businessId ?? null,
+      },
+    });
+  });
+
   router.patch("/me", auth, async (req: Request, res: Response) => {
     if (!req.user) {
       res.status(401).json({ error: "No autorizado" });

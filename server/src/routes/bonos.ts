@@ -35,6 +35,58 @@ export const bonosRouter = (prisma: PrismaClient) => {
     return String(err);
   };
 
+  const resolveServiceIdForBusiness = async (
+    serviceId: string,
+    businessId: string,
+  ): Promise<string | null> => {
+    const service = await prisma.service.findUnique({
+      where: { id: serviceId },
+      select: { businessId: true },
+    });
+    if (service && service.businessId === businessId) return serviceId;
+
+    const professionSvc = await prisma.professionService.findUnique({
+      where: { id: serviceId },
+      include: { category: true },
+    });
+    if (!professionSvc) return null;
+
+    const existing = await prisma.service.findFirst({
+      where: { businessId, sourceServiceId: serviceId },
+      select: { id: true },
+    });
+    if (existing) return existing.id;
+
+    const serviceCategory = await prisma.serviceCategory.findFirst({
+      where: { businessId, label: professionSvc.category.label },
+      select: { id: true },
+    });
+    const categoryId = serviceCategory?.id ?? (
+      await prisma.serviceCategory.create({
+        data: {
+          businessId,
+          label: professionSvc.category.label,
+          icon: professionSvc.category.icon,
+        },
+        select: { id: true },
+      })
+    ).id;
+
+    const created = await prisma.service.create({
+      data: {
+        businessId,
+        categoryId,
+        name: professionSvc.name,
+        duration: professionSvc.duration,
+        price: professionSvc.price,
+        description: professionSvc.description ?? null,
+        sourceServiceId: serviceId,
+      },
+      select: { id: true },
+    });
+    return created.id;
+  };
+
   router.post("/templates", auth, requireStaff, async (req: Request, res: Response, next: NextFunction) => {
     const businessId = getBizId(req);
     if (!businessId) { res.status(403).json({ error: "Negocio no asociado" }); return; }
@@ -42,13 +94,41 @@ export const bonosRouter = (prisma: PrismaClient) => {
     console.log("[bonos] POST /templates", { businessId, body: JSON.stringify(body) });
     const name = typeof body.name === "string" ? body.name.trim() : "";
     const typeRaw = typeof body.type === "string" ? body.type.trim() : "";
+    const serviceId = typeof body.serviceId === "string" && body.serviceId.trim()
+      ? body.serviceId.trim()
+      : null;
+    const serviceCategoryId = typeof body.serviceCategoryId === "string" && body.serviceCategoryId.trim()
+      ? body.serviceCategoryId.trim()
+      : null;
     if (!name || !typeRaw) { res.status(400).json({ error: "name y type son requeridos" }); return; }
+    if (serviceId && serviceCategoryId) {
+      res.status(400).json({ error: "Solo puedes asignar servicio o categoría, no ambos" });
+      return;
+    }
     const type = mapFrontendTypeToEnum(typeRaw);
     try {
       const business = await prisma.business.findUnique({ where: { id: businessId }, select: { id: true } });
       if (!business) {
         res.status(400).json({ error: "El negocio no existe. Cierra sesión y vuelve a entrar." });
         return;
+      }
+      let resolvedServiceId: string | null = null;
+      if (serviceId) {
+        resolvedServiceId = await resolveServiceIdForBusiness(serviceId, businessId);
+        if (!resolvedServiceId) {
+          res.status(404).json({ error: "Servicio no encontrado para este negocio" });
+          return;
+        }
+      }
+      if (serviceCategoryId) {
+        const category = await prisma.serviceCategory.findUnique({
+          where: { id: serviceCategoryId },
+          select: { businessId: true },
+        });
+        if (!category || category.businessId !== businessId) {
+          res.status(404).json({ error: "Categoría no encontrada para este negocio" });
+          return;
+        }
       }
       const bono = await prisma.bono.create({
         data: {
@@ -58,7 +138,8 @@ export const bonosRouter = (prisma: PrismaClient) => {
           sessions: body.sessions != null ? Number(body.sessions) : null,
           price: body.price != null ? Number(body.price) : null,
           validDays: body.validDays != null ? Number(body.validDays) : null,
-          serviceId: body.serviceId ?? null,
+          serviceId: resolvedServiceId,
+          serviceCategoryId,
           loyaltyTriggerEvery: body.loyaltyTriggerEvery != null ? Number(body.loyaltyTriggerEvery) : null,
           loyaltyRewardSessions: body.loyaltyRewardSessions != null ? Number(body.loyaltyRewardSessions) : null,
         },
@@ -83,13 +164,42 @@ export const bonosRouter = (prisma: PrismaClient) => {
         res.status(404).json({ error: "Bono no encontrado" }); return;
       }
       const body = req.body ?? {};
+      const requestedServiceId = body.serviceId !== undefined
+        ? (typeof body.serviceId === "string" && body.serviceId.trim() ? body.serviceId.trim() : null)
+        : existing.serviceId;
+      const requestedServiceCategoryId = body.serviceCategoryId !== undefined
+        ? (typeof body.serviceCategoryId === "string" && body.serviceCategoryId.trim() ? body.serviceCategoryId.trim() : null)
+        : existing.serviceCategoryId;
+      if (requestedServiceId && requestedServiceCategoryId) {
+        res.status(400).json({ error: "Solo puedes asignar servicio o categoría, no ambos" });
+        return;
+      }
+      let resolvedRequestedServiceId: string | null = null;
+      if (requestedServiceId) {
+        resolvedRequestedServiceId = await resolveServiceIdForBusiness(requestedServiceId, businessId);
+        if (!resolvedRequestedServiceId) {
+          res.status(404).json({ error: "Servicio no encontrado para este negocio" });
+          return;
+        }
+      }
+      if (requestedServiceCategoryId) {
+        const category = await prisma.serviceCategory.findUnique({
+          where: { id: requestedServiceCategoryId },
+          select: { businessId: true },
+        });
+        if (!category || category.businessId !== businessId) {
+          res.status(404).json({ error: "Categoría no encontrada para este negocio" });
+          return;
+        }
+      }
       const updateData: Record<string, unknown> = {
         ...(body.name !== undefined && { name: String(body.name).trim() }),
         ...(body.type !== undefined && { type: mapFrontendTypeToEnum(String(body.type)) }),
         ...(body.sessions !== undefined && { sessions: body.sessions }),
         ...(body.price !== undefined && { price: body.price != null ? Number(body.price) : null }),
         ...(body.validDays !== undefined && { validDays: body.validDays }),
-        ...(body.serviceId !== undefined && { serviceId: body.serviceId }),
+        ...(body.serviceId !== undefined && { serviceId: resolvedRequestedServiceId }),
+        ...(body.serviceCategoryId !== undefined && { serviceCategoryId: requestedServiceCategoryId }),
         ...(body.loyaltyTriggerEvery !== undefined && { loyaltyTriggerEvery: body.loyaltyTriggerEvery != null ? Number(body.loyaltyTriggerEvery) : null }),
         ...(body.loyaltyRewardSessions !== undefined && { loyaltyRewardSessions: body.loyaltyRewardSessions != null ? Number(body.loyaltyRewardSessions) : null }),
       };

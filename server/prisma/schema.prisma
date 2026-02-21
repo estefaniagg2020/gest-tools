@@ -218,6 +218,7 @@ model ServiceCategory {
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
   sourceCategoryId String?
+  bonos            Bono[]
   services         Service[]
   business         Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
   sourceCategory   ProfessionCategory? @relation(fields: [sourceCategoryId], references: [id])
@@ -231,12 +232,14 @@ model Bono {
   price                  Float?
   validDays              Int?
   serviceId              String?
+  serviceCategoryId      String?
   loyaltyTriggerEvery    Int?
   loyaltyRewardSessions   Int?
   createdAt              DateTime     @default(now())
   updatedAt              DateTime     @updatedAt
   type                   BonoType
   business               Business     @relation(fields: [businessId], references: [id])
+  serviceCategory        ServiceCategory? @relation(fields: [serviceCategoryId], references: [id])
   clientBonos            ClientBono[]
 }
 
@@ -524,4 +527,3 @@ enum StockMovementType {
   USAGE
   RETURN
 }
-

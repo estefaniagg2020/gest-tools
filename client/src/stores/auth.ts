@@ -80,8 +80,13 @@ export const useAuthStore = defineStore("auth", () => {
   const initialize = async () => {
     const session = authStorage.loadBackendSession();
     if (session) {
-      setUserFromBackend(session.user);
-      return;
+      try {
+        const me = await authApi.getMe();
+        setUserFromBackend(me.user);
+        return;
+      } catch {
+        authStorage.clearBackendSession();
+      }
     }
     try {
       const status = await authApi.getSetupStatus();

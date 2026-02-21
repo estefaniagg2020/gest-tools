@@ -75,6 +75,15 @@ export const authApi = {
     await apiFetch("/api/auth/logout", { method: "POST" });
   },
 
+  getMe: async (): Promise<{ user: AuthUser }> => {
+    const res = await apiFetch("/api/auth/me");
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.error ?? "Sesión inválida");
+    }
+    return data;
+  },
+
   forgotPassword: async (
     username: string,
     newPassword: string,

@@ -36,6 +36,8 @@ export const syncWizardTeamMembers = async (wizardMembers: WizardTeamMember[]): 
         defaultWorkStartHour: TEAM_MANAGER.DEFAULT_WORK_START_HOUR,
         defaultWorkEndHour: TEAM_MANAGER.DEFAULT_WORK_END_HOUR,
       });
+      const added = store.members[store.members.length - 1];
+      if (added) byName.set(name.toLowerCase(), added);
     }
   }
 };
