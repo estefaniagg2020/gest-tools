@@ -73,6 +73,16 @@ describe("Appointments CRUD", () => {
     expect(res.body.cancellationReason).toBe("No se presentó");
   });
 
+  it("PUT /:id marks payment as paid", async () => {
+    prisma.appointment.update = vi.fn().mockResolvedValue({
+      ...fakeAppt,
+      paymentStatus: "paid",
+    });
+    const res = await request(app).put("/apt-1").send({ paymentStatus: "paid" });
+    expect(res.status).toBe(200);
+    expect(res.body.paymentStatus).toBe("paid");
+  });
+
   it("PUT /:id returns 404 when appointment not found", async () => {
     prisma.appointment.findUnique = vi.fn().mockResolvedValue(null);
     const res = await request(app).put("/apt-999").send({ status: "confirmed" });

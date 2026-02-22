@@ -539,6 +539,8 @@
     "clearAgendaConfirm": "¿Borrar todas las citas y bloques de la agenda? Esta acción no se puede deshacer.",
     "cancelAppointment": "Cancelar cita",
     "deletePermanently": "Eliminar definitivamente",
+    "deleteAppointmentTitle": "Eliminar cita",
+    "deleteAppointmentConfirm": "¿Estás seguro de que quieres eliminar esta cita? Esta acción no se puede deshacer.",
     "cancelAppointmentHint": "La cita no se borrará; quedará como cancelada y dejará de mostrarse en la agenda.",
     "slotOccupiedConfirm": "Esa hora ya está ocupada. ¿Seguro que quieres crearlo?",
     "clientHasAppointmentThisWeekConfirm": "Este cliente ya tiene una cita esta semana. ¿Quieres crear la cita igualmente (duplicada)?",

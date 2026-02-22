@@ -116,7 +116,7 @@ model BusinessService {
   sourceServiceId      String?
   appointments         Appointment[]
   business             Business             @relation(fields: [businessId], references: [id])
-  businessCategory     BusinessCategory     @relation(fields: [categoryId], references: [id])
+  businessCategory     BusinessCategory     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   sourceService        ProfessionService?   @relation(fields: [sourceServiceId], references: [id])
   slotWaitlistEntries  SlotWaitlistEntry[]
 
@@ -176,7 +176,7 @@ model Appointment {
   workspaceMemberId  String?
   business           Business          @relation(fields: [businessId], references: [id])
   client             Client?           @relation(fields: [clientId], references: [id])
-  service            BusinessService?  @relation(fields: [serviceId], references: [id])
+  service            BusinessService?  @relation(fields: [serviceId], references: [id], onDelete: SetNull)
   user               User?             @relation(fields: [userId], references: [id])
   workspaceMember    WorkspaceMember?  @relation(fields: [workspaceMemberId], references: [id])
   sale               Sale?
@@ -246,7 +246,7 @@ model Bono {
   updatedAt             DateTime          @updatedAt
   type                  BonoType
   business              Business          @relation(fields: [businessId], references: [id])
-  businessCategory      BusinessCategory? @relation(fields: [serviceCategoryId], references: [id])
+  businessCategory      BusinessCategory? @relation(fields: [serviceCategoryId], references: [id], onDelete: SetNull)
   clientBonos           ClientBono[]
 }
 
@@ -278,7 +278,7 @@ model SlotWaitlistEntry {
   createdAt      DateTime        @default(now())
   business       Business        @relation(fields: [businessId], references: [id])
   client         Client?         @relation(fields: [clientId], references: [id])
-  service        BusinessService @relation(fields: [serviceId], references: [id])
+  service        BusinessService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   user           User?           @relation(fields: [userId], references: [id])
 }
 

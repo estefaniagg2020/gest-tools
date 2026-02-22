@@ -52,5 +52,6 @@ describe("Dashboard", () => {
     expect(res.body).toHaveProperty("reservasSemana");
     expect(res.body).toHaveProperty("reservasCanceladas");
     expect(res.body).toHaveProperty("clientesNuevos");
+    expect(res.body).toHaveProperty("clientesNuevosDetalle");
   });
 });

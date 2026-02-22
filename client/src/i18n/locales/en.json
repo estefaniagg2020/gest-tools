@@ -539,6 +539,8 @@
     "clearAgendaConfirm": "Delete all appointments and blocks from the schedule? This action cannot be undone.",
     "cancelAppointment": "Cancel appointment",
     "deletePermanently": "Delete permanently",
+    "deleteAppointmentTitle": "Delete appointment",
+    "deleteAppointmentConfirm": "Are you sure you want to delete this appointment? This action cannot be undone.",
     "cancelAppointmentHint": "The appointment will not be deleted; it will remain as cancelled and will no longer appear in the schedule.",
     "clientHasAppointmentThisWeekConfirm": "This client already has an appointment this week. Do you want to create the appointment anyway (duplicate)?",
     "clientHasAppointmentThisWeekTitle": "Appointment this week",

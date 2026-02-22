@@ -364,23 +364,7 @@
             </div>
             <div class="flex items-center gap-2">
               <button
-                v-if="isPastAppointment && !isCompleted && !isNoShow"
-                type="button"
-                class="btn-appointment-warn"
-                @click="onMarkNoShow"
-              >
-                {{ t('scheduler.markNoShow') }}
-              </button>
-              <button
-                v-if="isPastAppointment && !isCompleted && !isNoShow"
-                type="button"
-                class="btn-appointment-success"
-                @click="onMarkCompleted"
-              >
-                {{ t('scheduler.markCompleted') }}
-              </button>
-              <button
-                v-if="!isConfirmed && !isPastAppointment"
+                v-if="!isConfirmed"
                 type="button"
                 class="btn-appointment-success"
                 @click="onConfirmAppointment"
@@ -717,54 +701,64 @@
       variant: "primary",
     });
     if (!ok) return;
-    appointmentStore.update(id, { paymentStatus: "paid" });
-    addToast(t("scheduler.chargeSimulationToast"), "charge");
-  };
-
-  const onConfirmAppointment = () => {
-    const id = editingId.value;
-    if (id) {
-      appointmentStore.update(id, { status: "confirmed" });
+    try {
+      await appointmentStore.update(id, { paymentStatus: "paid" });
+      addToast(t("scheduler.chargeSimulationToast"), "charge");
+    } catch {
+      error.value = "No se pudo actualizar el cobro.";
     }
   };
 
-  const onConfirmCancel = () => {
+  const onConfirmAppointment = async () => {
     const id = editingId.value;
     if (!id) return;
-    appointmentStore.cancel(id, cancelReason.value.trim());
-    showCancelForm.value = false;
-    emit("cancel");
-    emit("close");
-  };
-
-  const onMarkNoShow = () => {
-    const id = editingId.value;
-    if (id) {
-      appointmentStore.update(id, { status: "no_show" });
+    try {
+      await appointmentStore.update(id, { status: "confirmed" });
+    } catch {
+      error.value = "No se pudo confirmar la cita.";
     }
   };
 
-  const onMarkCompleted = () => {
+  const onConfirmCancel = async () => {
     const id = editingId.value;
-    if (id) {
-      appointmentStore.update(id, { status: "completed" });
+    if (!id) return;
+    try {
+      await appointmentStore.cancel(id, cancelReason.value.trim());
+      showCancelForm.value = false;
+      emit("cancel");
+      emit("close");
+    } catch {
+      error.value = "No se pudo cancelar la cita.";
     }
   };
 
-  const onRestoreClick = () => {
+  const onRestoreClick = async () => {
     const id = editingId.value;
-    if (id) {
-      appointmentStore.update(id, { status: "pending", cancellationReason: undefined });
+    if (!id) return;
+    try {
+      await appointmentStore.update(id, { status: "pending", cancellationReason: undefined });
+    } catch {
+      error.value = "No se pudo restaurar la cita.";
     }
   };
 
-  const onDeleteClick = () => {
+  const onDeleteClick = async () => {
     const id = editingId.value;
-    if (id) {
-      appointmentStore.remove(id);
+    if (!id) return;
+    const ok = await showConfirm({
+      title: t("scheduler.deleteAppointmentTitle"),
+      message: t("scheduler.deleteAppointmentConfirm"),
+      confirmLabel: t("common.delete"),
+      variant: "danger",
+    });
+    if (!ok) return;
+    try {
+      await appointmentStore.remove(id);
       emit("delete");
+      emit("close");
+    } catch {
+      error.value = "No se pudo eliminar la cita.";
     }
-    emit("close");
   };
 
   const getWeekStart = (d: Date) => {
@@ -783,7 +777,7 @@
     return active.some((a) => sameWeek(new Date(a.start), appointmentDate));
   };
 
-  const performSave = () => {
+  const performSave = async () => {
     const dateStr = form.dateStr || toDateStr(new Date());
     const startTime = form.startTime || "09:00";
     const endTime = form.endTime || "10:00";
@@ -795,7 +789,7 @@
     const memberId = form.memberId?.trim() || undefined;
     const cartItems = form.cartItems.length > 0 ? form.cartItems.map((i) => ({ ...i })) : undefined;
     if (editingId.value) {
-      appointmentStore.update(editingId.value, {
+      await appointmentStore.update(editingId.value, {
         clientId,
         clientName,
         serviceId,
@@ -808,7 +802,7 @@
         cartItems,
       });
     } else {
-      appointmentStore.add({
+      await appointmentStore.add({
         clientId,
         clientName,
         serviceId,
@@ -824,9 +818,13 @@
     emit("save");
   };
 
-  const onConfirmDuplicateAndSave = () => {
+  const onConfirmDuplicateAndSave = async () => {
     showDuplicateConfirmModal.value = false;
-    performSave();
+    try {
+      await performSave();
+    } catch {
+      error.value = "No se pudo guardar la cita.";
+    }
   };
 
   const save = async () => {
@@ -867,7 +865,11 @@
       showDuplicateConfirmModal.value = true;
       return;
     }
-    performSave();
+    try {
+      await performSave();
+    } catch {
+      error.value = "No se pudo guardar la cita.";
+    }
   };
 </script>
 

@@ -168,6 +168,7 @@
         :members="filteredMembers"
         :blocks="activeBlocks"
         :appointments="activeAppointments"
+        :waitlist-entries-by-business="waitlistByBusiness"
         :min-hour="slotFinderMinHour"
         :max-hour="slotFinderMaxHour"
         :slot-duration-minutes="schedulerSettings.slotDurationMinutes.value"

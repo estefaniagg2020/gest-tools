@@ -111,6 +111,7 @@
               <DashboardWidgetNewClients
                 v-else-if="widget.id === 'clientes-nuevos'"
                 :count="bookingStats.stats.value?.clientesNuevos ?? 0"
+                :clients="bookingStats.stats.value?.clientesNuevosDetalle ?? []"
               />
               <DashboardWidgetWeeklyOccupancy
                 v-else-if="widget.id === 'ocupacion-semanal'"

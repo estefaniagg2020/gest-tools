@@ -539,6 +539,8 @@
     "clearAgendaConfirm": "¿Esborrar totes les cites i blocs de l'agenda? Aquesta acció no es pot desfer.",
     "cancelAppointment": "Cancel·lar cita",
     "deletePermanently": "Eliminar definitivament",
+    "deleteAppointmentTitle": "Eliminar cita",
+    "deleteAppointmentConfirm": "Estàs segur que vols eliminar aquesta cita? Aquesta acció no es pot desfer.",
     "cancelAppointmentHint": "La cita no s'esborrarà; quedarà com a cancel·lada i deixarà de mostrar-se a l'agenda.",
     "clientHasAppointmentThisWeekConfirm": "Aquest client ja té una cita aquesta setmana. Vols crear la cita igualment (duplicada)?",
     "clientHasAppointmentThisWeekTitle": "Cita aquesta setmana",
