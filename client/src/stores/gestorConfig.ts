@@ -89,7 +89,7 @@ export const useGestorConfigStore = defineStore("gestorConfig", () => {
         applyConfigToRefs({
           companyName: (apiConfig.companyName as string) || companyName.value,
           logoUrl: (apiConfig.logoUrl as string | null) ?? null,
-          numberOfPeople: (apiConfig.numberOfPeople as number) ?? numberOfPeople.value,
+          numberOfPeople: (apiConfig.numberOfPeople as number | undefined) ?? numberOfPeople.value,
           businessType: (apiConfig.professionId as string) || businessType.value,
           contactData: {
             email: (apiConfig.email as string) || "",

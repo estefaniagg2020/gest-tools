@@ -83,6 +83,7 @@ export const useServiciosManager = () => {
       name: form.name.trim(),
       category: selectedCategory?.label ?? "general",
       categoryId: form.categoryId,
+      categoryLabel: selectedCategory?.label ?? form.categoryId,
       duration: form.duration,
       price: form.price,
       description: form.description.trim() || undefined,
