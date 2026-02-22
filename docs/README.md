@@ -2,6 +2,12 @@
 
 Documentación organizada por contextos para separar frontend, backend y su integración.
 
+## Documento único para exposición
+
+| Documento | Descripción |
+|---|---|
+| [`PROYECTO-COMPLETO.md`](./PROYECTO-COMPLETO.md) | **Documento único** que explica todo el proyecto de manera detallada para exponerlo en clase |
+
 ## 1) Overview
 
 | Documento | Descripción |

@@ -36,15 +36,49 @@ const prisma = new PrismaClient({ adapter });
 const app = express();
 const port = process.env.PORT || 3000;
 
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || ["http://localhost:3000"];
+const normalizeOrigin = (origin: string): string => origin.trim().replace(/\/+$/, "");
+
+const normalizeOrigins = (value: string | undefined): string[] => {
+  const parsed = value
+    ?.split(",")
+    .map((origin) => normalizeOrigin(origin))
+    .filter((origin) => origin.length > 0);
+  if (parsed && parsed.length > 0) return parsed;
+  return ["http://localhost:3000", "http://localhost:5173"];
+};
+
+const originToRegExp = (pattern: string): RegExp => {
+  const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`^${escaped.replace(/\\\*/g, ".*")}$`);
+};
+
+const allowedOrigins = normalizeOrigins(process.env.ALLOWED_ORIGINS);
+const allowedOriginPatterns = allowedOrigins.map(originToRegExp);
 console.log("[cors] allowed origins:", allowedOrigins);
 
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  }),
-);
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+    const normalizedOrigin = normalizeOrigin(origin);
+    const isLocalDevOrigin =
+      process.env.NODE_ENV !== "production" &&
+      /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(normalizedOrigin);
+    const isAllowed = allowedOriginPatterns.some((pattern) => pattern.test(normalizedOrigin));
+    if (isAllowed || isLocalDevOrigin) {
+      callback(null, true);
+      return;
+    }
+    console.warn("[cors] blocked origin:", normalizedOrigin);
+    callback(null, false);
+  },
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 app.use(express.json());
 
 app.use((req, _res, next) => {

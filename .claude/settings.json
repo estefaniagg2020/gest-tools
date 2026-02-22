@@ -14,7 +14,8 @@
       "Bash(CI=true pnpm install:*)",
       "Bash(timeout 10 tsx:*)",
       "Bash(timeout 10 node_modules/.bin/tsx:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(node_modules/.bin/tsc:*)"
     ]
   }
 }

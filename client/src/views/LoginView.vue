@@ -129,7 +129,11 @@
   const loginBranding = ref<{ companyName: string; logoUrl: string | null } | null>(null);
 
   onMounted(async () => {
-    loginBranding.value = await publicBrandingApi.getBranding();
+    try {
+      loginBranding.value = await publicBrandingApi.getBranding();
+    } catch {
+      loginBranding.value = null;
+    }
   });
 
   const form = reactive({
