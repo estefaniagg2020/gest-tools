@@ -462,6 +462,7 @@
     "agendaOf": "Agenda de",
     "mySchedule": "Mi horario",
     "noBlocksToday": "Sin citas ni bloques este día",
+    "addAppointmentOnDay": "Añadir cita el {day} {date}",
     "pendingConfirmation": "Pendiente de confirmación",
     "confirmed": "Confirmada",
     "cancelled": "Cancelada",

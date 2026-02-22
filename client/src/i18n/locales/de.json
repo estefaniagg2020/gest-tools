@@ -462,6 +462,7 @@
     "agendaOf": "Kalender von",
     "mySchedule": "Mein Zeitplan",
     "noBlocksToday": "Keine Termine oder Blöcke heute",
+    "addAppointmentOnDay": "Termin am {day} {date} hinzufügen",
     "pendingConfirmation": "Warten auf Bestätigung",
     "confirmed": "Bestätigt",
     "cancelled": "Storniert",

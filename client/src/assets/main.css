@@ -13,10 +13,10 @@ html {
 }
 
 @theme {
-  --color-brand-primary: #008080;
-  --color-brand-secondary: #006d6d;
-  --color-brand-soft: #e9f2fb;
-  --color-brand-accent: #008080;
+  --color-brand-primary: #0a6fb4;
+  --color-brand-secondary: #085a94;
+  --color-brand-soft: #e8f4fc;
+  --color-brand-accent: #0a6fb4;
   --color-brand-white: #ffffff;
   --color-app-bg: #f5f7fa;
   --color-app-surface: #ffffff;
@@ -25,8 +25,8 @@ html {
   --color-app-border: #e0e0e0;
   --color-app-border-subtle: #f0f2f5;
   --agenda-bg: #ffffff;
-  --agenda-marked-days: #008080;
-  --agenda-vacation: #006d6d;
+  --agenda-marked-days: #0a6fb4;
+  --agenda-vacation: #085a94;
   --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
   --shadow-card-hover: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
 }

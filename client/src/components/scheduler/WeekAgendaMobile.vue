@@ -6,8 +6,14 @@
       class="flex flex-col gap-3"
     >
       <h3
-        class="text-sm font-bold uppercase tracking-wider sticky top-0 z-10 py-2 bg-[var(--chrome-surface)] border-b border-[var(--chrome-border)]"
+        class="text-sm font-bold uppercase tracking-wider sticky top-0 z-10 py-2 bg-[var(--chrome-surface)] border-b border-[var(--chrome-border)] cursor-pointer touch-manipulation select-none rounded-t-lg -mx-1 px-1 hover:bg-app-bg/50 active:bg-app-bg transition-colors"
         :class="dates.isToday(day) ? 'text-brand-accent' : 'text-app-text/70'"
+        role="button"
+        tabindex="0"
+        :aria-label="$t('scheduler.addAppointmentOnDay', { day: dates.formatDayName(day), date: day.getDate() })"
+        @click="emit('day-click', day)"
+        @keydown.enter="emit('day-click', day)"
+        @keydown.space.prevent="emit('day-click', day)"
       >
         {{ dates.formatDayName(day) }} {{ day.getDate() }}
       </h3>
@@ -73,12 +79,14 @@
             </div>
           </div>
         </article>
-        <p
+        <button
           v-if="sortedItemsByDay(day).length === 0"
-          class="text-xs text-app-text/60 py-2 pl-2"
+          type="button"
+          class="w-full text-left text-xs text-brand-primary py-3 pl-2 rounded-lg border border-dashed border-brand-primary/40 hover:bg-brand-primary/5 hover:border-brand-primary/60 transition-colors touch-manipulation"
+          @click="emit('day-click', day)"
         >
-          {{ $t('scheduler.noBlocksToday') }}
-        </p>
+          + {{ $t('scheduler.newAppointment') }}
+        </button>
       </div>
     </section>
     <div class="h-4 shrink-0" aria-hidden="true" />
@@ -104,6 +112,7 @@
   const emit = defineEmits<{
     (e: "block-click", block: ScheduleBlock): void;
     (e: "item-click", item: AgendaItem): void;
+    (e: "day-click", day: Date): void;
   }>();
 
   const dates = useScheduleDates();

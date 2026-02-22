@@ -4,7 +4,7 @@
     viewBox="0 0 115 36"
     fill="none"
     class="bokio-logo-svg shrink-0"
-    :class="sizeClass"
+    :class="[sizeClass, variant === 'footer' && 'bokio-logo-footer']"
     role="img"
     aria-label="Bokio"
   >
@@ -19,11 +19,14 @@
       <tspan x="29">i</tspan>
       <tspan x="32">o</tspan>
     </text>
-    <g transform="translate(15, 17)">
+    <g
+      transform="translate(15, 17)"
+      :fill="iconFill"
+      :stroke="iconStroke"
+    >
       <circle
         r="5.5"
         fill="none"
-        stroke="var(--color-brand-accent, #187bcd)"
         stroke-width="2"
       />
       <rect
@@ -32,7 +35,6 @@
         width="3"
         height="2.5"
         rx="0.5"
-        fill="var(--color-brand-accent, #187bcd)"
         fill-opacity="0.6"
       />
       <line
@@ -40,7 +42,6 @@
         y1="0"
         x2="-2"
         y2="-3"
-        stroke="var(--color-brand-accent, #187bcd)"
         stroke-width="1"
         stroke-linecap="round"
         stroke-opacity="0.7"
@@ -50,7 +51,6 @@
         y1="0"
         x2="2.5"
         y2="-2"
-        stroke="var(--color-brand-accent, #187bcd)"
         stroke-width="1"
         stroke-linecap="round"
         stroke-opacity="0.7"
@@ -59,7 +59,6 @@
         cx="0"
         cy="0"
         r="0.8"
-        fill="var(--color-brand-accent, #187bcd)"
         fill-opacity="0.7"
       />
       <line
@@ -67,7 +66,6 @@
         y1="-4.8"
         x2="0"
         y2="-5.5"
-        stroke="var(--color-brand-accent, #187bcd)"
         stroke-width="0.6"
         stroke-opacity="0.35"
       />
@@ -76,7 +74,6 @@
         y1="0"
         x2="5.5"
         y2="0"
-        stroke="var(--color-brand-accent, #187bcd)"
         stroke-width="0.6"
         stroke-opacity="0.35"
       />
@@ -85,7 +82,6 @@
         y1="4.8"
         x2="0"
         y2="5.5"
-        stroke="var(--color-brand-accent, #187bcd)"
         stroke-width="0.6"
         stroke-opacity="0.35"
       />
@@ -94,7 +90,6 @@
         y1="0"
         x2="-5.5"
         y2="0"
-        stroke="var(--color-brand-accent, #187bcd)"
         stroke-width="0.6"
         stroke-opacity="0.35"
       />
@@ -108,8 +103,9 @@
   const props = withDefaults(
     defineProps<{
       size?: "sm" | "md" | "lg" | "xl";
+      variant?: "default" | "footer";
     }>(),
-    { size: "md" }
+    { size: "md", variant: "default" }
   );
 
   const sizeClass = computed(() => {
@@ -121,4 +117,16 @@
     };
     return map[props.size];
   });
+
+  const iconFill = computed(() =>
+    props.variant === "footer"
+      ? "var(--footer-text, #f1f5f9)"
+      : "var(--color-brand-accent, #187bcd)"
+  );
+
+  const iconStroke = computed(() =>
+    props.variant === "footer"
+      ? "var(--footer-text, #f1f5f9)"
+      : "var(--color-brand-accent, #187bcd)"
+  );
 </script>

@@ -59,6 +59,7 @@
             :members="filteredMembers"
             @block-click="handleEditBlock"
             @item-click="handleItemClick"
+            @day-click="handleDayClick"
           />
         </div>
         <div
@@ -450,6 +451,15 @@
     initialBlockHour.value = data.hour;
     selectedDate.value = data.date;
     initialAppointmentMemberId.value = data.memberId;
+    editingAppointment.value = null;
+    appointmentModalKey.value += 1;
+    isAppointmentModalOpen.value = true;
+  };
+
+  const handleDayClick = (day: Date) => {
+    selectedDate.value = new Date(day);
+    initialBlockHour.value = slotFinderMinHour.value;
+    initialAppointmentMemberId.value = undefined;
     editingAppointment.value = null;
     appointmentModalKey.value += 1;
     isAppointmentModalOpen.value = true;

@@ -462,6 +462,7 @@
     "agendaOf": "Agenda de",
     "mySchedule": "El meu horari",
     "noBlocksToday": "Sense cites ni blocs avui",
+    "addAppointmentOnDay": "Afegir cita el {day} {date}",
     "pendingConfirmation": "Pendent de confirmació",
     "confirmed": "Confirmada",
     "cancelled": "Cancel·lada",
