@@ -63,7 +63,7 @@ const allowedOrigins = rawAllowedOrigins.length > 0
 const allowedOriginPatterns = allowedOrigins.map(originToRegExp);
 
 console.log("[cors] allowed origins:", allowedOrigins);
-
+console.log("process", process.env)
 
 const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
