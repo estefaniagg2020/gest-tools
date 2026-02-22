@@ -605,7 +605,17 @@
     "searchService": "Leistung suchen…",
     "searchEmployee": "Mitarbeiter suchen…",
     "serviceOptionalLabel": "Leistung (optional)",
-    "noneOption": "Keine"
+    "noneOption": "Keine",
+    "startTime": "Beginn",
+    "endTime": "Ende",
+    "appointmentAtHome": "Termin beim Kunden",
+    "vipSpecial": "VIP / Besonders",
+    "notes": "Notizen",
+    "cancellationReason": "Stornierungsgrund",
+    "confirm": "Bestätigen",
+    "deadTimeWarning": "Leerzeit von {minutes} Min. Erwägen Sie, den Termin zu verschieben, um die Lücke zu optimieren.",
+    "memberBlockConflict": "{memberName} hat einen internen Block zu dieser Zeit («{title}»).",
+    "memberBlockConflictEmployee": "Der Mitarbeiter"
   },
   "team": {
     "kicker": "Teamverwaltung",

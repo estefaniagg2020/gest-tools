@@ -52,16 +52,18 @@ const originToRegExp = (pattern: string): RegExp => {
   return new RegExp(`^${escaped.replace(/\\\*/g, ".*")}$`);
 };
 
-// Collect allowed origins from ALLOWED_ORIGINS and/or FRONTEND_URL env vars
 const rawAllowedOrigins = [
   ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
   ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(",") : []),
 ];
+const bokioUrl ="https://www.bokiogest.es"
 const allowedOrigins = rawAllowedOrigins.length > 0
   ? rawAllowedOrigins.map(normalizeOrigin).filter((o) => o.length > 0)
-  : ["http://localhost:3000", "http://localhost:5173"];
+  : ["https://www.bokiogest.es", "http://localhost:3000", "http://localhost:5173"];
 const allowedOriginPatterns = allowedOrigins.map(originToRegExp);
+
 console.log("[cors] allowed origins:", allowedOrigins);
+
 
 const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
@@ -82,6 +84,8 @@ const corsOptions: cors.CorsOptions = {
     callback(null, false);
   },
   credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 };
 
 app.use(cors(corsOptions));

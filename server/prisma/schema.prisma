@@ -66,8 +66,8 @@ model GestorConfig {
   moduleIcons                 Json?
   sameColorsForAll            Boolean            @default(true)
   agendaBg                    String             @default("#ffffff")
-  markedDaysColor             String             @default("#3498db")
-  vacationColor               String             @default("#e74c3c")
+  markedDaysColor             String             @default("#008080")
+  vacationColor               String             @default("#006d6d")
   perAgendaColors             Json?
   startHour                   Int                @default(9)
   endHour                     Int                @default(20)

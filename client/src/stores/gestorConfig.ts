@@ -39,8 +39,8 @@ export const useGestorConfigStore = defineStore("gestorConfig", () => {
   // Agenda / Colors
   const sameColorsForAll = ref(true);
   const agendaBg = ref("#ffffff");
-  const markedDaysColor = ref("#3498db");
-  const vacationColor = ref("#e74c3c");
+  const markedDaysColor = ref("#008080");
+  const vacationColor = ref("#006d6d");
   const perAgendaColors = ref<any>(null);
 
   // Layout

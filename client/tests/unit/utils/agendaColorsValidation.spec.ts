@@ -8,8 +8,8 @@ import type { AgendaColorsConfig } from "@/interfaces/agendaColors";
 const defaultConfig: AgendaColorsConfig = {
   sameColorsForAll: true,
   agendaBg: "#ffffff",
-  markedDaysColor: "#3498db",
-  vacationColor: "#e74c3c",
+  markedDaysColor: "#008080",
+  vacationColor: "#006d6d",
   perAgendaColors: undefined,
 };
 
@@ -94,8 +94,8 @@ describe("agendaColorsValidation", () => {
     it("should_normalize_perAgendaColors_when_non_empty_array", () => {
       const raw = {
         agendaBg: "#ffffff",
-        markedDaysColor: "#3498db",
-        vacationColor: "#e74c3c",
+        markedDaysColor: "#008080",
+        vacationColor: "#006d6d",
         perAgendaColors: [
           { agendaBg: "#cccccc", markedDaysColor: "#0000ff", vacationColor: "#ff0000" },
           { agendaBg: "invalid", markedDaysColor: "#00ff00", vacationColor: "#00ffff" },
@@ -130,8 +130,8 @@ describe("agendaColorsValidation", () => {
     it("should_not_set_perAgendaColors_when_empty_array", () => {
       const raw = {
         agendaBg: "#ffffff",
-        markedDaysColor: "#3498db",
-        vacationColor: "#e74c3c",
+        markedDaysColor: "#008080",
+        vacationColor: "#006d6d",
         perAgendaColors: [],
       };
       const result = normalizeAgendaColorsConfig(raw, defaultConfig);
@@ -141,8 +141,8 @@ describe("agendaColorsValidation", () => {
     it("should_not_set_perAgendaColors_when_not_array", () => {
       const raw = {
         agendaBg: "#ffffff",
-        markedDaysColor: "#3498db",
-        vacationColor: "#e74c3c",
+        markedDaysColor: "#008080",
+        vacationColor: "#006d6d",
         perAgendaColors: {},
       };
       const result = normalizeAgendaColorsConfig(raw, defaultConfig);

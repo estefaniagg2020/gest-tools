@@ -605,7 +605,17 @@
     "searchService": "Search service…",
     "searchEmployee": "Search employee…",
     "serviceOptionalLabel": "Service (optional)",
-    "noneOption": "None"
+    "noneOption": "None",
+    "startTime": "Start",
+    "endTime": "End",
+    "appointmentAtHome": "Home appointment",
+    "vipSpecial": "VIP / Special",
+    "notes": "Notes",
+    "cancellationReason": "Cancellation reason",
+    "confirm": "Confirm",
+    "deadTimeWarning": "Dead time of {minutes} min. Consider moving the appointment to optimize the slot.",
+    "memberBlockConflict": "{memberName} has an internal block at that time («{title}»).",
+    "memberBlockConflictEmployee": "The employee"
   },
   "team": {
     "kicker": "Team management",

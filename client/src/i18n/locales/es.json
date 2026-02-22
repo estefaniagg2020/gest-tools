@@ -605,7 +605,17 @@
     "searchService": "Buscar servicio…",
     "searchEmployee": "Buscar empleado…",
     "serviceOptionalLabel": "Servicio (opcional)",
-    "noneOption": "Ninguno"
+    "noneOption": "Ninguno",
+    "startTime": "Inicio",
+    "endTime": "Fin",
+    "appointmentAtHome": "Cita en domicilio",
+    "vipSpecial": "VIP / Especial",
+    "notes": "Notas",
+    "cancellationReason": "Motivo de cancelación",
+    "confirm": "Confirmar",
+    "deadTimeWarning": "Tiempo muerto de {minutes} min. Considera mover la cita para optimizar el hueco.",
+    "memberBlockConflict": "{memberName} tiene un bloque interno en ese horario («{title}»).",
+    "memberBlockConflictEmployee": "El empleado"
   },
   "team": {
     "kicker": "Gestión del equipo",

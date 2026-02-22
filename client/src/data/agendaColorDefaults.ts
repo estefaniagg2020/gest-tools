@@ -35,8 +35,8 @@ const BY_THEME: Record<string, ThemeAgendaDefaults> = {
   },
   teal: {
     agendaBg: "#ffffff",
-    markedDaysColor: "#017074",
-    vacationColor: "#db7f50",
+    markedDaysColor: "#008080",
+    vacationColor: "#006d6d",
   },
   claro: {
     agendaBg: "#ffffff",
@@ -100,15 +100,15 @@ const BY_THEME: Record<string, ThemeAgendaDefaults> = {
   },
   personalizado: {
     agendaBg: "#ffffff",
-    markedDaysColor: "#017074",
-    vacationColor: "#db7f50",
+    markedDaysColor: "#008080",
+    vacationColor: "#006d6d",
   },
 };
 
 const FALLBACK: ThemeAgendaDefaults = {
   agendaBg: "#ffffff",
-  markedDaysColor: "#017074",
-  vacationColor: "#db7f50",
+  markedDaysColor: "#008080",
+  vacationColor: "#006d6d",
 };
 
 export const getDefaultAgendaColorsForTheme = (themeId: string): AgendaColorsConfig => {

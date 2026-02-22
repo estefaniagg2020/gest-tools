@@ -605,7 +605,17 @@
     "searchService": "Cercar servei…",
     "searchEmployee": "Cercar empleat…",
     "serviceOptionalLabel": "Servei (opcional)",
-    "noneOption": "Cap"
+    "noneOption": "Cap",
+    "startTime": "Inici",
+    "endTime": "Fi",
+    "appointmentAtHome": "Cita a domicili",
+    "vipSpecial": "VIP / Especial",
+    "notes": "Notes",
+    "cancellationReason": "Motiu de cancel·lació",
+    "confirm": "Confirmar",
+    "deadTimeWarning": "Temps mort de {minutes} min. Considera moure la cita per optimitzar el forat.",
+    "memberBlockConflict": "{memberName} té un bloc intern en aquest horari («{title}»).",
+    "memberBlockConflictEmployee": "L'empleat"
   },
   "team": {
     "kicker": "Gestió de l'equip",

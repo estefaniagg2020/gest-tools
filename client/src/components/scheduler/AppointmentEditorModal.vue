@@ -102,7 +102,7 @@
 
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-bold text-gray-700 mb-1">Inicio</label>
+          <label class="block text-sm font-bold text-gray-700 mb-1">{{ t('scheduler.startTime') }}</label>
           <input
             v-model="form.startTime"
             type="time"
@@ -111,7 +111,7 @@
           />
         </div>
         <div>
-          <label class="block text-sm font-bold text-gray-700 mb-1">Fin</label>
+          <label class="block text-sm font-bold text-gray-700 mb-1">{{ t('scheduler.endTime') }}</label>
           <input
             v-model="form.endTime"
             type="time"
@@ -129,7 +129,7 @@
             :disabled="isCancelled"
             class="rounded border-gray-300"
           />
-          <span class="text-sm font-bold text-gray-700">Cita en domicilio</span>
+          <span class="text-sm font-bold text-gray-700">{{ t('scheduler.appointmentAtHome') }}</span>
         </label>
         <div class="flex flex-col gap-0.5">
           <label class="flex items-center gap-2 cursor-pointer">
@@ -139,7 +139,7 @@
               :disabled="isCancelled"
               class="rounded border-gray-300"
             />
-            <span class="text-sm font-bold text-gray-700">VIP / Especial</span>
+            <span class="text-sm font-bold text-gray-700">{{ t('scheduler.vipSpecial') }}</span>
           </label>
           <p class="text-xs text-gray-500 ml-6">
             {{ $t('scheduler.vipSpecialHint') }}
@@ -148,7 +148,7 @@
       </div>
 
       <div>
-        <label class="block text-sm font-bold text-gray-700 mb-1">Notas</label>
+        <label class="block text-sm font-bold text-gray-700 mb-1">{{ t('scheduler.notes') }}</label>
         <textarea
           v-model="form.notes"
           rows="2"
@@ -246,7 +246,7 @@
         v-if="isCancelled && form.cancellationReason"
         class="px-3 py-2 rounded-lg bg-gray-50 border border-gray-200"
       >
-        <p class="text-xs font-bold text-gray-500 mb-1">Motivo de cancelación</p>
+        <p class="text-xs font-bold text-gray-500 mb-1">{{ t('scheduler.cancellationReason') }}</p>
         <p class="text-sm text-gray-700">{{ form.cancellationReason }}</p>
       </div>
 
@@ -369,7 +369,7 @@
                 class="btn-appointment-success"
                 @click="onConfirmAppointment"
               >
-                Confirmar
+                {{ t('scheduler.confirm') }}
               </button>
               <button
                 v-if="isConfirmed && !isPaid"
@@ -378,7 +378,7 @@
                 :title="$t('scheduler.chargeServiceHint')"
                 @click="onChargeClick"
               >
-                Cobrar
+                {{ t('scheduler.chargeService') }}
               </button>
               <BaseButton
                 type="submit"
@@ -586,7 +586,7 @@
   const deadTimeWarning = computed(() => {
     const dead = deadTimeMinutes.value;
     if (dead <= 0) return null;
-    return `Tiempo muerto de ${dead} min. Considera mover la cita para optimizar el hueco.`;
+    return t("scheduler.deadTimeWarning", { minutes: dead });
   });
 
   const memberBlockConflict = computed(() => {
@@ -605,8 +605,11 @@
     });
     if (!conflict) return null;
     const member = teamStore.members.find((m) => m.id === memberId);
-    const memberName = member?.name ?? "El empleado";
-    return `${memberName} tiene un bloque interno en ese horario ("${conflict.title}").`;
+    const memberName = member?.name ?? t("scheduler.memberBlockConflictEmployee");
+    return t("scheduler.memberBlockConflict", {
+      memberName,
+      title: conflict.title,
+    });
   });
 
   const toDateStr = (d: Date) => {

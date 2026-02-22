@@ -1,19 +1,16 @@
 <template>
   <footer
-    class="footer-bokio shrink-0 w-full border-t border-(--chrome-border) bg-(--footer-bg) text-(--footer-text) px-4 py-3 md:py-0 md:h-[56px] md:px-6 lg:px-8"
+    class="footer-bokio shrink-0 w-full border-t border-(--chrome-border) bg-(--color-brand-primary) text-white md:bg-(--chrome-surface) md:text-(--chrome-text) px-4 py-3 md:py-0 md:h-[56px] md:px-6 lg:px-8"
   >
     <div
       class="w-full flex flex-col gap-3 md:flex-row md:items-center md:gap-4 md:min-h-0"
     >
       <div class="flex shrink-0 items-center justify-between md:contents">
         <div class="flex shrink-0 items-center md:flex-1 md:min-w-0 md:justify-start">
-          <BokioLogoSvg
-            size="sm"
-            variant="footer"
-          />
+          <BokioLogoSvg size="sm" />
         </div>
         <div
-          class="flex shrink-0 items-center gap-1.5 text-xs md:text-sm tabular-nums opacity-90"
+          class="flex shrink-0 items-center gap-1.5 text-xs md:text-sm tabular-nums opacity-90 text-white md:text-app-text/80"
           aria-live="polite"
           :aria-label="$t('footer.currentTime')"
         >
@@ -22,24 +19,24 @@
         </div>
       </div>
       <nav
-        class="flex flex-wrap items-center gap-x-4 gap-y-1 md:flex-nowrap md:flex-1 md:justify-end md:min-w-0 md:gap-x-6 text-xs md:text-sm font-medium opacity-90"
+        class="flex flex-wrap items-center gap-x-4 gap-y-1 md:flex-nowrap md:flex-1 md:justify-end md:min-w-0 md:gap-x-6 text-xs md:text-sm font-medium text-white/90 md:text-app-text/80"
         :aria-label="$t('footer.legalLinks')"
       >
         <RouterLink
           to="/privacy"
-          class="hover:opacity-100 transition-colors underline decoration-transparent hover:decoration-current underline-offset-2 shrink-0"
+          class="hover:text-white transition-colors underline decoration-transparent hover:decoration-current underline-offset-2 md:hover:text-brand-accent shrink-0"
         >
           {{ $t('footer.privacyPolicy') }}
         </RouterLink>
         <RouterLink
           to="/terms"
-          class="hover:opacity-100 transition-colors underline decoration-transparent hover:decoration-current underline-offset-2 shrink-0"
+          class="hover:text-white transition-colors underline decoration-transparent hover:decoration-current underline-offset-2 md:hover:text-brand-accent shrink-0"
         >
           {{ $t('footer.termsOfUse') }}
         </RouterLink>
         <RouterLink
           to="/legal-notice"
-          class="hover:opacity-100 transition-colors underline decoration-transparent hover:decoration-current underline-offset-2 shrink-0"
+          class="hover:text-white transition-colors underline decoration-transparent hover:decoration-current underline-offset-2 md:hover:text-brand-accent shrink-0"
         >
           {{ $t('footer.legalNotice') }}
         </RouterLink>

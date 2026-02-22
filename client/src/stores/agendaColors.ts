@@ -36,8 +36,8 @@ export const useAgendaColorsStore = defineStore("agendaColors", () => {
 
   const sameColorsForAll = ref(true);
   const agendaBg = ref("#ffffff");
-  const markedDaysColor = ref("#017074");
-  const vacationColor = ref("#db7f50");
+  const markedDaysColor = ref("#008080");
+  const vacationColor = ref("#006d6d");
   const perAgendaColors = ref<AgendaColorSet[]>([]);
 
   const globalSet = computed(() =>
