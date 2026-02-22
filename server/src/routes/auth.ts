@@ -297,9 +297,14 @@ export const authRouter = (prisma: PrismaClient) => {
     const trimmedEmail = email.trim().toLowerCase();
     const user = await prisma.user.findFirst({
       where: { email: { equals: trimmedEmail, mode: "insensitive" } },
+      select: { id: true, email: true, passwordHash: true, salt: true },
     });
     if (!user) {
-      res.status(404).json({ error: "No existe ninguna cuenta con ese email" });
+      // Check if there's a user with the same email but it's stored differently
+      // (e.g. user exists but has no email set — give a helpful message)
+      res.status(404).json({
+        error: "No existe ninguna cuenta asociada a ese email. Si tu cuenta no tiene email configurado, contacta con el administrador.",
+      });
       return;
     }
     const salt = generateSalt();

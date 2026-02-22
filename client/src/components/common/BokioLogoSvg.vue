@@ -102,7 +102,7 @@
 
   const props = withDefaults(
     defineProps<{
-      size?: "sm" | "md" | "lg" | "xl";
+      size?: "xs" | "sm" | "md" | "lg" | "xl";
       variant?: "default" | "footer";
     }>(),
     { size: "md", variant: "default" }
@@ -110,6 +110,7 @@
 
   const sizeClass = computed(() => {
     const map = {
+      xs: "h-7 w-auto",
       sm: "h-10 w-auto",
       md: "h-14 w-auto",
       lg: "h-20 w-auto",
@@ -118,15 +119,7 @@
     return map[props.size];
   });
 
-  const iconFill = computed(() =>
-    props.variant === "footer"
-      ? "var(--footer-text, #f1f5f9)"
-      : "var(--color-brand-accent, #187bcd)"
-  );
+  const iconFill = computed(() => "#2f2a2d");
 
-  const iconStroke = computed(() =>
-    props.variant === "footer"
-      ? "var(--footer-text, #f1f5f9)"
-      : "var(--color-brand-accent, #187bcd)"
-  );
+  const iconStroke = computed(() => "#2f2a2d");
 </script>
