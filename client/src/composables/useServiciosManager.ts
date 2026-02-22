@@ -11,7 +11,7 @@ import {
   getBusinessServiceDefaults,
   type ServiceTemplate,
 } from "@/data/serviceTemplates";
-import type { Service } from "@/interfaces";
+import type { Service, ServiceCategoryDefinition } from "@/interfaces";
 import { markSystemServiceRemoved } from "@/infrastructure/serviceSystemRemovedStorage";
 
 const buildDefaultForm = (firstCategoryId: string) => ({
@@ -20,6 +20,36 @@ const buildDefaultForm = (firstCategoryId: string) => ({
   duration: 60,
   price: 0,
   description: "",
+});
+
+const buildServicePayload = ({
+  name,
+  categoryId,
+  categoryLabel,
+  duration,
+  price,
+  description,
+  requiresCabin,
+  requiresTherapist,
+}: {
+  name: string;
+  categoryId: string;
+  categoryLabel: string;
+  duration: number;
+  price: number;
+  description?: string;
+  requiresCabin: boolean;
+  requiresTherapist: boolean;
+}) => ({
+  name,
+  categoryId,
+  category: categoryLabel,
+  duration,
+  price,
+  description,
+  requiresCabin,
+  requiresTherapist,
+  employeesCount: requiresTherapist ? 1 : undefined,
 });
 
 export const useServiciosManager = () => {
@@ -83,16 +113,17 @@ export const useServiciosManager = () => {
 
   const saveService = async () => {
     const businessDefaults = getBusinessServiceDefaults(configStore.businessType);
-    const payload = {
+    const selectedCategory = categories.value.find((category) => category.id === form.categoryId);
+    const payload = buildServicePayload({
       name: form.name.trim(),
       categoryId: form.categoryId,
+      categoryLabel: selectedCategory?.label ?? form.categoryId,
       duration: form.duration,
       price: form.price,
       description: form.description.trim() || undefined,
       requiresCabin: businessDefaults.requiresCabin,
       requiresTherapist: businessDefaults.requiresStaff,
-      employeesCount: businessDefaults.requiresStaff ? 1 : undefined,
-    };
+    });
     if (isEditing.value && editingId.value) {
       await serviceStore.updateService(editingId.value, payload);
       addToast("Servicio actualizado correctamente", "success");
@@ -151,40 +182,48 @@ export const useServiciosManager = () => {
     getServiceTemplates(configStore.businessType)
   );
 
-  const ensureCategoryExists = (id: string, label: string, icon: string): string => {
+  const ensureCategoryExists = async (id: string, label: string, icon: string): Promise<ServiceCategoryDefinition> => {
     const existing = categoryStore.getCategoryById(id);
-    if (existing) return existing.id;
+    if (existing) return existing;
     const byLabel = categories.value.find(
       (c) => c.label.toLowerCase() === label.toLowerCase()
     );
-    if (byLabel) return byLabel.id;
-    return categoryStore.addCategoryWithId({ id, label, icon }).id;
+    if (byLabel) {
+      return {
+        id: byLabel.id,
+        label: byLabel.label,
+        icon: byLabel.icon,
+      };
+    }
+    return categoryStore.addCategoryWithId({ id, label, icon });
   };
 
   const quickAddFromTemplate = async (template: ServiceTemplate) => {
     const businessDefaults = getBusinessServiceDefaults(configStore.businessType);
-    const categoryId = ensureCategoryExists(
+    const category = await ensureCategoryExists(
       template.suggestedCategory,
       template.suggestedCategory,
       template.suggestedCategoryIcon,
     );
-    await serviceStore.addService({
+    await serviceStore.addService(buildServicePayload({
       name: template.name,
-      categoryId,
+      categoryId: category.id,
+      categoryLabel: category.label,
       duration: template.duration,
       price: template.price,
       description: template.description,
       requiresCabin: businessDefaults.requiresCabin,
       requiresTherapist: businessDefaults.requiresStaff,
-      employeesCount: businessDefaults.requiresStaff ? 1 : undefined,
-    });
+    }));
     addToast(`"${template.name}" añadido`, "success");
   };
 
   const quickAddAllTemplates = async () => {
     const templates = suggestedTemplates.value;
     if (!templates) return;
-    templates.categories.forEach((cat) => ensureCategoryExists(cat.id, cat.label, cat.icon));
+    for (const category of templates.categories) {
+      await ensureCategoryExists(category.id, category.label, category.icon);
+    }
     for (const template of templates.services) {
       const alreadyExists = serviceStore.services.some(
         (s) => s.name.toLowerCase() === template.name.toLowerCase()

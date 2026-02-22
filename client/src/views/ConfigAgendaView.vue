@@ -331,6 +331,7 @@
   import { useAgendaList } from "@/composables/useAgendaList";
   import { useAgendaColors } from "@/composables/useAgendaColors";
   import { useAppointmentStore } from "@/stores/appointment";
+  import { useAuthStore } from "@/stores/auth";
   import { SCHEDULE_VIEW_SETTINGS, AGENDA_COLORS, CONFIG_AGENDA, AGENDA_LIST } from "@/data/constants";
   import { useBusinessTerminology } from "@/composables/useBusinessTerminology";
   import { HEX_REGEX } from "@/interfaces/agendaColors";
@@ -341,6 +342,7 @@
 
   const agenda = useConfigAgenda();
   const appointmentStore = useAppointmentStore();
+  const authStore = useAuthStore();
   const clearedMessage = ref("");
   const agendas = useAgendaList();
   const agendaColors = useAgendaColors();
@@ -358,7 +360,7 @@
 
   onMounted(() => {
     agendas.initialize();
-    agendaColors.initialize();
+    agendaColors.initialize(authStore.user?.businessId ?? null);
     if (selectedAgendaIndex.value >= agendas.numberOfAgendas.value) {
       selectedAgendaIndex.value = Math.max(0, agendas.numberOfAgendas.value - 1);
     }

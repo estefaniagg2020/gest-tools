@@ -1,12 +1,13 @@
 import { Router, Request, Response } from "express";
 import type { PrismaClient } from "@prisma/client";
+import type { AppointmentStatus, PaymentStatus } from "@prisma/client";
 import { requireAuth, requireStaff } from "../middleware/auth.js";
 
-const CANCELLED = "cancelled";
-const NO_SHOW = "no_show";
-const COMPLETED = "completed";
-const EXCLUDED_STATUSES = [CANCELLED, NO_SHOW];
-const UNPAID_STATUSES = ["pending", "partial"];
+const CANCELLED: AppointmentStatus = "cancelled";
+const NO_SHOW: AppointmentStatus = "no_show";
+const COMPLETED: AppointmentStatus = "completed";
+const EXCLUDED_STATUSES: AppointmentStatus[] = [CANCELLED, NO_SHOW];
+const UNPAID_STATUSES: PaymentStatus[] = ["pending", "partial"];
 
 const normalize = (str: string): string =>
   str
@@ -63,7 +64,7 @@ export const clientsRouter = (prisma: PrismaClient) => {
     }
 
     try {
-      const services = await prisma.service.findMany({
+      const services = await prisma.businessService.findMany({
         where: { businessId },
         select: { id: true, name: true },
       });

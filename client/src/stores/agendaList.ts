@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { computed, watch } from "vue";
+import { computed } from "vue";
 import { i18n } from "@/i18n";
 import type { AgendaEntry, AgendaListConfig } from "@/interfaces/agendaList";
 import { useGestorConfigStore } from "./gestorConfig";
