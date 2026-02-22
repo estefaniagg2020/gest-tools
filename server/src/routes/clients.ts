@@ -74,6 +74,7 @@ export const clientsRouter = (prisma: PrismaClient) => {
         normalized: normalize(s.name),
       }));
       const servicePriceById = new Map(normalizedServices.map((s) => [s.id, Number(s.price)]));
+      const serviceNameById = new Map(normalizedServices.map((s) => [s.id, s.name]));
 
       const serviceTokens: string[] = [];
       const clientTokens: string[] = [];
@@ -156,7 +157,7 @@ export const clientsRouter = (prisma: PrismaClient) => {
 
       const clientIds = clients.map((c) => c.id);
 
-      const [allAppointments, unpaidAppointments, noShowAppointments] = await Promise.all([
+      const [allAppointments, unpaidAppointments, noShowAppointments, workspaceMembers] = await Promise.all([
         prisma.appointment.findMany({
           where: {
             businessId,
@@ -167,8 +168,7 @@ export const clientsRouter = (prisma: PrismaClient) => {
             clientId: true,
             serviceId: true,
             start: true,
-            service: { select: { id: true, name: true, price: true } },
-            workspaceMember: { select: { name: true } },
+            workspaceMemberId: true,
           },
           orderBy: { start: "desc" },
         }),
@@ -192,7 +192,12 @@ export const clientsRouter = (prisma: PrismaClient) => {
           },
           select: { clientId: true },
         }),
+        prisma.workspaceMember.findMany({
+          where: { businessId },
+          select: { id: true, name: true },
+        }),
       ]);
+      const workspaceMemberNameById = new Map(workspaceMembers.map((member) => [member.id, member.name]));
 
       const appointmentsByClient = new Map<string, typeof allAppointments>();
       for (const apt of allAppointments) {
@@ -224,13 +229,15 @@ export const clientsRouter = (prisma: PrismaClient) => {
 
         const serviceCountMap = new Map<string, { name: string; count: number; lastDate: string }>();
         for (const a of apts) {
-          if (!a.serviceId || !a.service) continue;
+          if (!a.serviceId) continue;
+          const serviceName = serviceNameById.get(a.serviceId);
+          if (!serviceName) continue;
           const existing = serviceCountMap.get(a.serviceId);
           if (existing) {
             existing.count += 1;
           } else {
             serviceCountMap.set(a.serviceId, {
-              name: a.service.name,
+              name: serviceName,
               count: 1,
               lastDate: a.start.toISOString(),
             });
@@ -267,8 +274,12 @@ export const clientsRouter = (prisma: PrismaClient) => {
         return {
           client,
           lastVisit: lastApt?.start?.toISOString() ?? null,
-          lastVisitServiceName: lastApt?.service?.name ?? null,
-          lastVisitMemberName: lastApt?.workspaceMember?.name ?? null,
+          lastVisitServiceName: lastApt?.serviceId
+            ? (serviceNameById.get(lastApt.serviceId) ?? null)
+            : null,
+          lastVisitMemberName: lastApt?.workspaceMemberId
+            ? (workspaceMemberNameById.get(lastApt.workspaceMemberId) ?? null)
+            : null,
           totalVisits: apts.length,
           topServices,
           matchedServiceHistory,
