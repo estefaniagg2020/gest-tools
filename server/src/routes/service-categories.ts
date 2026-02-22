@@ -15,7 +15,7 @@ export const serviceCategoriesRouter = (prisma: PrismaClient) => {
     if (!businessId) { res.status(403).json({ error: "Negocio no asociado" }); return; }
     if (!UUID_REGEX.test(businessId)) { res.status(400).json({ error: "businessId inválido" }); return; }
     try {
-      const categories = await prisma.businessCategory.findMany({
+      const categories = await prisma.serviceCategory.findMany({
         where: { businessId },
         orderBy: { label: "asc" },
       });
@@ -33,7 +33,7 @@ export const serviceCategoriesRouter = (prisma: PrismaClient) => {
     const label = typeof body.label === "string" ? body.label.trim() : "";
     if (!label) { res.status(400).json({ error: "label es requerido" }); return; }
     try {
-      const category = await prisma.businessCategory.create({
+      const category = await prisma.serviceCategory.create({
         data: { businessId, label, icon: body.icon ?? null },
       });
       res.status(201).json(category);
@@ -48,12 +48,12 @@ export const serviceCategoriesRouter = (prisma: PrismaClient) => {
     if (!UUID_REGEX.test(businessId)) { res.status(400).json({ error: "businessId inválido" }); return; }
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id ?? "";
     try {
-      const existing = await prisma.businessCategory.findUnique({ where: { id } });
+      const existing = await prisma.serviceCategory.findUnique({ where: { id } });
       if (!existing || existing.businessId !== businessId) {
         res.status(404).json({ error: "Categoría no encontrada" }); return;
       }
       const body = req.body ?? {};
-      const updated = await prisma.businessCategory.update({
+      const updated = await prisma.serviceCategory.update({
         where: { id },
         data: {
           ...(body.label !== undefined && { label: String(body.label).trim() }),
@@ -72,11 +72,11 @@ export const serviceCategoriesRouter = (prisma: PrismaClient) => {
     if (!UUID_REGEX.test(businessId)) { res.status(400).json({ error: "businessId inválido" }); return; }
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id ?? "";
     try {
-      const existing = await prisma.businessCategory.findUnique({ where: { id } });
+      const existing = await prisma.serviceCategory.findUnique({ where: { id } });
       if (!existing || existing.businessId !== businessId) {
         res.status(404).json({ error: "Categoría no encontrada" }); return;
       }
-      await prisma.businessCategory.delete({ where: { id } });
+      await prisma.serviceCategory.delete({ where: { id } });
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: "Failed to delete service category" });

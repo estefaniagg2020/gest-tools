@@ -36,7 +36,7 @@ export const bookingsRouter = (prisma: PrismaClient) => {
       });
       return;
     }
-    const service = await prisma.businessService.findFirst({
+    const service = await prisma.service.findFirst({
       where: { id: serviceId, businessId },
     });
     if (!service) {

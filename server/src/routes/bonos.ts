@@ -39,7 +39,7 @@ export const bonosRouter = (prisma: PrismaClient) => {
     serviceId: string,
     businessId: string,
   ): Promise<string | null> => {
-    const service = await prisma.businessService.findUnique({
+    const service = await prisma.service.findUnique({
       where: { id: serviceId },
       select: { businessId: true },
     });
@@ -51,18 +51,18 @@ export const bonosRouter = (prisma: PrismaClient) => {
     });
     if (!professionSvc) return null;
 
-    const existing = await prisma.businessService.findFirst({
+    const existing = await prisma.service.findFirst({
       where: { businessId, sourceServiceId: serviceId },
       select: { id: true },
     });
     if (existing) return existing.id;
 
-    const businessCategory = await prisma.businessCategory.findFirst({
+    const serviceCategory = await prisma.serviceCategory.findFirst({
       where: { businessId, label: professionSvc.category.label },
       select: { id: true },
     });
-    const categoryId = businessCategory?.id ?? (
-      await prisma.businessCategory.create({
+    const categoryId = serviceCategory?.id ?? (
+      await prisma.serviceCategory.create({
         data: {
           businessId,
           label: professionSvc.category.label,
@@ -72,7 +72,7 @@ export const bonosRouter = (prisma: PrismaClient) => {
       })
     ).id;
 
-    const created = await prisma.businessService.create({
+    const created = await prisma.service.create({
       data: {
         businessId,
         categoryId,
@@ -121,7 +121,7 @@ export const bonosRouter = (prisma: PrismaClient) => {
         }
       }
       if (serviceCategoryId) {
-        const category = await prisma.businessCategory.findUnique({
+        const category = await prisma.serviceCategory.findUnique({
           where: { id: serviceCategoryId },
           select: { businessId: true },
         });
@@ -183,7 +183,7 @@ export const bonosRouter = (prisma: PrismaClient) => {
         }
       }
       if (requestedServiceCategoryId) {
-        const category = await prisma.businessCategory.findUnique({
+        const category = await prisma.serviceCategory.findUnique({
           where: { id: requestedServiceCategoryId },
           select: { businessId: true },
         });

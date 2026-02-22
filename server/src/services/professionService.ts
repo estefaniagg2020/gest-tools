@@ -26,7 +26,7 @@ export async function instantiateProfessionTemplate(
     // Create ServiceCategory for Business
     // Check if category already exists to avoid duplicates? 
     // For now, we assume this runs once on setup or forces new categories.
-    const businessCat = await prisma.businessCategory.create({
+    const businessCat = await prisma.serviceCategory.create({
       data: {
         businessId,
         label: templateCat.label,
@@ -36,7 +36,7 @@ export async function instantiateProfessionTemplate(
 
     // 3. Iterate services in category
     for (const templateService of templateCat.services) {
-      await prisma.businessService.create({
+      await prisma.service.create({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         data: {
           businessId,

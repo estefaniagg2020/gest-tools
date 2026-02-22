@@ -67,7 +67,7 @@ export const getAvailableSlots = async (
   const config = await prisma.gestorConfig.findUnique({
     where: { businessId },
   });
-  const service = await prisma.businessService.findFirst({
+  const service = await prisma.service.findFirst({
     where: { id: serviceId, businessId },
   });
   if (!config || !service) return [];
@@ -102,7 +102,7 @@ export const getSmartSlots = async (
   const config = await prisma.gestorConfig.findUnique({
     where: { businessId },
   });
-  const service = await prisma.businessService.findFirst({
+  const service = await prisma.service.findFirst({
     where: { id: serviceId, businessId },
   });
   if (!config || !service) return [];
@@ -142,7 +142,7 @@ export const getOccupiedSlots = async (
   const config = await prisma.gestorConfig.findUnique({
     where: { businessId },
   });
-  const service = await prisma.businessService.findFirst({
+  const service = await prisma.service.findFirst({
     where: { id: serviceId, businessId },
   });
   if (!config || !service) return [];
