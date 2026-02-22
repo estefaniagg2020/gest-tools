@@ -1,4 +1,4 @@
-import type { PrismaClient } from "../generated/prisma/index.js";
+import type { PrismaClient } from "@prisma/client";
 import { PROFESSION_TEMPLATES } from "../data/professionTemplates.js";
 
 /**

@@ -3,7 +3,7 @@ import request from "supertest";
 import { withAuth, mockPrisma } from "./helpers.js";
 import { serviceCategoriesRouter } from "../routes/service-categories.js";
 
-const BIZ = "biz-1";
+const BIZ = "00000000-0000-0000-0000-000000000001";
 const fakeCat = {
   id: "cat-1", businessId: BIZ, label: "Masajes", icon: "💆",
   createdAt: new Date(), updatedAt: new Date(),

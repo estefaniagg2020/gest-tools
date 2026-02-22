@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import type { PrismaClient } from "../generated/prisma/index.js";
+import type { PrismaClient } from "@prisma/client";
 import { requireAuth } from "../middleware/auth.js";
 import { sendAppointmentConfirmation } from "../services/whatsapp.js";
 import { notifyWaitlistForFreedSlot } from "../services/waitlist.js";

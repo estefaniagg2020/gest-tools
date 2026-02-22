@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
 import express from "express";
 import cors from "cors";
-import { PrismaClient } from "../generated/prisma/index.js";
+import { PrismaClient } from "@prisma/client";
 
 // Mock normalizedOrigins to control allowed origins in test
 const mockAllowedOrigins = ["http://localhost:5173", "https://www.bokioqest.es"];

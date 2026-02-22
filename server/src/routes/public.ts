@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { PrismaClient } from "../generated/prisma/index.js";
+import { PrismaClient } from "@prisma/client";
 
 export const publicRouter = (prisma: PrismaClient) => {
   const router = Router();

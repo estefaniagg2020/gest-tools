@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { PrismaClient } from "./generated/prisma/index.js";
+import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
 
@@ -52,7 +52,14 @@ const originToRegExp = (pattern: string): RegExp => {
   return new RegExp(`^${escaped.replace(/\\\*/g, ".*")}$`);
 };
 
-const allowedOrigins = normalizeOrigins(process.env.ALLOWED_ORIGINS);
+// Collect allowed origins from ALLOWED_ORIGINS and/or FRONTEND_URL env vars
+const rawAllowedOrigins = [
+  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
+  ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(",") : []),
+];
+const allowedOrigins = rawAllowedOrigins.length > 0
+  ? rawAllowedOrigins.map(normalizeOrigin).filter((o) => o.length > 0)
+  : ["http://localhost:3000", "http://localhost:5173"];
 const allowedOriginPatterns = allowedOrigins.map(originToRegExp);
 console.log("[cors] allowed origins:", allowedOrigins);
 

@@ -1,4 +1,4 @@
-import type { PrismaClient, Appointment } from "../generated/prisma/index.js";
+import type { PrismaClient, Appointment } from "@prisma/client";
 
 const MS_MINUTE = 60 * 1000;
 

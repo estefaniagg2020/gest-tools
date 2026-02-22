@@ -1,4 +1,4 @@
-import type { PrismaClient } from "../generated/prisma/index.js";
+import type { PrismaClient } from "@prisma/client";
 import { ROLE_TEMPLATES } from "../data/roleTemplates.js";
 
 export const ensureRoleTemplates = async (prisma: PrismaClient): Promise<void> => {

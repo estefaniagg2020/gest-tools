@@ -1,5 +1,6 @@
 import express from "express";
-import type { PrismaClient } from "../generated/prisma/index.js";
+import { vi } from "vitest";
+import type { PrismaClient } from "@prisma/client";
 
 export const TEST_TOKEN = "test-token-12345";
 export const TEST_USER = {
@@ -9,7 +10,7 @@ export const TEST_USER = {
   name: "Admin",
   email: null,
   phone: null,
-  workspaces: [{ businessId: "biz-1" }],
+  workspaces: [{ businessId: "00000000-0000-0000-0000-000000000001" }],
 };
 
 type ModelMock = Record<string, ReturnType<typeof vi.fn>>;

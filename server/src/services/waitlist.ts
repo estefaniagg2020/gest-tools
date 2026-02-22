@@ -1,4 +1,4 @@
-import type { PrismaClient } from "../generated/prisma/index.js";
+import type { PrismaClient } from "@prisma/client";
 
 const MS_MINUTE = 60 * 1000;
 

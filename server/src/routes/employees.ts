@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import type { PrismaClient } from "../generated/prisma/index.js";
+import type { PrismaClient } from "@prisma/client";
 import { requireAuth, requireStaff } from "../middleware/auth.js";
 
 const VALID_ROLE_NAMES = new Set(["admin", "employee"]);
