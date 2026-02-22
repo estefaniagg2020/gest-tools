@@ -47,14 +47,14 @@
         class="relative"
       >
         <div
-          v-if="clientStore.clients.length > 0"
+          v-if="clientStore.clients.length > 0 && bonosEnabled"
           class="mb-4"
         >
-          <label class="flex items-center gap-2 cursor-pointer text-sm text-app-title">
+          <label class="flex items-center gap-2 cursor-pointer text-sm text-app-title select-none touch-manipulation">
             <input
               v-model="filterActiveBono"
               type="checkbox"
-              class="h-4 w-4 rounded border-app-border-subtle text-brand-accent focus:ring-brand-accent"
+              class="h-4 w-4 min-w-4 min-h-4 rounded border-app-border-subtle text-brand-accent focus:ring-brand-accent"
             />
             {{ $t('clients.filterActiveBono') }}
           </label>
@@ -73,7 +73,7 @@
               <div class="flex items-center gap-2">
                 <h3 class="font-semibold text-app-title truncate">{{ client.name }}</h3>
                 <span
-                  v-if="bonoStore.hasActiveBono(client.id)"
+                  v-if="bonosEnabled && bonoStore.hasActiveBono(client.id)"
                   class="shrink-0 text-xs font-medium px-2 py-0.5 rounded-full bg-brand-accent/15 text-brand-accent"
                   :title="$t('clientBonos.sectionTitle')"
                 >
@@ -210,8 +210,10 @@
   import ClientSmartSearchPanel from "@/components/clients/ClientSmartSearchPanel.vue";
   import { useClientsManager } from "@/composables/useClientsManager";
   import { useClientSearch } from "@/composables/useClientSearch";
+  import { useBillingConfig } from "@/composables/useBillingConfig";
   import { useBonoStore } from "@/stores/bono";
 
+  const { bonosEnabled, load: loadBillingConfig } = useBillingConfig();
   const {
     clientStore,
     isModalOpen,
@@ -236,7 +238,8 @@
     return list;
   });
 
-  onMounted(() => {
+  onMounted(async () => {
+    await loadBillingConfig();
     bonoStore.initialize();
   });
 </script>

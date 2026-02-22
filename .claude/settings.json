@@ -9,7 +9,12 @@
       "Bash(pnpm exec prisma generate:*)",
       "Read(//home/estefania/proyectos/gest-tools/server/**)",
       "Bash(pnpm add:*)",
-      "Bash(pnpm install:*)"
+      "Bash(pnpm install:*)",
+      "Bash(node:*)",
+      "Bash(CI=true pnpm install:*)",
+      "Bash(timeout 10 tsx:*)",
+      "Bash(timeout 10 node_modules/.bin/tsx:*)",
+      "Bash(git add:*)"
     ]
   }
 }

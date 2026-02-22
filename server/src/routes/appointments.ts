@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "../generated/prisma/index.js";
 import { requireAuth, requireStaff } from "../middleware/auth.js";
 
 export const appointmentsRouter = (prisma: PrismaClient) => {

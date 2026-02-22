@@ -1,5 +1,5 @@
 import express from "express";
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "../generated/prisma/index.js";
 
 export const TEST_TOKEN = "test-token-12345";
 export const TEST_USER = {

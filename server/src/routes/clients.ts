@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import type { PrismaClient, AppointmentStatus, PaymentStatus } from "@prisma/client";
+import type { PrismaClient, AppointmentStatus, PaymentStatus } from "../generated/prisma/index.js";
 import { requireAuth, requireStaff } from "../middleware/auth.js";
 
 const CANCELLED = "cancelled" as AppointmentStatus;

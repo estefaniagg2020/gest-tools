@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../generated/prisma/index.js";
 
 export async function instantiateProfessionTemplate(
   prisma: PrismaClient,

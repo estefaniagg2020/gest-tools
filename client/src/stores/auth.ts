@@ -93,7 +93,7 @@ export const useAuthStore = defineStore("auth", () => {
       const status = await authApi.getSetupStatus();
       hasUsersRef.value = status.hasUsers;
     } catch {
-      hasUsersRef.value = true;
+      hasUsersRef.value = false;
     }
     user.value = null;
     authStorage.clearBackendSession();

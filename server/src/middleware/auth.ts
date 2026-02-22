@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "../generated/prisma/index.js";
 import type { RoleName } from "../types/express.js";
 
 const STAFF_ROLES: ReadonlySet<RoleName> = new Set(["superadmin", "admin", "employee"]);

@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import rateLimit from "express-rate-limit";
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "../generated/prisma/index.js";
 import { discoverProfessionWithAI } from "../services/aiProfessionDiscovery.js";
 
 const discoverRateLimit = rateLimit({
