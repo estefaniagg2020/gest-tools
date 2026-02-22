@@ -256,6 +256,9 @@ server/src/
   - `requireStaff`: superadmin, admin o employee
   - `requireAdmin`: superadmin o admin
   - `requireSuperadmin`: solo superadmin
+- **Permisos del módulo Equipo**:
+  - `employee`: solo lectura del listado de miembros.
+  - `admin` y `superadmin`: crear, editar y eliminar miembros.
 
 ### 6.3 Inicialización del servidor
 
@@ -385,7 +388,8 @@ Referencia completa en `docs/backend/api-reference.md`.
 ### 9.4 Equipo
 
 - Ruta: `/team`
-- CRUD de miembros del equipo
+- Lectura del equipo para personal autenticado (`requireStaff`)
+- Altas, edición, borrado y limpieza masiva solo para `admin`/`superadmin`
 - Roles por negocio
 
 ### 9.5 Clientes

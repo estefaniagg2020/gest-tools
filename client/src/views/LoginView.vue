@@ -94,11 +94,10 @@
             {{ $t('auth.forgotPassword') }}
           </RouterLink>
           <RouterLink
-            v-if="!authStore.hasAnyUser()"
-            to="/setup"
-            class="block text-sm text-app-text/80 hover:underline"
+            to="/register"
+            class="block text-sm text-brand-accent hover:underline"
           >
-            {{ $t('auth.createFirstAccount') }}
+            {{ $t('auth.noAccountSignUp') }}
           </RouterLink>
         </div>
       </div>

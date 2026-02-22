@@ -1,7 +1,7 @@
 import { loadBackendToken } from "./authStorage";
 
 const getBaseUrl = (): string => {
-  const env = import.meta.env?.VITE_API_URL;
+  const env = (import.meta as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL;
   if (typeof env === "string" && env) return env.replace(/\/$/, "");
   return "";
 };

@@ -46,6 +46,8 @@ export type TeamFormState = {
   name: string;
   email: string;
   phoneNumber: string;
+  username: string;
+  password: string;
   weeklyHours: number;
   photoUrl: string;
   linkedInUrl: string | undefined;
@@ -59,6 +61,8 @@ const getInitialForm = (): TeamFormState => ({
   name: "",
   email: "",
   phoneNumber: "",
+  username: "",
+  password: "",
   weeklyHours: 40,
   photoUrl: "",
   linkedInUrl: undefined,
@@ -102,6 +106,8 @@ export const useTeamManager = () => {
     form.name = member.name;
     form.email = member.email;
     form.phoneNumber = member.phoneNumber;
+    form.username = "";
+    form.password = "";
     form.weeklyHours = member.weeklyHours;
     form.photoUrl = member.photoUrl;
     form.linkedInUrl = member.linkedInUrl ?? "";
@@ -118,6 +124,16 @@ export const useTeamManager = () => {
 
   const saveMember = async () => {
     if (isSaving.value) return;
+    if (!isEditing.value) {
+      if (!form.username?.trim()) {
+        addToast(t("team.errorUsernameRequired"), "error");
+        return;
+      }
+      if (form.password.length < 4) {
+        addToast(t("team.errorPasswordMin"), "error");
+        return;
+      }
+    }
     const startH = form.defaultWorkStartHour;
     const endH = form.defaultWorkEndHour <= startH ? startH + 1 : form.defaultWorkEndHour;
     const payload = {
@@ -126,6 +142,8 @@ export const useTeamManager = () => {
       defaultWorkStartHour: startH,
       defaultWorkEndHour: Math.min(24, endH),
       birthDate: form.birthDate?.trim() || undefined,
+      username: form.username?.trim() || undefined,
+      password: form.password || undefined,
     };
     isSaving.value = true;
     try {

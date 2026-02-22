@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import type { PrismaClient } from "@prisma/client";
-import { requireAuth, requireStaff } from "../middleware/auth.js";
+import { hashPassword, generateSalt } from "../utils/password.js";
+import { requireAuth, requireAdmin, requireStaff } from "../middleware/auth.js";
 
 const VALID_ROLE_NAMES = new Set(["admin", "employee"]);
 
@@ -36,8 +37,9 @@ export const employeeRouter = (prisma: PrismaClient) => {
     }
   });
 
-  router.post("/", auth, requireStaff, async (req: Request, res: Response) => {
+  router.post("/", auth, requireAdmin, async (req: Request, res: Response) => {
     const businessId = req.user!.businessId;
+    const createdById = req.user!.id;
     if (!businessId) {
       res.status(400).json({ error: "El usuario no tiene negocio asociado" });
       return;
@@ -47,6 +49,21 @@ export const employeeRouter = (prisma: PrismaClient) => {
       const name = typeof body.name === "string" ? body.name.trim() : "";
       if (!name) {
         res.status(400).json({ error: "name es requerido" });
+        return;
+      }
+      const username = typeof body.username === "string" ? body.username.trim().toLowerCase() : "";
+      const password = typeof body.password === "string" ? body.password : "";
+      const createWithLogin = username.length > 0 && password.length >= 4;
+      if (username.length > 0 && password.length >= 4) {
+        const existingUser = await prisma.user.findFirst({
+          where: { username: { equals: username, mode: "insensitive" } },
+        });
+        if (existingUser) {
+          res.status(409).json({ error: "Ese nombre de usuario ya está en uso" });
+          return;
+        }
+      } else if (username.length > 0 || password.length > 0) {
+        res.status(400).json({ error: "username y contraseña (mín. 4 caracteres) son requeridos para dar de alta al usuario" });
         return;
       }
       const roleId = await resolveRoleId(prisma, typeof body.role === "string" ? body.role : "employee");
@@ -61,23 +78,48 @@ export const employeeRouter = (prisma: PrismaClient) => {
         res.status(409).json({ error: "Ya existe un miembro con ese nombre en este negocio" });
         return;
       }
-      const member = await prisma.workspaceMember.create({
-        data: {
-          businessId,
-          name,
-          roleId,
-          userId: typeof body.userId === "string" ? body.userId : null,
-          photoUrl: typeof body.photoUrl === "string" ? body.photoUrl.trim() || null : null,
-          linkedInUrl: typeof body.linkedInUrl === "string" ? body.linkedInUrl.trim() || null : null,
-          phone: (typeof (body.phone ?? body.phoneNumber) === "string" ? String(body.phone ?? body.phoneNumber).trim() : null) || null,
-          email: typeof body.email === "string" ? body.email.trim() || null : null,
-          weeklyHours: typeof body.weeklyHours === "number" ? body.weeklyHours : null,
-          color: typeof body.color === "string" ? body.color.trim() || null : null,
-          position: typeof body.position === "string" ? body.position.trim() || null : null,
-          defaultWorkStartHour: typeof body.defaultWorkStartHour === "number" ? body.defaultWorkStartHour : null,
-          defaultWorkEndHour: typeof body.defaultWorkEndHour === "number" ? body.defaultWorkEndHour : null,
-        },
-        include: { role: { select: { name: true } } },
+      const member = await prisma.$transaction(async (tx) => {
+        let userId: string | null = null;
+        if (createWithLogin) {
+          const salt = generateSalt();
+          const passwordHash = hashPassword(password, salt);
+          const userRoleName = body.role === "admin" ? "admin" : "employee";
+          const userRoleId = await prisma.role.findUnique({ where: { name: userRoleName } }).then((r) => r?.id);
+          if (!userRoleId) {
+            throw new Error("Rol no encontrado");
+          }
+          const newUser = await tx.user.create({
+            data: {
+              username,
+              passwordHash,
+              salt,
+              roleId: userRoleId,
+              name,
+              email: typeof body.email === "string" ? body.email.trim() || null : null,
+              createdById,
+            },
+          });
+          userId = newUser.id;
+        }
+        const wm = await tx.workspaceMember.create({
+          data: {
+            businessId,
+            name,
+            roleId,
+            userId,
+            photoUrl: typeof body.photoUrl === "string" ? body.photoUrl.trim() || null : null,
+            linkedInUrl: typeof body.linkedInUrl === "string" ? body.linkedInUrl.trim() || null : null,
+            phone: (typeof (body.phone ?? body.phoneNumber) === "string" ? String(body.phone ?? body.phoneNumber).trim() : null) || null,
+            email: typeof body.email === "string" ? body.email.trim() || null : null,
+            weeklyHours: typeof body.weeklyHours === "number" ? body.weeklyHours : null,
+            color: typeof body.color === "string" ? body.color.trim() || null : null,
+            position: typeof body.position === "string" ? body.position.trim() || null : null,
+            defaultWorkStartHour: typeof body.defaultWorkStartHour === "number" ? body.defaultWorkStartHour : null,
+            defaultWorkEndHour: typeof body.defaultWorkEndHour === "number" ? body.defaultWorkEndHour : null,
+          },
+          include: { role: { select: { name: true } } },
+        });
+        return wm;
       });
       const { roleId: _roleId, role, ...rest } = member;
       res.status(201).json({ ...rest, role: role.name });
@@ -87,7 +129,7 @@ export const employeeRouter = (prisma: PrismaClient) => {
     }
   });
 
-  router.put("/:id", auth, requireStaff, async (req: Request, res: Response) => {
+  router.put("/:id", auth, requireAdmin, async (req: Request, res: Response) => {
     const businessId = req.user!.businessId;
     const id = req.params.id as string;
     if (!businessId) {
@@ -147,7 +189,7 @@ export const employeeRouter = (prisma: PrismaClient) => {
     }
   });
 
-  router.delete("/:id", auth, requireStaff, async (req: Request, res: Response) => {
+  router.delete("/:id", auth, requireAdmin, async (req: Request, res: Response) => {
     const businessId = req.user!.businessId;
     const id = req.params.id as string;
     if (!businessId) {

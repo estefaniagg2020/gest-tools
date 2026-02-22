@@ -75,7 +75,6 @@
 <script setup lang="ts">
   import { ref, computed, watch } from "vue";
   import { useI18n } from "vue-i18n";
-  import { storeToRefs } from "pinia";
   import TeamManagerHeader from "@/components/team/TeamManagerHeader.vue";
   import TeamCard from "@/components/team/TeamCard.vue";
   import TeamAvatarTile from "@/components/team/TeamAvatarTile.vue";
@@ -84,7 +83,6 @@
   import { useTeamManager } from "@/composables/useTeamManager";
   import { useConfirmDialog } from "@/composables/useConfirmDialog";
   import { useAuthStore } from "@/stores/auth";
-  import { AUTH_CONFIG } from "@/data/authConfig";
 
   const PAGE_SIZE = 10;
 
@@ -106,8 +104,7 @@
   const { show: showConfirm } = useConfirmDialog();
 
   const authStore = useAuthStore();
-  const { currentRole } = storeToRefs(authStore);
-  const canManage = computed(() => currentRole.value === AUTH_CONFIG.ROLE_MANAGER);
+  const canManage = computed(() => authStore.isAdmin);
 
   const handleClearTeam = async () => {
     const ok = await showConfirm({

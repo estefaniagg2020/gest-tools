@@ -21,6 +21,29 @@
         />
       </div>
 
+      <div v-if="!isEditing" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('team.username') }}</label>
+          <input
+            v-model="form.username"
+            type="text"
+            autocomplete="username"
+            :placeholder="$t('team.placeholderUsername')"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent/20 focus:border-brand-accent"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('team.password') }}</label>
+          <input
+            v-model="form.password"
+            type="password"
+            autocomplete="new-password"
+            :placeholder="$t('team.placeholderPassword')"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent/20 focus:border-brand-accent"
+          />
+        </div>
+      </div>
+
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('team.email') }}</label>

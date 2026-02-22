@@ -42,10 +42,11 @@ export const authApi = {
   register: async (
     username: string,
     password: string,
+    email?: string,
   ): Promise<LoginResponse> => {
     const res = await apiFetch("/api/auth/register", {
       method: "POST",
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ username, password, email: email || undefined }),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
@@ -85,12 +86,12 @@ export const authApi = {
   },
 
   forgotPassword: async (
-    username: string,
+    email: string,
     newPassword: string,
   ): Promise<void> => {
     const res = await apiFetch("/api/auth/forgot-password", {
       method: "POST",
-      body: JSON.stringify({ username, newPassword }),
+      body: JSON.stringify({ email, newPassword }),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {

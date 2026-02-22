@@ -13,6 +13,58 @@ const getRoleId = async (prisma: PrismaClient, name: string): Promise<string> =>
   return role.id;
 };
 
+const getPrimaryWorkspaceBusinessId = async (
+  prisma: PrismaClient,
+  userId: string,
+): Promise<string | null> => {
+  const workspace = await prisma.workspaceMember.findFirst({
+    where: { userId },
+    select: { businessId: true },
+    orderBy: { createdAt: "desc" },
+  });
+  return workspace?.businessId ?? null;
+};
+
+const resolveWorkspaceRoleName = (roleName: string): "admin" | "employee" => {
+  if (roleName === "admin" || roleName === "superadmin") return "admin";
+  return "employee";
+};
+
+const attachUserToCreatorBusinessIfNeeded = async (
+  prisma: PrismaClient,
+  user: { id: string; username: string; roleName: string; createdById: string | null },
+): Promise<string | null> => {
+  const existingBusinessId = await getPrimaryWorkspaceBusinessId(prisma, user.id);
+  if (existingBusinessId) return existingBusinessId;
+  if (!user.createdById) return null;
+  const creatorBusinessId = await getPrimaryWorkspaceBusinessId(
+    prisma,
+    user.createdById,
+  );
+  if (!creatorBusinessId) return null;
+  const roleName = resolveWorkspaceRoleName(user.roleName);
+  const role = await prisma.role.findUnique({
+    where: { name: roleName },
+    select: { id: true },
+  });
+  if (!role) return null;
+  const alreadyLinked = await prisma.workspaceMember.findFirst({
+    where: { userId: user.id, businessId: creatorBusinessId },
+    select: { id: true },
+  });
+  if (!alreadyLinked) {
+    await prisma.workspaceMember.create({
+      data: {
+        userId: user.id,
+        businessId: creatorBusinessId,
+        roleId: role.id,
+        name: user.username,
+      },
+    });
+  }
+  return creatorBusinessId;
+};
+
 export const authRouter = (prisma: PrismaClient) => {
   const router = Router();
   const auth = requireAuth(prisma);
@@ -47,23 +99,27 @@ export const authRouter = (prisma: PrismaClient) => {
       where: { id: user.id },
       data: { sessionToken: token },
     });
-    let workspaces = await prisma.workspaceMember.findMany({
-      where: { userId: user.id },
-      select: { businessId: true },
-      take: 1,
+    let businessId = await attachUserToCreatorBusinessIfNeeded(prisma, {
+      id: user.id,
+      username: user.username,
+      roleName: user.role.name,
+      createdById: user.createdById ?? null,
     });
+    if (!businessId) {
+      businessId = await getPrimaryWorkspaceBusinessId(prisma, user.id);
+    }
     const isStaff = user.role.name !== "client";
-    if (workspaces.length === 0 && isStaff) {
+    if (!businessId && isStaff) {
       const adminRoleId = await getRoleId(prisma, "admin");
-      const { businessId } = await prisma.$transaction(async (tx) => {
+      const created = await prisma.$transaction(async (tx) => {
         const company = await tx.company.create({ data: { name: user.username } });
         const business = await tx.business.create({ data: { name: user.username, companyId: company.id } });
         await tx.workspaceMember.create({
           data: { userId: user.id, businessId: business.id, roleId: adminRoleId, name: user.username },
         });
-        return { businessId: business.id };
+        return business.id;
       });
-      workspaces = [{ businessId }];
+      businessId = created;
     }
     res.json({
       user: {
@@ -73,24 +129,24 @@ export const authRouter = (prisma: PrismaClient) => {
         name: user.name,
         email: user.email,
         phone: user.phone,
-        businessId: workspaces[0]?.businessId ?? null,
+        businessId,
       },
       token,
     });
   });
 
   router.post("/register", async (req: Request, res: Response) => {
-    const count = await prisma.user.count();
-    if (count > 0) {
-      res.status(403).json({ error: "Ya existe un usuario registrado" });
-      return;
-    }
-    const { username, password } = req.body as {
+    const { username, password, email } = req.body as {
       username?: string;
       password?: string;
+      email?: string;
     };
     if (!username || typeof username !== "string" || !password) {
       res.status(400).json({ error: "Usuario y contraseña requeridos" });
+      return;
+    }
+    if (!email || typeof email !== "string" || !email.trim()) {
+      res.status(400).json({ error: "El email es obligatorio" });
       return;
     }
     const trimmed = username.trim();
@@ -116,9 +172,16 @@ export const authRouter = (prisma: PrismaClient) => {
     const superadminRoleId = await getRoleId(prisma, "superadmin");
     const adminRoleId = await getRoleId(prisma, "admin");
 
+    const trimmedEmail = email.trim().toLowerCase();
     const { user, businessId } = await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
-        data: { username: trimmed, passwordHash, salt, roleId: superadminRoleId },
+        data: {
+          username: trimmed,
+          passwordHash,
+          salt,
+          roleId: superadminRoleId,
+          email: trimmedEmail,
+        },
       });
       const company = await tx.company.create({
         data: { name: trimmed },
@@ -215,13 +278,13 @@ export const authRouter = (prisma: PrismaClient) => {
   });
 
   router.post("/forgot-password", async (req: Request, res: Response) => {
-    const { username, newPassword } = req.body as {
-      username?: string;
+    const { email, newPassword } = req.body as {
+      email?: string;
       newPassword?: string;
     };
-    if (!username || typeof username !== "string" || !newPassword) {
+    if (!email || typeof email !== "string" || !newPassword) {
       res.status(400).json({
-        error: "Usuario y nueva contraseña requeridos",
+        error: "Email y nueva contraseña requeridos",
       });
       return;
     }
@@ -231,11 +294,12 @@ export const authRouter = (prisma: PrismaClient) => {
       });
       return;
     }
+    const trimmedEmail = email.trim().toLowerCase();
     const user = await prisma.user.findFirst({
-      where: { username: { equals: username.trim(), mode: "insensitive" } },
+      where: { email: { equals: trimmedEmail, mode: "insensitive" } },
     });
     if (!user) {
-      res.status(404).json({ error: "No existe ninguna cuenta con ese usuario" });
+      res.status(404).json({ error: "No existe ninguna cuenta con ese email" });
       return;
     }
     const salt = generateSalt();
@@ -305,17 +369,24 @@ export const authRouter = (prisma: PrismaClient) => {
     }
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
-      include: { role: { select: { name: true } } },
+      include: {
+        role: { select: { name: true } },
+        createdBy: { select: { id: true, username: true, name: true } },
+      },
     });
     if (!user) {
       res.status(401).json({ error: "Sesión inválida o expirada" });
       return;
     }
-    const workspaces = await prisma.workspaceMember.findMany({
-      where: { userId: user.id },
-      select: { businessId: true },
-      take: 1,
+    let businessId = await attachUserToCreatorBusinessIfNeeded(prisma, {
+      id: user.id,
+      username: user.username,
+      roleName: user.role.name,
+      createdById: user.createdById ?? null,
     });
+    if (!businessId) {
+      businessId = await getPrimaryWorkspaceBusinessId(prisma, user.id);
+    }
     res.json({
       user: {
         id: user.id,
@@ -324,7 +395,9 @@ export const authRouter = (prisma: PrismaClient) => {
         name: user.name,
         email: user.email,
         phone: user.phone,
-        businessId: workspaces[0]?.businessId ?? null,
+        businessId,
+        createdById: user.createdById ?? null,
+        createdBy: user.createdBy ? { id: user.createdBy.id, username: user.createdBy.username, name: user.createdBy.name } : null,
       },
     });
   });
@@ -347,11 +420,7 @@ export const authRouter = (prisma: PrismaClient) => {
       data: data as { name?: string | null; phone?: string | null },
       include: { role: { select: { name: true } } },
     });
-    const workspaces = await prisma.workspaceMember.findMany({
-      where: { userId: user.id },
-      select: { businessId: true },
-      take: 1,
-    });
+    const businessId = await getPrimaryWorkspaceBusinessId(prisma, user.id);
     res.json({
       user: {
         id: user.id,
@@ -360,7 +429,7 @@ export const authRouter = (prisma: PrismaClient) => {
         name: user.name,
         email: user.email,
         phone: user.phone ?? undefined,
-        businessId: workspaces[0]?.businessId ?? null,
+        businessId,
       },
     });
   });

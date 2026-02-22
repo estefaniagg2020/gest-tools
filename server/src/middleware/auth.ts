@@ -11,12 +11,46 @@ const ensureBusinessIdForUser = async (
   user: {
     id: string;
     username: string;
+    createdById: string | null;
     role: { name: string };
-    workspaces: { businessId: string }[];
+    workspaces: { businessId: string; createdAt: Date }[];
   },
 ): Promise<string | null> => {
   const currentBusinessId = user.workspaces[0]?.businessId ?? null;
   if (currentBusinessId) return currentBusinessId;
+  if (user.createdById) {
+    const creatorWorkspace = await prisma.workspaceMember.findFirst({
+      where: { userId: user.createdById },
+      select: { businessId: true },
+      orderBy: { createdAt: "desc" },
+    });
+    if (creatorWorkspace?.businessId) {
+      const roleName = user.role.name === "admin" || user.role.name === "superadmin"
+        ? "admin"
+        : "employee";
+      const role = await prisma.role.findUnique({
+        where: { name: roleName },
+        select: { id: true },
+      });
+      if (role) {
+        const link = await prisma.workspaceMember.findFirst({
+          where: { userId: user.id, businessId: creatorWorkspace.businessId },
+          select: { id: true },
+        });
+        if (!link) {
+          await prisma.workspaceMember.create({
+            data: {
+              userId: user.id,
+              businessId: creatorWorkspace.businessId,
+              roleId: role.id,
+              name: user.username,
+            },
+          });
+        }
+      }
+      return creatorWorkspace.businessId;
+    }
+  }
   if (!isStaffRole(user.role.name)) return null;
   const adminRole = await prisma.role.findUnique({
     where: { name: "admin" },
@@ -55,13 +89,15 @@ export const requireAuth = (prisma: PrismaClient) => {
       select: {
         id: true,
         username: true,
+        createdById: true,
         role: { select: { name: true } },
         name: true,
         email: true,
         phone: true,
         workspaces: {
-          select: { businessId: true },
-          take: 1
+          select: { businessId: true, createdAt: true },
+          orderBy: { createdAt: "desc" },
+          take: 1,
         }
       },
     });

@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
-import { withAuth, mockPrisma } from "./helpers.js";
+import { withAuth, mockPrisma, TEST_USER } from "./helpers.js";
 import { employeeRouter } from "../routes/employees.js";
 
-const BIZ = "biz-1";
+const BIZ = "00000000-0000-0000-0000-000000000001";
 const fakeMember = {
   id: "emp-1", businessId: BIZ, name: "Ana García", photoUrl: null,
   linkedInUrl: null, phone: null, email: null,
@@ -41,8 +41,31 @@ describe("Employees CRUD", () => {
     expect(res.body[0].name).toBe("Ana García");
   });
 
-  it("POST / creates an employee", async () => {
+  it("POST / creates an employee without login (wizard sync)", async () => {
     const res = await request(app).post("/").send({ name: "Luis", role: "employee", color: "#fff" });
+    expect(res.status).toBe(201);
+    expect(res.body.id).toBe("emp-new");
+  });
+
+  it("POST / creates an employee with username and password (admin creates user)", async () => {
+    vi.mocked(prisma.role.findUnique).mockResolvedValue({ id: "role-1", name: "employee" });
+    vi.mocked(prisma.user.findFirst)
+      .mockResolvedValueOnce(TEST_USER as any)
+      .mockResolvedValueOnce(null);
+    (prisma as any).user.create = vi.fn().mockResolvedValue({
+      id: "user-new",
+      username: "luis",
+      name: "Luis",
+      email: null,
+      roleId: "role-1",
+    });
+    const res = await request(app).post("/").send({
+      name: "Luis",
+      username: "luis",
+      password: "secret",
+      role: "employee",
+      color: "#fff",
+    });
     expect(res.status).toBe(201);
     expect(res.body.id).toBe("emp-new");
   });

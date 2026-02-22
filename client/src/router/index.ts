@@ -26,6 +26,11 @@ const router = createRouter({
       component: () => import("../views/SetupView.vue"),
     },
     {
+      path: "/register",
+      name: "register",
+      component: () => import("../views/RegisterView.vue"),
+    },
+    {
       path: "/",
       component: AppLayout,
       children: [
@@ -166,7 +171,7 @@ const router = createRouter({
   ],
 });
 
-const PUBLIC_NAMES = ["login", "forgot-password", "setup", "public-business"] as const;
+const PUBLIC_NAMES = ["login", "forgot-password", "setup", "register", "public-business"] as const;
 
 router.beforeEach(async (to) => {
   const authStore = useAuthStore();
@@ -188,6 +193,9 @@ router.beforeEach(async (to) => {
   }
   if (!authStore.isAuthenticated && to.name === "setup" && authStore.hasAnyUser()) {
     return { name: "login" };
+  }
+  if (!authStore.isAuthenticated && to.name === "register" && !authStore.hasAnyUser()) {
+    return { name: "setup" };
   }
   if (authStore.isAuthenticated && to.meta.requiresGestor && !authStore.isStaff) {
     return { name: "dashboard" };

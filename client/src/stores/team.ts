@@ -23,12 +23,14 @@ const dtoToMember = (d: EmployeeDto): TeamMember => ({
   defaultWorkEndHour: d.defaultWorkEndHour ?? TEAM_MANAGER.DEFAULT_WORK_END_HOUR,
 });
 
-const memberToPayload = (m: Partial<TeamMember>): Record<string, unknown> => ({
+const memberToPayload = (m: Partial<TeamMember> & { username?: string; password?: string }): Record<string, unknown> => ({
   name: m.name ?? "",
   photoUrl: m.photoUrl ?? null,
   linkedInUrl: m.linkedInUrl ?? null,
   phoneNumber: m.phoneNumber ?? null,
   email: m.email ?? null,
+  username: m.username ?? undefined,
+  password: m.password ?? undefined,
   weeklyHours: m.weeklyHours ?? null,
   color: m.color ?? null,
   role: m.role ?? "employee",
@@ -60,10 +62,12 @@ export const useTeamStore = defineStore("team", () => {
     members.value = members.value.filter((m) => m.role === "admin");
   };
 
-  const addMember = async (member: Omit<TeamMember, "id" | "color"> & { color?: string }): Promise<void> => {
+  const addMember = async (member: Omit<TeamMember, "id" | "color"> & { color?: string; username?: string; password?: string }): Promise<void> => {
     const payload = memberToPayload({
       ...member,
       color: member.color || generatePastelColor(),
+      username: member.username,
+      password: member.password,
     });
     const created = await employeeApi.createEmployee(payload as Omit<EmployeeDto, "id" | "businessId">);
     members.value.push(dtoToMember(created));

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-[#f8f9fa] flex flex-col items-center justify-center p-4">
+  <div class="min-h-screen bg-app-bg flex flex-col items-center justify-center p-4">
     <div class="w-full max-w-md">
       <div class="flex items-center justify-center mb-8">
         <AppBrand
@@ -8,10 +8,10 @@
         />
       </div>
 
-      <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 md:p-8">
-        <h2 class="text-lg font-bold text-gray-800 mb-2">Crear tu cuenta</h2>
-        <p class="text-sm text-gray-500 mb-6">
-          Configura el primer usuario para empezar a usar tu gestor.
+      <div class="bg-app-surface rounded-2xl shadow-card border border-app-border-subtle p-6 md:p-8">
+        <h2 class="text-lg font-bold text-app-title mb-4">{{ $t('auth.createAccount') }}</h2>
+        <p class="text-sm text-app-text/80 mb-6">
+          {{ $t('auth.createAccountHint') }}
         </p>
 
         <form
@@ -20,69 +20,69 @@
         >
           <div>
             <label
-              for="setup-email"
-              class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2"
+              for="register-email"
+              class="block text-xs font-bold text-app-text uppercase tracking-wider mb-2"
             >
-              Email
+              {{ $t('auth.email') }}
             </label>
             <input
-              id="setup-email"
+              id="register-email"
               v-model="form.email"
               type="email"
               autocomplete="email"
-              placeholder="tu@email.com"
-              class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 placeholder:text-gray-400"
+              :placeholder="$t('auth.placeholderEmail')"
+              class="w-full p-2.5 bg-app-bg border border-app-border rounded-lg text-sm font-medium text-app-text focus:outline-none focus:ring-2 focus:ring-brand-accent/20 placeholder:text-app-text/60"
             />
           </div>
 
           <div>
             <label
-              for="setup-username"
-              class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2"
+              for="register-username"
+              class="block text-xs font-bold text-app-text uppercase tracking-wider mb-2"
             >
-              Usuario
+              {{ $t('auth.username') }}
             </label>
             <input
-              id="setup-username"
+              id="register-username"
               v-model="form.username"
               type="text"
               autocomplete="username"
-              placeholder="Elige un usuario"
-              class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 placeholder:text-gray-400"
+              :placeholder="$t('auth.placeholderUsername')"
+              class="w-full p-2.5 bg-app-bg border border-app-border rounded-lg text-sm font-medium text-app-text focus:outline-none focus:ring-2 focus:ring-brand-accent/20 placeholder:text-app-text/60"
             />
           </div>
 
           <div>
             <label
-              for="setup-password"
-              class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2"
+              for="register-password"
+              class="block text-xs font-bold text-app-text uppercase tracking-wider mb-2"
             >
-              Contraseña
+              {{ $t('auth.password') }}
             </label>
             <input
-              id="setup-password"
+              id="register-password"
               v-model="form.password"
               type="password"
               autocomplete="new-password"
-              placeholder="Mínimo 4 caracteres"
-              class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 placeholder:text-gray-400"
+              :placeholder="$t('auth.placeholderPasswordNew')"
+              class="w-full p-2.5 bg-app-bg border border-app-border rounded-lg text-sm font-medium text-app-text focus:outline-none focus:ring-2 focus:ring-brand-accent/20 placeholder:text-app-text/60"
             />
           </div>
 
           <div>
             <label
-              for="setup-confirm"
-              class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2"
+              for="register-confirm"
+              class="block text-xs font-bold text-app-text uppercase tracking-wider mb-2"
             >
-              Repetir contraseña
+              {{ $t('auth.confirmPassword') }}
             </label>
             <input
-              id="setup-confirm"
+              id="register-confirm"
               v-model="form.confirmPassword"
               type="password"
               autocomplete="new-password"
-              placeholder="Repite la contraseña"
-              class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 placeholder:text-gray-400"
+              :placeholder="$t('auth.confirmPasswordPlaceholder')"
+              class="w-full p-2.5 bg-app-bg border border-app-border rounded-lg text-sm font-medium text-app-text focus:outline-none focus:ring-2 focus:ring-brand-accent/20 placeholder:text-app-text/60"
             />
             <p
               v-if="error"
@@ -97,17 +97,16 @@
             class="w-full"
             :disabled="loading"
           >
-            {{ loading ? "Creando…" : "Crear cuenta" }}
+            {{ loading ? $t('auth.creating') : $t('auth.createAccountButton') }}
           </BaseButton>
         </form>
 
-        <div class="mt-6 pt-4 border-t border-gray-100">
+        <div class="mt-6 pt-4 border-t border-app-border-subtle">
           <RouterLink
-            v-if="authStore.hasAnyUser()"
             to="/login"
             class="text-sm text-brand-accent hover:underline"
           >
-            Ya tengo cuenta
+            {{ $t('auth.backToLogin') }}
           </RouterLink>
         </div>
       </div>
@@ -116,12 +115,14 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive } from "vue";
+  import { ref, reactive, onMounted } from "vue";
+  import { useI18n } from "vue-i18n";
   import { useRouter } from "vue-router";
   import { useAuthStore } from "@/stores/auth";
   import AppBrand from "@/components/common/AppBrand.vue";
   import BaseButton from "@/components/common/BaseButton.vue";
 
+  const { t } = useI18n();
   const router = useRouter();
   const authStore = useAuthStore();
 
@@ -135,22 +136,28 @@
     confirmPassword: "",
   });
 
+  onMounted(() => {
+    if (!authStore.hasAnyUser()) {
+      router.replace({ name: "setup" });
+    }
+  });
+
   const handleSubmit = async () => {
     error.value = "";
     if (!form.email.trim()) {
-      error.value = "El email es obligatorio";
+      error.value = t("auth.errorEmailRequired");
       return;
     }
     if (!form.username.trim()) {
-      error.value = "El usuario no puede estar vacío";
+      error.value = t("auth.errorUsernameEmpty");
       return;
     }
     if (form.password.length < 4) {
-      error.value = "La contraseña debe tener al menos 4 caracteres";
+      error.value = t("auth.errorPasswordShort");
       return;
     }
     if (form.password !== form.confirmPassword) {
-      error.value = "Las contraseñas no coinciden";
+      error.value = t("auth.errorPasswordMismatch");
       return;
     }
     loading.value = true;

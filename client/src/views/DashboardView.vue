@@ -172,6 +172,7 @@
   import { useScheduleStore } from "@/stores/schedule";
   import { useTeamStore } from "@/stores/team";
   import { useSchedulerSettingsStore } from "@/stores/schedulerSettings";
+  import { useAppointmentStore } from "@/stores/appointment";
   import DashboardWidgetMonthlyBookings from "@/components/dashboard/DashboardWidgetMonthlyBookings.vue";
   import DashboardWidgetWeeklyBookings from "@/components/dashboard/DashboardWidgetWeeklyBookings.vue";
   import DashboardWidgetDailyProfit from "@/components/dashboard/DashboardWidgetDailyProfit.vue";
@@ -296,6 +297,7 @@
     useScheduleStore().initialize();
     useTeamStore().initialize();
     useSchedulerSettingsStore().initialize();
+    useAppointmentStore().initialize();
   });
 </script>
 

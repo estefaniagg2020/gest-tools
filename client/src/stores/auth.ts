@@ -139,9 +139,10 @@ export const useAuthStore = defineStore("auth", () => {
   const register = async (
     username: string,
     password: string,
+    email?: string,
   ): Promise<RegisterResult> => {
     try {
-      const { user: u, token } = await authApi.register(username, password);
+      const { user: u, token } = await authApi.register(username, password, email);
       authStorage.saveBackendSession(token, {
         id: u.id,
         username: u.username,
@@ -162,11 +163,11 @@ export const useAuthStore = defineStore("auth", () => {
   };
 
   const forgotPassword = async (
-    username: string,
+    email: string,
     newPassword: string,
   ): Promise<ForgotPasswordResult> => {
     try {
-      await authApi.forgotPassword(username, newPassword);
+      await authApi.forgotPassword(email, newPassword);
       return { ok: true };
     } catch (err) {
       return {

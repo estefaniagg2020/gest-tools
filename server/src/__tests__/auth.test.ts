@@ -85,28 +85,51 @@ describe("Auth routes", () => {
     expect(res.body.user.businessId).toBe("biz-1");
   });
 
-  it("POST /register returns 403 when users already exist", async () => {
-    (prisma as any).user.count = vi.fn().mockResolvedValue(1);
+  it("POST /register returns 400 when username or password missing", async () => {
+    const res = await request(app).post("/register").send({});
+    expect(res.status).toBe(400);
+  });
+
+  it("POST /register returns 400 when email missing", async () => {
     const res = await request(app).post("/register").send({
       username: "newuser",
       password: "password",
     });
-    expect(res.status).toBe(403);
-    expect(res.body.error).toContain("Ya existe");
-  });
-
-  it("POST /register returns 400 when username or password missing", async () => {
-    const res = await request(app).post("/register").send({});
     expect(res.status).toBe(400);
+    expect(res.body.error).toContain("email");
   });
 
   it("POST /register returns 400 when password too short", async () => {
     const res = await request(app).post("/register").send({
       username: "newuser",
       password: "123",
+      email: "user@test.com",
     });
     expect(res.status).toBe(400);
     expect(res.body.error).toContain("4 caracteres");
+  });
+
+  it("POST /register returns 201 when users already exist (open registration)", async () => {
+    const newUser = {
+      id: "u2",
+      username: "newuser",
+      name: null,
+      email: "user@test.com",
+      phone: null,
+      role: { name: "superadmin" },
+    };
+    (prisma as any).user.create = vi.fn().mockResolvedValue(newUser);
+    (prisma as any).company.create = vi.fn().mockResolvedValue({ id: "c1" });
+    (prisma as any).business.create = vi.fn().mockResolvedValue({ id: "b1" });
+    (prisma as any).workspaceMember.create = vi.fn().mockResolvedValue({});
+    const res = await request(app).post("/register").send({
+      username: "newuser",
+      password: "password",
+      email: "user@test.com",
+    });
+    expect(res.status).toBe(201);
+    expect(res.body.user.username).toBe("newuser");
+    expect(res.body.token).toBeDefined();
   });
 
   it("POST /logout returns 200", async () => {

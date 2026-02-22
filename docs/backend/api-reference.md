@@ -71,9 +71,13 @@ Notas:
 | Método | Ruta | Auth |
 |---|---|---|
 | `GET` | `/api/employees` | `requireAuth + requireStaff` |
-| `POST` | `/api/employees` | `requireAuth + requireStaff` |
-| `PUT` | `/api/employees/:id` | `requireAuth + requireStaff` |
-| `DELETE` | `/api/employees/:id` | `requireAuth + requireStaff` |
+| `POST` | `/api/employees` | `requireAuth + requireAdmin` |
+| `PUT` | `/api/employees/:id` | `requireAuth + requireAdmin` |
+| `DELETE` | `/api/employees/:id` | `requireAuth + requireAdmin` |
+
+Regla de permisos del módulo equipo:
+- `employee` puede consultar el equipo (solo lectura).
+- Solo `admin` y `superadmin` pueden crear, editar o eliminar miembros.
 
 ## Clients (`/api/clients`)
 

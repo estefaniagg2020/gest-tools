@@ -4,6 +4,7 @@ import { storeToRefs } from "pinia";
 import { useScheduleStore } from "@/stores/schedule";
 import { useTeamStore } from "@/stores/team";
 import { useSchedulerSettingsStore } from "@/stores/schedulerSettings";
+import { useAppointmentStore } from "@/stores/appointment";
 import { isSameDay } from "@/composables/useScheduleDates";
 import { blockDurationMinutes } from "@/composables/useScheduleDates";
 
@@ -50,9 +51,11 @@ export const useDashboardAgendaStats = () => {
   const scheduleStore = useScheduleStore();
   const teamStore = useTeamStore();
   const schedulerSettingsStore = useSchedulerSettingsStore();
+  const appointmentStore = useAppointmentStore();
   const { blocks } = storeToRefs(scheduleStore);
   const { members } = storeToRefs(teamStore);
   const { startHour, endHour } = storeToRefs(schedulerSettingsStore);
+  const { appointments } = storeToRefs(appointmentStore);
 
   const tomorrow = computed(() => getTomorrow());
 
@@ -68,9 +71,19 @@ export const useDashboardAgendaStats = () => {
     );
   });
 
+  const appointmentsTomorrow = computed(() => {
+    const date = tomorrow.value;
+    return appointments.value.filter(
+      (a) =>
+        isSameDay(new Date(a.start), date) &&
+        a.status !== "cancelled" &&
+        a.status !== "no_show",
+    );
+  });
+
   const occupiedMinutes = computed(() =>
-    workBlocksTomorrow.value.reduce(
-      (sum, b) => sum + blockDurationMinutes(b.start, b.end),
+    appointmentsTomorrow.value.reduce(
+      (sum, a) => sum + blockDurationMinutes(a.start, a.end),
       0,
     ),
   );
@@ -90,14 +103,12 @@ export const useDashboardAgendaStats = () => {
 
   const slotsByHour = computed((): HourOccupancy[] => {
     const date = tomorrow.value;
-    const workBlocks = blocks.value.filter(
-      (b) => b.type === WORK_TYPE && isSameDay(new Date(b.start), date),
-    );
+    const appts = appointmentsTomorrow.value;
     const maxPeople = Math.max(1, members.value.length);
     const rows: HourOccupancy[] = [];
     for (let h = startHour.value; h < endHour.value; h++) {
-      const count = workBlocks.filter((b) =>
-        blockOverlapsHour(b.start, b.end, date, h),
+      const count = appts.filter((a) =>
+        blockOverlapsHour(a.start, a.end, date, h),
       ).length;
       rows.push({
         hour: h,
@@ -127,7 +138,7 @@ export const useDashboardAgendaStats = () => {
     tomorrow,
     tomorrowLabel,
     workBlocksTomorrow,
-    workBlocksCount: computed(() => workBlocksTomorrow.value.length),
+    workBlocksCount: computed(() => appointmentsTomorrow.value.length),
     occupiedMinutes,
     totalAvailableMinutes,
     occupancyPercent,
