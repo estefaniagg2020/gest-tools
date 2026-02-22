@@ -36,9 +36,12 @@ const prisma = new PrismaClient({ adapter });
 const app = express();
 const port = process.env.PORT || 3000;
 
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || ["http://localhost:3000"];
+console.log("[cors] allowed origins:", allowedOrigins);
+
 app.use(
   cors({
-    origin: process.env.ALLOWED_ORIGINS?.split(",") || "http://localhost:3000",
+    origin: allowedOrigins,
     credentials: true,
   }),
 );
