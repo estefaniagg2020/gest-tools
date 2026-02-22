@@ -49,47 +49,6 @@
         </div>
       </div>
 
-      <div
-        v-if="suggestedTemplates && suggestedTemplates.services.length > 0"
-        class="relative mb-8 rounded-2xl border border-brand-accent/20 bg-brand-soft/50 dark:bg-app-bg/80 dark:border-app-border-subtle p-5"
-      >
-        <div class="flex items-center justify-between gap-4 mb-4">
-          <div>
-            <h2 class="text-sm font-bold text-app-title">
-              {{ $t('servicios.suggestions') }}
-            </h2>
-            <p class="text-xs text-app-text/80 mt-0.5">
-              {{ $t('servicios.suggestionsDesc') }}
-            </p>
-          </div>
-          <BaseButton
-            variant="outline"
-            class="shrink-0 rounded-xl text-sm px-4 py-2"
-            @click="quickAddAllTemplates"
-          >
-            {{ $t('common.addAll') }}
-          </BaseButton>
-        </div>
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-for="template in suggestedTemplates.services"
-            :key="template.name"
-            type="button"
-            class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-150"
-            :class="isTemplateAdded(template)
-              ? 'border-app-border-subtle bg-app-bg text-app-text/40 cursor-default'
-              : 'border-brand-accent/30 bg-app-surface text-brand-accent hover:bg-brand-accent/10 hover:border-brand-accent/40 cursor-pointer'"
-            :disabled="isTemplateAdded(template)"
-            @click="() => !isTemplateAdded(template) && quickAddFromTemplate(template)"
-          >
-            <span v-if="isTemplateAdded(template)">✓</span>
-            <span v-else>+</span>
-            {{ template.name }}
-            <span class="opacity-60 font-normal">· {{ template.duration }} min · {{ formatServicePrice(template.price) }}</span>
-          </button>
-        </div>
-      </div>
-
       <div class="relative space-y-8">
         <section
           v-for="(category, catIndex) in filteredCategoriesWithServices"
@@ -374,10 +333,6 @@
     openCategoryModal,
     closeCategoryModal,
     saveCategory,
-    suggestedTemplates,
-    quickAddFromTemplate,
-    quickAddAllTemplates,
-    isTemplateAdded,
   } = useServiciosManager();
 
   const searchQuery = ref("");

@@ -1,35 +1,56 @@
 # Documentación — gest-tools
 
-Índice de toda la documentación técnica y funcional del proyecto.
+Documentación organizada por contextos para separar frontend, backend y su integración.
 
-## Guías de inicio
-
-| Documento | Descripción |
-|---|---|
-| [`../README.md`](../README.md) | Resumen del proyecto, stack, instalación rápida |
-| [`setup.md`](./setup.md) | Guía de instalación y configuración detallada (incl. puertos 5173/3000 y proxy) |
-
-## Arquitectura y diseño
+## 1) Overview
 
 | Documento | Descripción |
 |---|---|
-| [`architecture.md`](./architecture.md) | Arquitectura completa del sistema (frontend + backend) |
-| [`backend-architecture.md`](./backend-architecture.md) | Decisiones técnicas del backend (Express, Prisma, PostgreSQL) |
-| [`database.md`](./database.md) | Esquema de base de datos, modelos, relaciones y enums |
-| [`../AGENTS.md`](../AGENTS.md) | Reglas de código, SOLID, Clean Code, convenciones del proyecto |
+| [`overview/setup.md`](./overview/setup.md) | Instalación y puesta en marcha local |
 
-## Referencia de API
+## 2) Integración (Front + Back)
 
 | Documento | Descripción |
 |---|---|
-| [`api-reference.md`](./api-reference.md) | Todos los endpoints REST de la API (rutas, métodos, autenticación) |
+| [`integration/architecture.md`](./integration/architecture.md) | Arquitectura global y capas |
+| [`integration/front-back-link.md`](./integration/front-back-link.md) | Mapa de unión frontend-backend por dominio |
 
-## Funcionalidades
+## 3) Backend
 
 | Documento | Descripción |
 |---|---|
-| [`features.md`](./features.md) | Descripción detallada de todos los módulos del sistema |
-| [`dashboard.md`](./dashboard.md) | Vista Dashboard: métricas y widgets |
-| [`scheduler.md`](./scheduler.md) | Vista Agenda: vistas, roles y flujo de aprobación |
-| [`therapists.md`](./therapists.md) | Vista Equipo: gestión de miembros |
-| [`spas.md`](./spas.md) | Vista Negocios/Centros |
+| [`backend/architecture.md`](./backend/architecture.md) | Diseño interno del backend |
+| [`backend/api-reference.md`](./backend/api-reference.md) | Endpoints reales y auth |
+| [`backend/database.md`](./backend/database.md) | Modelo de datos Prisma |
+
+## 4) Frontend
+
+| Documento | Descripción |
+|---|---|
+| [`frontend/dashboard.md`](./frontend/dashboard.md) | Vista dashboard |
+| [`frontend/scheduler.md`](./frontend/scheduler.md) | Vista agenda |
+| [`frontend/team.md`](./frontend/team.md) | Vista equipo |
+| [`frontend/spas.md`](./frontend/spas.md) | Estado de la ruta `/spas` |
+
+## 5) Producto
+
+| Documento | Descripción |
+|---|---|
+| [`product/features.md`](./product/features.md) | Módulos funcionales y rutas |
+
+## 6) Auditorías
+
+| Documento | Descripción |
+|---|---|
+| [`audits/configuration-persistence-audit.md`](./audits/configuration-persistence-audit.md) | Hallazgos técnicos de persistencia |
+
+## 7) Backlog
+
+| Documento | Descripción |
+|---|---|
+| [`backlog/todo-agenda.md`](./backlog/todo-agenda.md) | Ideas de evolución de agenda |
+
+## Referencias
+
+- README raíz: [`../README.md`](../README.md)
+- Normas de desarrollo: [`../AGENTS.md`](../AGENTS.md)

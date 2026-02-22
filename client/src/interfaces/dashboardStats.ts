@@ -38,6 +38,14 @@ export interface EmpleadoMasReservasItem {
   count: number;
 }
 
+export interface ClienteNuevoItem {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  createdAt: string;
+}
+
 export interface VentasPorEmpleadoItem {
   employeeId: string | null;
   employeeName: string | null;
@@ -56,6 +64,7 @@ export interface DashboardStats {
   ventasPorEmpleado: VentasPorEmpleadoItem[];
   serviciosPopulares: ServicioPopularItem[];
   clientesNuevos: number;
+  clientesNuevosDetalle: ClienteNuevoItem[];
   proximasCitasHoy: ProximaCitaItem[];
   ocupacionSemanal: number;
   horasTrabajadasSemana: number;

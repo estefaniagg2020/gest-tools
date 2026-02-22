@@ -4,24 +4,21 @@ import { loadStoredSpas, loadStoredCurrentSpaId, saveSpaList, saveCurrentSpaId }
 
 describe("utils/spaStorage", () => {
   beforeEach(() => {
-    localStorage.clear();
+    saveSpaList([]);
+    saveCurrentSpaId("");
   });
 
   describe("loadStoredSpas", () => {
-    it("should_return_null_when_no_data_stored", () => {
-      expect(loadStoredSpas()).toBeNull();
-    });
-
-    it("should_return_parsed_array_when_valid_json_stored", () => {
+    it("should_return_saved_array_when_data_is_saved", () => {
       const spas: Spa[] = [{ id: "s1", name: "Spa 1", themeColor: "#000" }];
-      localStorage.setItem("spa-list", JSON.stringify(spas));
+      saveSpaList(spas);
       expect(loadStoredSpas()).toEqual(spas);
     });
   });
 
   describe("loadStoredCurrentSpaId", () => {
-    it("should_return_stored_id", () => {
-      localStorage.setItem("spa-current-id", "spa-123");
+    it("should_return_saved_id", () => {
+      saveCurrentSpaId("spa-123");
       expect(loadStoredCurrentSpaId()).toBe("spa-123");
     });
   });

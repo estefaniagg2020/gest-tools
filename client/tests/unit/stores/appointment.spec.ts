@@ -69,6 +69,25 @@ describe("useAppointmentStore", () => {
     expect(appointmentsApi.updateAppointment).toHaveBeenCalledWith("apt-1", { status: "cancelled" });
   });
 
+  it("should_update_payment_status_to_paid", async () => {
+    const store = useAppointmentStore();
+    await store.initialize();
+    vi.mocked(appointmentsApi.updateAppointment).mockResolvedValue({
+      ...fakeApt,
+      paymentStatus: "paid",
+    });
+    await store.update("apt-1", { paymentStatus: "paid" });
+    expect(store.appointments[0].paymentStatus).toBe("paid");
+    expect(appointmentsApi.updateAppointment).toHaveBeenCalledWith("apt-1", { paymentStatus: "paid" });
+  });
+
+  it("should_throw_when_update_fails", async () => {
+    const store = useAppointmentStore();
+    await store.initialize();
+    vi.mocked(appointmentsApi.updateAppointment).mockRejectedValue(new Error("fail"));
+    await expect(store.update("apt-1", { status: "confirmed" })).rejects.toThrow("fail");
+  });
+
   it("should_cancel_appointment_with_reason", async () => {
     const store = useAppointmentStore();
     await store.initialize();

@@ -12,9 +12,9 @@ export const publicRouter = (prisma: PrismaClient) => {
       const business = await prisma.business.findFirst({
         where: { slug },
         include: {
-          services: {
+          businessServices: {
             where: { onlineBookingEnabled: true },
-            include: { serviceCategory: true }
+            include: { businessCategory: true }
           },
           workspaceMembers: {
              select: { id: true, name: true, photoUrl: true, role: true, position: true }
@@ -38,7 +38,7 @@ export const publicRouter = (prisma: PrismaClient) => {
             address: business.address,
             email: business.email
         },
-        services: business.services,
+        services: business.businessServices,
         team: business.workspaceMembers
       };
 

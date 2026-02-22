@@ -233,9 +233,11 @@
         isCanarias: form.isCanarias,
         logoUrl: form.logoDataUrl,
       }, user.value.businessId ?? null);
+      success.value = true;
+    } catch {
+      error.value = "No se pudo guardar. Inténtalo de nuevo.";
     } finally {
       loading.value = false;
-      success.value = true;
     }
   };
 </script>

@@ -5,9 +5,9 @@ import { setActivePinia, createPinia } from "pinia";
 import { useSpaManager } from "@/composables/useSpaManager";
 import { useSpaStore } from "@/stores/spa";
 import { useTeamStore } from "@/stores/team";
-import * as spaStorage from "@/utils/spaStorage";
+import * as spaStorage from "@/infrastructure/spaStorage";
 
-vi.mock("@/utils/spaStorage", () => ({
+vi.mock("@/infrastructure/spaStorage", () => ({
   loadStoredSpas: vi.fn(() => null),
   loadStoredCurrentSpaId: vi.fn(() => null),
   saveSpaList: vi.fn(),

@@ -98,6 +98,22 @@ export const authApi = {
     }
   },
 
+  activateAccount: async (
+    email: string,
+    username: string,
+    password: string,
+  ): Promise<LoginResponse> => {
+    const res = await apiFetch("/api/auth/activate-account", {
+      method: "POST",
+      body: JSON.stringify({ email, username, password }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.error ?? "Error al activar la cuenta");
+    }
+    return data;
+  },
+
   updateProfile: async (payload: {
     name?: string;
     phone?: string;

@@ -111,6 +111,7 @@
               <DashboardWidgetNewClients
                 v-else-if="widget.id === 'clientes-nuevos'"
                 :count="bookingStats.stats.value?.clientesNuevos ?? 0"
+                :clients="bookingStats.stats.value?.clientesNuevosDetalle ?? []"
               />
               <DashboardWidgetWeeklyOccupancy
                 v-else-if="widget.id === 'ocupacion-semanal'"
@@ -165,6 +166,7 @@
   import { DEFAULT_DASHBOARD_MODULE_IDS } from "@/interfaces/layoutConfig";
   import { useDashboardAgendaStats } from "@/composables/useDashboardAgendaStats";
   import { useDashboardBookingStats } from "@/composables/useDashboardBookingStats";
+  import { useBillingConfig } from "@/composables/useBillingConfig";
   import { useAuthStore } from "@/stores/auth";
   import { useLayoutStore } from "@/stores/layout";
   import { useScheduleStore } from "@/stores/schedule";
@@ -202,12 +204,18 @@
   const route = useRoute();
   const layoutStore = useLayoutStore();
   const authStore = useAuthStore();
+  const { inventarioEnabled } = useBillingConfig();
   const { dashboardModuleIds, showSidebar } = storeToRefs(layoutStore);
   const { user } = storeToRefs(authStore);
 
   const widgetIdsForDisplay = computed(() => {
     const ids = dashboardModuleIds.value;
-    return ids.length > 0 ? ids : [...DEFAULT_DASHBOARD_MODULE_IDS];
+    const base = ids.length > 0 ? ids : [...DEFAULT_DASHBOARD_MODULE_IDS];
+    // HIDDEN_FEATURE: inventario - Oculta widget productos-bajo-stock si inventarioEnabled=false
+    if (!inventarioEnabled.value) {
+      return base.filter((id) => id !== "productos-bajo-stock");
+    }
+    return base;
   });
 
   const orderedReservaWidgets = computed(() =>

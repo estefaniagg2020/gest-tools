@@ -191,30 +191,28 @@
 
     <div class="max-h-40 overflow-y-auto space-y-1 custom-scrollbar">
       <p
-        v-if="availableSlots.length > 0"
+        v-if="waitlistEntriesByBusiness.length > 0"
         class="text-[10px] text-app-text/60 mb-1"
       >
-        {{ $t('scheduler.slotFinderClickToBook') }}
+        Personas en lista de espera
       </p>
-      <button
-        v-for="slot in availableSlots"
-        :key="`${slot.date.toISOString()}-${slot.startHour}-${slot.memberId}`"
-        type="button"
-        class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium bg-app-surface border border-app-border-subtle hover:bg-brand-primary/10 hover:border-brand-primary/30 cursor-pointer flex items-center justify-between gap-2 transition-colors"
-        @click="$emit('slot-select', slot)"
+      <div
+        v-for="entry in waitlistEntriesByBusiness"
+        :key="entry.id"
+        class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium bg-app-surface border border-app-border-subtle flex items-center justify-between gap-2"
       >
         <span>
-          <span class="text-app-title">{{ formatSlotLabel(slot.startHour) }} – {{ formatSlotLabel(slot.endHour) }}</span>
-          <span class="text-app-text/70 ml-1">· {{ formatDayShort(slot.date) }}</span>
-          <span class="text-app-text/60 ml-1 truncate">· {{ slot.memberName.split(' ')[0] }}</span>
+          <span class="text-app-title">{{ formatIsoTimeRange(entry.preferredStart, entry.preferredEnd) }}</span>
+          <span class="text-app-text/70 ml-1">· {{ formatIsoDayShort(entry.preferredStart) }}</span>
+          <span class="text-app-text/60 ml-1 truncate">· {{ entry.user.name ?? entry.user.username }}</span>
         </span>
-        <span class="text-brand-primary text-[10px] font-semibold shrink-0">{{ $t('scheduler.slotFinderReserve') }}</span>
-      </button>
+        <span class="text-brand-primary text-[10px] font-semibold shrink-0">{{ entry.service.name }}</span>
+      </div>
       <p
-        v-if="availableSlots.length === 0 && !showWaitlistSection"
+        v-if="waitlistEntriesByBusiness.length === 0"
         class="text-xs text-app-text/60 py-2"
       >
-        {{ $t('scheduler.slotFinderNoResults') }}
+        No hay personas apuntadas en lista de espera
       </p>
     </div>
 
@@ -316,10 +314,10 @@
   import { ref, computed, watch } from "vue";
   import { useI18n } from "vue-i18n";
   import { useSlotFinder, type AvailableSlot, type TimeWindow } from "@/composables/useSlotFinder";
-  import { formatSlotLabel } from "@/composables/useScheduleDates";
   import { getIntlLocale } from "@/utils/intlLocale";
   import { useServiceStore } from "@/stores/service";
   import { bookingApi } from "@/infrastructure/bookingApi";
+  import type { WaitlistEntryByBusiness } from "@/infrastructure/bookingApi";
   import { aiApi } from "@/infrastructure/aiApi";
   import type { ScheduleBlock, Client } from "@/interfaces";
   import type { Appointment } from "@/interfaces";
@@ -330,6 +328,7 @@
       members: TeamMember[];
       blocks: ScheduleBlock[];
       appointments: Appointment[];
+      waitlistEntriesByBusiness?: WaitlistEntryByBusiness[];
       minHour: number;
       maxHour: number;
       slotDurationMinutes: number;
@@ -337,7 +336,7 @@
       businessId?: string | null;
       clients?: Client[];
     }>(),
-    { businessId: null, clients: () => [] },
+    { businessId: null, clients: () => [], waitlistEntriesByBusiness: () => [] },
   );
 
   defineEmits<{
@@ -593,8 +592,14 @@
     }
   };
 
-  const formatDayShort = (d: Date) =>
-    new Intl.DateTimeFormat(getIntlLocale(), { weekday: "short", day: "numeric", month: "short" }).format(d);
+  const formatIsoDayShort = (iso: string) =>
+    new Intl.DateTimeFormat(getIntlLocale(), { weekday: "short", day: "numeric", month: "short" }).format(new Date(iso));
+
+  const formatIsoTimeRange = (startIso: string, endIso: string) => {
+    const start = new Date(startIso);
+    const end = new Date(endIso);
+    return `${start.toLocaleTimeString(getIntlLocale(), { hour: "2-digit", minute: "2-digit" })} - ${end.toLocaleTimeString(getIntlLocale(), { hour: "2-digit", minute: "2-digit" })}`;
+  };
 
   watch(
     () => props.initialDate,

@@ -151,6 +151,69 @@ export const authRouter = (prisma: PrismaClient) => {
     });
   });
 
+  router.post("/activate-account", async (req: Request, res: Response) => {
+    const { email, username, password } = req.body as {
+      email?: string;
+      username?: string;
+      password?: string;
+    };
+    if (!email || !username || !password) {
+      res.status(400).json({ error: "Email, usuario y contraseña son requeridos" });
+      return;
+    }
+    const trimmedEmail = email.trim().toLowerCase();
+    const trimmedUsername = username.trim();
+    if (trimmedUsername.length < 1) {
+      res.status(400).json({ error: "El usuario no puede estar vacío" });
+      return;
+    }
+    if (password.length < 4) {
+      res.status(400).json({ error: "La contraseña debe tener al menos 4 caracteres" });
+      return;
+    }
+    // Find WorkspaceMember by email with no linked user account
+    const member = await prisma.workspaceMember.findFirst({
+      where: { email: { equals: trimmedEmail, mode: "insensitive" }, userId: null },
+      include: { role: { select: { name: true } } },
+    });
+    if (!member) {
+      res.status(404).json({ error: "No se encontró ningún empleado con ese email sin cuenta activa. Comprueba que el email es correcto y que aún no tienes cuenta." });
+      return;
+    }
+    const existingUser = await prisma.user.findFirst({
+      where: { username: { equals: trimmedUsername, mode: "insensitive" } },
+    });
+    if (existingUser) {
+      res.status(400).json({ error: "Ese nombre de usuario ya está en uso, elige otro" });
+      return;
+    }
+    const salt = generateSalt();
+    const passwordHash = hashPassword(password, salt);
+    const roleName = member.role.name === "admin" ? "admin" : "employee";
+    const roleId = await getRoleId(prisma, roleName);
+    const newUser = await prisma.$transaction(async (tx) => {
+      const u = await tx.user.create({
+        data: { username: trimmedUsername, passwordHash, salt, roleId, name: member.name, email: trimmedEmail },
+      });
+      await tx.workspaceMember.update({ where: { id: member.id }, data: { userId: u.id } });
+      return u;
+    });
+    const token = generateSessionToken();
+    await prisma.user.update({ where: { id: newUser.id }, data: { sessionToken: token } });
+    res.status(201).json({
+      user: {
+        id: newUser.id,
+        username: newUser.username,
+        role: roleName,
+        name: newUser.name,
+        email: newUser.email,
+        phone: newUser.phone,
+        businessId: member.businessId,
+      },
+      token,
+    });
+  });
+
   router.post("/forgot-password", async (req: Request, res: Response) => {
     const { username, newPassword } = req.body as {
       username?: string;

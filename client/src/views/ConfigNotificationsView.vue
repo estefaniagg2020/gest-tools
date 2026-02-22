@@ -106,7 +106,7 @@
           </p>
         </section>
 
-        <section class="rounded-xl border border-app-border-subtle bg-app-surface p-5">
+        <section v-if="inventarioEnabled" class="rounded-xl border border-app-border-subtle bg-app-surface p-5">
           <h2 class="text-base font-semibold text-app-title flex items-center gap-2">
             <span aria-hidden="true">📦</span>
             Productos próximos a acabar
@@ -177,12 +177,13 @@
 <script setup lang="ts">
   import { ref, onMounted } from "vue";
   import { useAuthStore } from "@/stores/auth";
+  import { useBillingConfig } from "@/composables/useBillingConfig";
   import { useNotificacionesAvisos } from "@/composables/useNotificacionesAvisos";
-  import { bookingApi } from "@/infrastructure/bookingApi";
   import { businessConfigApi } from "@/infrastructure/businessConfigApi";
   import ConfigPageHeader from "@/components/config/ConfigPageHeader.vue";
 
   const authStore = useAuthStore();
+  const { inventarioEnabled } = useBillingConfig();
   const whatsappBusinessId = ref<string | null>(null);
   const whatsappConfigLoading = ref(true);
   const whatsappRemindersEnabled = ref(false);
@@ -191,16 +192,12 @@
   const whatsappSaveError = ref("");
   const whatsappSaveSuccess = ref(false);
 
-  const resolveBusinessId = async (): Promise<string | null> => {
-    const id = authStore.user?.businessId ?? null;
-    if (id) return id;
-    const list = await bookingApi.getBusinesses().catch(() => []);
-    const first = Array.isArray(list) && list.length > 0 ? list[0] : null;
-    return first?.id ?? null;
-  };
-
   onMounted(async () => {
-    whatsappBusinessId.value = await resolveBusinessId();
+    whatsappBusinessId.value = authStore.user?.businessId ?? null;
+    if (!whatsappBusinessId.value) {
+      whatsappConfigLoading.value = false;
+      return;
+    }
     if (whatsappBusinessId.value) {
       try {
         const config = await businessConfigApi.getConfig(whatsappBusinessId.value);

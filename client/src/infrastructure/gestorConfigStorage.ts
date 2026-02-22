@@ -1,71 +1,24 @@
-import type { GestorConfig, ContactData, WizardTeamMember } from "@/interfaces";
-import { DEFAULT_CONTACT_DATA } from "@/interfaces";
+import type { GestorConfig } from "@/interfaces";
 
-const KEY_PREFIX = "gestor-config-";
+const memoryByUser = new Map<string, GestorConfig>();
 
-function isContactData(value: unknown): value is ContactData {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "email" in value &&
-    "phone" in value &&
-    typeof (value as ContactData).email === "string" &&
-    typeof (value as ContactData).phone === "string"
-  );
-}
+export const loadGestorConfig = (userId: string): GestorConfig | null => {
+  const current = memoryByUser.get(userId);
+  if (!current) return null;
+  const cloned = JSON.parse(JSON.stringify(current)) as GestorConfig;
+  if (!Array.isArray(cloned.teamMembers)) cloned.teamMembers = [];
+  return cloned;
+};
 
-function normalizeStored(value: unknown): GestorConfig | null {
-  if (typeof value !== "object" || value === null) return null;
-  const o = value as Record<string, unknown>;
-  if (typeof o.companyName !== "string") return null;
-  const logoUrl = o.logoUrl === null || typeof o.logoUrl === "string" ? o.logoUrl : null;
-  const numberOfPeople =
-    typeof o.numberOfPeople === "number" && o.numberOfPeople >= 0 ? o.numberOfPeople : 1;
-  const businessType = typeof o.businessType === "string" ? o.businessType : "";
-  const contactData = isContactData(o.contactData)
-    ? { ...DEFAULT_CONTACT_DATA, ...o.contactData }
-    : DEFAULT_CONTACT_DATA;
-  const onboardingComplete = typeof o.onboardingComplete === "boolean" ? o.onboardingComplete : false;
-  const teamMembers = Array.isArray(o.teamMembers)
-    ? (o.teamMembers as unknown[]).filter(
-        (m): m is WizardTeamMember =>
-          typeof m === "object" &&
-          m !== null &&
-          typeof (m as WizardTeamMember).id === "string" &&
-          typeof (m as WizardTeamMember).name === "string" &&
-          typeof (m as WizardTeamMember).specialty === "string",
-      )
-    : [];
-  const businessAddress = typeof o.businessAddress === "string" ? o.businessAddress : undefined;
-  const businessPopulation = typeof o.businessPopulation === "string" ? o.businessPopulation : undefined;
-  const isCanarias = typeof o.isCanarias === "boolean" ? o.isCanarias : undefined;
-  const taxId = typeof o.taxId === "string" ? o.taxId : undefined;
-  return {
-    companyName: o.companyName,
-    logoUrl,
-    numberOfPeople,
-    businessType,
-    contactData,
-    onboardingComplete,
-    teamMembers,
-    ...(businessAddress !== undefined && { businessAddress }),
-    ...(businessPopulation !== undefined && { businessPopulation }),
-    ...(isCanarias !== undefined && { isCanarias }),
-    ...(taxId !== undefined && { taxId }),
-  };
-}
+export const saveGestorConfig = (
+  userId: string,
+  config: GestorConfig,
+): void => {
+  const cloned = JSON.parse(JSON.stringify(config)) as GestorConfig;
+  if (!Array.isArray(cloned.teamMembers)) cloned.teamMembers = [];
+  memoryByUser.set(userId, cloned);
+};
 
-export function loadGestorConfig(userId: string): GestorConfig | null {
-  const raw = localStorage.getItem(KEY_PREFIX + userId);
-  if (raw === null) return null;
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    return normalizeStored(parsed);
-  } catch {
-    return null;
-  }
-}
-
-export function saveGestorConfig(userId: string, config: GestorConfig): void {
-  localStorage.setItem(KEY_PREFIX + userId, JSON.stringify(config));
-}
+export const resetGestorConfigStorage = (): void => {
+  memoryByUser.clear();
+};

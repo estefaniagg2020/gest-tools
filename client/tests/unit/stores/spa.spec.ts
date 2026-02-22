@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { setActivePinia, createPinia } from "pinia";
 import { useSpaStore } from "@/stores/spa";
-import * as spaStorage from "@/utils/spaStorage";
+import * as spaStorage from "@/infrastructure/spaStorage";
 
-vi.mock("@/utils/spaStorage", () => ({
+vi.mock("@/infrastructure/spaStorage", () => ({
   loadStoredSpas: vi.fn(),
   loadStoredCurrentSpaId: vi.fn(),
   saveSpaList: vi.fn(),

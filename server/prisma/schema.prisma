@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -15,7 +16,7 @@ model Company {
 }
 
 model Business {
-  id                  String              @id @default(uuid())
+  id                  String               @id @default(uuid())
   name                String
   logoUrl             String?
   email               String?
@@ -25,25 +26,25 @@ model Business {
   taxId               String?
   businessAddress     String?
   businessPopulation  String?
-  isCanarias          Boolean             @default(false)
+  isCanarias          Boolean              @default(false)
   description         String?
   publicPhoneNumber   String?
-  slug                String?             @unique
+  slug                String?              @unique
   socialLinks         Json?
   companyId           String
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
   appointments        Appointment[]
   bonos               Bono[]
-  company             Company             @relation(fields: [companyId], references: [id])
+  company             Company              @relation(fields: [companyId], references: [id])
   clients             Client[]
   gestorConfig        GestorConfig?
   products            Product[]
-  profession          Profession?         @relation(fields: [professionId], references: [id])
+  profession          Profession?          @relation(fields: [professionId], references: [id])
   sales               Sale[]
   scheduleBlocks      ScheduleBlock[]
-  services            Service[]
-  serviceCategories   ServiceCategory[]
+  businessServices    BusinessService[]
+  businessCategories  BusinessCategory[]
   slotWaitlistEntries SlotWaitlistEntry[]
   suppliers           Supplier[]
   workspaceMembers    WorkspaceMember[]
@@ -84,9 +85,9 @@ model GestorConfig {
   whatsappPhoneNumberId       String?
   defaultVatPercent           Int                @default(21)
   cartEnabled                 Boolean            @default(false)
-  bonosEnabled                Boolean            @default(true)
+  bonosEnabled                Boolean            @default(false)
   serviciosEnabled            Boolean            @default(true)
-  inventarioEnabled           Boolean            @default(true)
+  inventarioEnabled           Boolean            @default(false)
   hiddenSystemServiceNames    String[]           @default([])
   locale                      String?
   createdAt                   DateTime           @default(now())
@@ -97,26 +98,29 @@ model GestorConfig {
   business                    Business           @relation(fields: [businessId], references: [id])
 }
 
-model Service {
-  id                   String              @id @default(uuid())
+/// Servicio propio de una empresa (copiado desde ProfessionService al elegir profesión, o creado manualmente)
+model BusinessService {
+  id                   String               @id @default(uuid())
   name                 String
   duration             Int
   price                Float
   description          String?
-  requiresCabin        Boolean             @default(false)
-  requiresTherapist    Boolean             @default(true)
+  requiresCabin        Boolean              @default(false)
+  requiresTherapist    Boolean              @default(true)
   businessId           String
   categoryId           String
-  createdAt            DateTime            @default(now())
-  updatedAt            DateTime            @updatedAt
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
   depositAmount        Float?
-  onlineBookingEnabled Boolean             @default(true)
+  onlineBookingEnabled Boolean              @default(true)
   sourceServiceId      String?
   appointments         Appointment[]
-  business             Business            @relation(fields: [businessId], references: [id])
-  serviceCategory      ServiceCategory     @relation(fields: [categoryId], references: [id])
-  sourceService        ProfessionService?  @relation(fields: [sourceServiceId], references: [id])
+  business             Business             @relation(fields: [businessId], references: [id])
+  businessCategory     BusinessCategory     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  sourceService        ProfessionService?   @relation(fields: [sourceServiceId], references: [id])
   slotWaitlistEntries  SlotWaitlistEntry[]
+
+  @@map("Service")
 }
 
 model Role {
@@ -172,7 +176,7 @@ model Appointment {
   workspaceMemberId  String?
   business           Business          @relation(fields: [businessId], references: [id])
   client             Client?           @relation(fields: [clientId], references: [id])
-  service            Service?          @relation(fields: [serviceId], references: [id])
+  service            BusinessService?  @relation(fields: [serviceId], references: [id], onDelete: SetNull)
   user               User?             @relation(fields: [userId], references: [id])
   workspaceMember    WorkspaceMember?  @relation(fields: [workspaceMemberId], references: [id])
   sale               Sale?
@@ -210,7 +214,8 @@ model Client {
   slotWaitlistEntries SlotWaitlistEntry[]
 }
 
-model ServiceCategory {
+/// Categoría propia de una empresa (copiada desde ProfessionCategory al elegir profesión, o creada manualmente)
+model BusinessCategory {
   id               String              @id @default(uuid())
   businessId       String
   label            String
@@ -219,60 +224,62 @@ model ServiceCategory {
   updatedAt        DateTime            @updatedAt
   sourceCategoryId String?
   bonos            Bono[]
-  services         Service[]
+  businessServices BusinessService[]
   business         Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
   sourceCategory   ProfessionCategory? @relation(fields: [sourceCategoryId], references: [id])
+
+  @@map("ServiceCategory")
 }
 
 model Bono {
-  id                     String       @id @default(uuid())
-  businessId             String
-  name                   String
-  sessions               Int?
-  price                  Float?
-  validDays              Int?
-  serviceId              String?
-  serviceCategoryId      String?
-  loyaltyTriggerEvery    Int?
-  loyaltyRewardSessions   Int?
-  createdAt              DateTime     @default(now())
-  updatedAt              DateTime     @updatedAt
-  type                   BonoType
-  business               Business     @relation(fields: [businessId], references: [id])
-  serviceCategory        ServiceCategory? @relation(fields: [serviceCategoryId], references: [id])
-  clientBonos            ClientBono[]
+  id                    String            @id @default(uuid())
+  businessId            String
+  name                  String
+  sessions              Int?
+  price                 Float?
+  validDays             Int?
+  serviceId             String?
+  serviceCategoryId     String?
+  loyaltyTriggerEvery   Int?
+  loyaltyRewardSessions Int?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  type                  BonoType
+  business              Business          @relation(fields: [businessId], references: [id])
+  businessCategory      BusinessCategory? @relation(fields: [serviceCategoryId], references: [id], onDelete: SetNull)
+  clientBonos           ClientBono[]
 }
 
 model ClientBono {
-  id                    String       @id @default(uuid())
+  id                    String    @id @default(uuid())
   clientId              String
   bonoId                String
-  sessionsUsed          Int          @default(0)
+  sessionsUsed          Int       @default(0)
   sessionsTotal         Int?
   remainingSessions     Int?
-  paidCount             Int          @default(0)
+  paidCount             Int       @default(0)
   freeSessionsRemaining Int?
-  assignedAt            DateTime     @default(now())
+  assignedAt            DateTime  @default(now())
   expiresAt             DateTime?
-  createdAt             DateTime     @default(now())
-  updatedAt             DateTime     @updatedAt
-  client                Client       @relation(fields: [clientId], references: [id])
-  bono                  Bono         @relation(fields: [bonoId], references: [id])
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  client                Client    @relation(fields: [clientId], references: [id])
+  bono                  Bono      @relation(fields: [bonoId], references: [id])
 }
 
 model SlotWaitlistEntry {
-  id             String   @id @default(uuid())
+  id             String          @id @default(uuid())
   userId         String?
   clientId       String?
   businessId     String
   serviceId      String
   preferredStart DateTime
   preferredEnd   DateTime
-  createdAt      DateTime @default(now())
-  business       Business @relation(fields: [businessId], references: [id])
-  client         Client?  @relation(fields: [clientId], references: [id])
-  service        Service  @relation(fields: [serviceId], references: [id])
-  user           User?    @relation(fields: [userId], references: [id])
+  createdAt      DateTime        @default(now())
+  business       Business        @relation(fields: [businessId], references: [id])
+  client         Client?         @relation(fields: [clientId], references: [id])
+  service        BusinessService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  user           User?           @relation(fields: [userId], references: [id])
 }
 
 model WaitlistNotification {
@@ -363,11 +370,11 @@ model ProfessionCategory {
   professionId     String
   label            String
   icon             String
-  code             String              @unique
-  id               String              @id @default(uuid())
-  profession       Profession          @relation(fields: [professionId], references: [id], onDelete: Cascade)
+  code             String             @unique
+  id               String             @id @default(uuid())
+  profession       Profession         @relation(fields: [professionId], references: [id], onDelete: Cascade)
   services         ProfessionService[]
-  clonedCategories ServiceCategory[]
+  clonedCategories BusinessCategory[]
 
   @@index([professionId])
 }
@@ -381,7 +388,7 @@ model ProfessionService {
   code           String             @unique
   id             String             @id @default(uuid())
   category       ProfessionCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  clonedServices Service[]
+  clonedServices BusinessService[]
 
   @@index([categoryId])
 }
@@ -465,7 +472,6 @@ enum CalendarAppearance {
   spacious
 }
 
-
 enum AppointmentStatus {
   pending
   confirmed
@@ -498,7 +504,6 @@ enum BonoType {
   unlimited
   loyalty
 }
-
 
 enum SaleStatus {
   open

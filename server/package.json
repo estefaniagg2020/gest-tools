@@ -7,6 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "prisma db seed",
@@ -15,6 +16,7 @@
     "clear-db-keep-categories": "tsx scripts/clear-db-keep-categories.ts",
     "clear-user-data": "tsx scripts/clearUserData.ts",
     "clear-appointments": "tsx scripts/clearAppointments.ts",
+    "migrate:profession-templates": "tsx scripts/migrate-instantiate-profession-templates.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"

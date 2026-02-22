@@ -18,8 +18,10 @@ export const useResolvedLayoutModules = () => {
     const withIcons = layoutModules.resolveLayoutModuleIcons(ordered, (c) => moduleIconsStore.getIcon(c));
     const withLabels = withIcons.map((m) => ({ ...m, label: t(m.labelKey) }));
     return withLabels.filter((m) => {
+      // HIDDEN_FEATURE: bonos - Oculta módulo Bonos del sidebar si bonosEnabled=false
       if (m.id === "bonos") return bonosEnabled.value;
       if (m.id === "servicios") return serviciosEnabled.value;
+      // HIDDEN_FEATURE: inventario - Oculta módulo Inventario del sidebar si inventarioEnabled=false
       if (m.id === "inventario") return inventarioEnabled.value;
       return true;
     });

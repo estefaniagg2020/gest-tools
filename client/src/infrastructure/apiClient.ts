@@ -1,3 +1,5 @@
+import { loadBackendToken } from "./authStorage";
+
 const getBaseUrl = (): string => {
   const env = import.meta.env?.VITE_API_URL;
   if (typeof env === "string" && env) return env.replace(/\/$/, "");
@@ -7,8 +9,7 @@ const getBaseUrl = (): string => {
 export const apiBaseUrl = getBaseUrl();
 
 export const getAuthHeaders = (): HeadersInit => {
-  const raw = localStorage.getItem("auth-token");
-  const token = typeof raw === "string" ? raw : null;
+  const token = loadBackendToken();
   const headers: HeadersInit = { "Content-Type": "application/json" };
   if (token) (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
   return headers;

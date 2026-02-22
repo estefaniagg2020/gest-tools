@@ -6,13 +6,7 @@ import { useServiceCategoryStore } from "@/stores/serviceCategory";
 import { useGestorConfigStore } from "@/stores/gestorConfig";
 import { useToast } from "@/composables/useToast";
 import { useAuthStore } from "@/stores/auth";
-import {
-  getServiceTemplates,
-  getBusinessServiceDefaults,
-  type ServiceTemplate,
-} from "@/data/serviceTemplates";
-import type { Service, ServiceCategoryDefinition } from "@/interfaces";
-import { markSystemServiceRemoved } from "@/infrastructure/serviceSystemRemovedStorage";
+import type { Service } from "@/interfaces";
 
 const buildDefaultForm = (firstCategoryId: string) => ({
   name: "",
@@ -20,36 +14,6 @@ const buildDefaultForm = (firstCategoryId: string) => ({
   duration: 60,
   price: 0,
   description: "",
-});
-
-const buildServicePayload = ({
-  name,
-  categoryId,
-  categoryLabel,
-  duration,
-  price,
-  description,
-  requiresCabin,
-  requiresTherapist,
-}: {
-  name: string;
-  categoryId: string;
-  categoryLabel: string;
-  duration: number;
-  price: number;
-  description?: string;
-  requiresCabin: boolean;
-  requiresTherapist: boolean;
-}) => ({
-  name,
-  categoryId,
-  category: categoryLabel,
-  duration,
-  price,
-  description,
-  requiresCabin,
-  requiresTherapist,
-  employeesCount: requiresTherapist ? 1 : undefined,
 });
 
 export const useServiciosManager = () => {
@@ -112,18 +76,18 @@ export const useServiciosManager = () => {
   };
 
   const saveService = async () => {
-    const businessDefaults = getBusinessServiceDefaults(configStore.businessType);
-    const selectedCategory = categories.value.find((category) => category.id === form.categoryId);
-    const payload = buildServicePayload({
+    const selectedCategory = categories.value.find(
+      (category) => category.id === form.categoryId,
+    );
+    const payload = {
       name: form.name.trim(),
+      category: selectedCategory?.label ?? "general",
       categoryId: form.categoryId,
       categoryLabel: selectedCategory?.label ?? form.categoryId,
       duration: form.duration,
       price: form.price,
       description: form.description.trim() || undefined,
-      requiresCabin: businessDefaults.requiresCabin,
-      requiresTherapist: businessDefaults.requiresStaff,
-    });
+    };
     if (isEditing.value && editingId.value) {
       await serviceStore.updateService(editingId.value, payload);
       addToast("Servicio actualizado correctamente", "success");
@@ -142,15 +106,6 @@ export const useServiciosManager = () => {
       variant: "danger",
     });
     if (!ok) return;
-    const businessId = authStore.user?.businessId ?? null;
-    if (!businessId) {
-      const service = serviceStore.getServiceById(id);
-      const businessType = configStore.businessType || "estetica";
-      const templates = getServiceTemplates(businessType);
-      if (service && templates?.services.some((t) => t.name.toLowerCase() === service.name.toLowerCase())) {
-        await markSystemServiceRemoved({ businessId: null, businessType, serviceName: service.name });
-      }
-    }
     await serviceStore.deleteService(id);
     addToast("Servicio eliminado", "success");
   };
@@ -177,66 +132,6 @@ export const useServiciosManager = () => {
     addToast("Categoría creada", "success");
     closeCategoryModal();
   };
-
-  const suggestedTemplates = computed(() =>
-    getServiceTemplates(configStore.businessType)
-  );
-
-  const ensureCategoryExists = async (id: string, label: string, icon: string): Promise<ServiceCategoryDefinition> => {
-    const existing = categoryStore.getCategoryById(id);
-    if (existing) return existing;
-    const byLabel = categories.value.find(
-      (c) => c.label.toLowerCase() === label.toLowerCase()
-    );
-    if (byLabel) {
-      return {
-        id: byLabel.id,
-        label: byLabel.label,
-        icon: byLabel.icon,
-      };
-    }
-    return categoryStore.addCategoryWithId({ id, label, icon });
-  };
-
-  const quickAddFromTemplate = async (template: ServiceTemplate) => {
-    const businessDefaults = getBusinessServiceDefaults(configStore.businessType);
-    const category = await ensureCategoryExists(
-      template.suggestedCategory,
-      template.suggestedCategory,
-      template.suggestedCategoryIcon,
-    );
-    await serviceStore.addService(buildServicePayload({
-      name: template.name,
-      categoryId: category.id,
-      categoryLabel: category.label,
-      duration: template.duration,
-      price: template.price,
-      description: template.description,
-      requiresCabin: businessDefaults.requiresCabin,
-      requiresTherapist: businessDefaults.requiresStaff,
-    }));
-    addToast(`"${template.name}" añadido`, "success");
-  };
-
-  const quickAddAllTemplates = async () => {
-    const templates = suggestedTemplates.value;
-    if (!templates) return;
-    for (const category of templates.categories) {
-      await ensureCategoryExists(category.id, category.label, category.icon);
-    }
-    for (const template of templates.services) {
-      const alreadyExists = serviceStore.services.some(
-        (s) => s.name.toLowerCase() === template.name.toLowerCase()
-      );
-      if (!alreadyExists) await quickAddFromTemplate(template);
-    }
-    addToast("Servicios sugeridos añadidos", "success");
-  };
-
-  const isTemplateAdded = (template: ServiceTemplate) =>
-    serviceStore.services.some(
-      (s) => s.name.toLowerCase() === template.name.toLowerCase()
-    );
 
   onMounted(async () => {
     const userId = authStore.currentUserId ?? "local";
@@ -271,9 +166,5 @@ export const useServiciosManager = () => {
     openCategoryModal,
     closeCategoryModal,
     saveCategory,
-    suggestedTemplates,
-    quickAddFromTemplate,
-    quickAddAllTemplates,
-    isTemplateAdded,
   };
 };

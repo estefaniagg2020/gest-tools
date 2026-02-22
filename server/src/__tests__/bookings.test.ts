@@ -94,7 +94,7 @@ describe("Bookings routes", () => {
   });
 
   it("should_return_404_when_service_not_found", async () => {
-    prisma.service.findFirst = vi.fn().mockResolvedValue(null);
+    prisma.businessService.findFirst = vi.fn().mockResolvedValue(null);
     const res = await request(app).post("/").send({ businessId: BIZ, serviceId: "no-svc", start, end });
     expect(res.status).toBe(404);
   });

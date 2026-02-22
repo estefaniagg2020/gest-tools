@@ -200,6 +200,7 @@
 
   onMounted(async () => {
     await loadBillingConfig();
+    // HIDDEN_FEATURE: bonos - Redirige a config si bonosEnabled=false
     if (!bonosEnabled.value) {
       router.replace({ name: "config" });
       return;

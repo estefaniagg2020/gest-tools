@@ -1,72 +1,33 @@
-import type { SchedulerViewSettings, WeekStartOption } from "@/interfaces";
+import type { SchedulerViewSettings } from "@/interfaces";
 
-const KEY = "spa-scheduler-view-settings";
+let memorySettings: SchedulerViewSettings | null = null;
 
-const VALID_SLOT_DURATIONS = [30, 60, 90, 120] as const;
-
-const DEFAULT_WORK_DAYS = 5;
-const DEFAULT_MAX_PEOPLE = 1;
-const VALID_VIEWS = ["day", "week", "month"] as const;
-const VALID_WEEK_START = ["locale", "monday", "sunday"] as const;
-
-function normalizeStored(parsed: Record<string, unknown>): SchedulerViewSettings | null {
-  const startHour = typeof parsed.startHour === "number" ? parsed.startHour : null;
-  const endHour = typeof parsed.endHour === "number" ? parsed.endHour : null;
-  const pixelsPerHour = typeof parsed.pixelsPerHour === "number" ? parsed.pixelsPerHour : null;
-  const slotDurationMinutes =
-    typeof parsed.slotDurationMinutes === "number" &&
-    VALID_SLOT_DURATIONS.includes(parsed.slotDurationMinutes as 30 | 60 | 90 | 120)
-      ? (parsed.slotDurationMinutes as 30 | 60 | 90 | 120)
-      : 60;
-  const workDaysPerWeek =
-    typeof parsed.workDaysPerWeek === "number" && parsed.workDaysPerWeek >= 1 && parsed.workDaysPerWeek <= 7
-      ? Math.floor(parsed.workDaysPerWeek)
-      : DEFAULT_WORK_DAYS;
-  const maxPeoplePerSlot =
-    typeof parsed.maxPeoplePerSlot === "number" && parsed.maxPeoplePerSlot >= 1 && parsed.maxPeoplePerSlot <= 20
-      ? Math.floor(parsed.maxPeoplePerSlot)
-      : DEFAULT_MAX_PEOPLE;
-  const defaultView =
-    typeof parsed.defaultView === "string" && VALID_VIEWS.includes(parsed.defaultView as "day" | "week" | "month")
-      ? (parsed.defaultView as "day" | "week" | "month")
-      : "week";
-  const weekStart =
-    typeof parsed.weekStart === "string" && VALID_WEEK_START.includes(parsed.weekStart as WeekStartOption)
-      ? (parsed.weekStart as WeekStartOption)
-      : "locale";
-  if (startHour === null || endHour === null || pixelsPerHour === null) return null;
-  return {
-    startHour,
-    endHour,
-    pixelsPerHour,
-    slotDurationMinutes,
-    workDaysPerWeek,
-    maxPeoplePerSlot,
-    defaultView,
-    weekStart,
-  };
-}
-
-export function loadSchedulerSettings(): SchedulerViewSettings | null {
-  const raw = localStorage.getItem(KEY);
-  if (raw === null) return null;
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (
-      parsed &&
-      typeof parsed === "object" &&
-      "startHour" in parsed &&
-      "endHour" in parsed &&
-      "pixelsPerHour" in parsed
-    ) {
-      return normalizeStored(parsed as Record<string, unknown>);
-    }
-    return null;
-  } catch {
-    return null;
+const normalizeSlotDuration = (
+  value: number,
+): SchedulerViewSettings["slotDurationMinutes"] => {
+  if (value === 30 || value === 60 || value === 90 || value === 120) {
+    return value;
   }
-}
+  return 60;
+};
 
-export function saveSchedulerSettings(settings: SchedulerViewSettings): void {
-  localStorage.setItem(KEY, JSON.stringify(settings));
-}
+export const loadSchedulerSettings = (): SchedulerViewSettings | null => {
+  if (!memorySettings) return null;
+  return {
+    ...memorySettings,
+    slotDurationMinutes: normalizeSlotDuration(memorySettings.slotDurationMinutes),
+  };
+};
+
+export const saveSchedulerSettings = (
+  settings: SchedulerViewSettings,
+): void => {
+  memorySettings = {
+    ...settings,
+    slotDurationMinutes: normalizeSlotDuration(settings.slotDurationMinutes),
+  };
+};
+
+export const resetSchedulerSettingsStorage = (): void => {
+  memorySettings = null;
+};

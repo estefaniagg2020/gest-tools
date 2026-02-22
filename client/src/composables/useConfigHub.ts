@@ -104,6 +104,7 @@ const CONFIG_CARDS: readonly ConfigHubCardItem[] = [
 
 export const useConfigHub = (): { cards: ComputedRef<ConfigHubCardItem[]> } => {
   const { bonosEnabled } = useBillingConfig();
+  // HIDDEN_FEATURE: bonos - Oculta tarjeta Config Bonos del hub si bonosEnabled=false
   const cards = computed(() =>
     CONFIG_CARDS.filter((card) => (card.id === "bonos" ? bonosEnabled.value : true))
   );

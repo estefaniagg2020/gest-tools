@@ -9,7 +9,7 @@
       autocomplete="off"
       class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary/50 disabled:opacity-60"
       @input="onInput"
-      @focus="isOpen = true"
+      @focus="onFocus"
       @blur="onBlur"
       @keydown.down.prevent="highlightNext"
       @keydown.up.prevent="highlightPrev"
@@ -84,7 +84,6 @@
 
   const displayValue = computed(() => {
     if (query.value) return query.value;
-    if (props.modelValue === "" && props.emptyOptionLabel) return props.emptyOptionLabel;
     const opt = optionsList.value.find((o) => o.value === props.modelValue);
     return opt?.label ?? "";
   });
@@ -104,6 +103,11 @@
       highlightedIndex.value = 0;
     },
   );
+
+  const onFocus = () => {
+    query.value = "";
+    isOpen.value = true;
+  };
 
   const onInput = (e: Event) => {
     const target = e.target as HTMLInputElement;

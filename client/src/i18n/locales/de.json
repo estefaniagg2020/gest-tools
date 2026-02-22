@@ -22,7 +22,9 @@
     "placeholderCompany": "Mein Manager",
     "logoHint": "PNG, JPG oder SVG. Ohne Logo wird das Standard-Icon verwendet.",
     "removeLogo": "Logo entfernen",
-    "back": "Zurück"
+    "back": "Zurück",
+    "currency": "€",
+    "saveChanges": "Änderungen speichern"
   },
   "nav": {
     "aria": "Hauptnavigation",
@@ -145,7 +147,8 @@
     "defaultVatLabel": "MwSt.-Satz",
     "cartSectionTitle": "Warenkorb bei Terminen",
     "cartSectionDesc": "Produkte zum Termin hinzufügen (z. B. Shampoo, Maske) und mit dem Service berechnen.",
-    "cartEnabledLabel": "Warenkorb im Termineditor aktivieren"
+    "cartEnabledLabel": "Warenkorb im Termineditor aktivieren",
+    "comingSoon": "Demnächst"
   },
   "configModules": {
     "title": "Manager-Module",
@@ -290,6 +293,8 @@
     "proximasCitasHoyDesc": "Die nächsten Termine des aktuellen Tages.",
     "productosBajoStock": "Produkte mit niedrigem Bestand",
     "productosBajoStockDesc": "Inventarprodukte, die bald ausgehen.",
+    "listaEspera": "Warteliste",
+    "listaEsperaDesc": "Personen, die auf einen freien Termin warten.",
     "noData": "Keine Daten",
     "reservasSuffix": "Buchungen",
     "thisMonth": "diesen Monat",
@@ -534,6 +539,8 @@
     "clearAgendaConfirm": "Alle Termine und Blöcke aus dem Kalender löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
     "cancelAppointment": "Termin stornieren",
     "deletePermanently": "Endgültig löschen",
+    "deleteAppointmentTitle": "Termin löschen",
+    "deleteAppointmentConfirm": "Sind Sie sicher, dass Sie diesen Termin löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
     "cancelAppointmentHint": "Der Termin wird nicht gelöscht; er bleibt als storniert und erscheint nicht mehr im Kalender.",
     "clientHasAppointmentThisWeekConfirm": "Dieser Kunde hat diese Woche bereits einen Termin. Möchten Sie den Termin trotzdem erstellen (Duplikat)?",
     "clientHasAppointmentThisWeekTitle": "Termin diese Woche",
@@ -670,7 +677,15 @@
     "price": "Preis",
     "noProducts": "Keine Produkte. Füge das erste hinzu.",
     "editProduct": "Produkt bearbeiten",
-    "newProduct": "Neues Produkt"
+    "newProduct": "Neues Produkt",
+    "productNamePlaceholder": "z.B.: Produktname",
+    "cost": "Kosten",
+    "stockLevel": "Bestand",
+    "minStockLevel": "Mindestbestand",
+    "description": "Beschreibung",
+    "isServiceProduct": "Dienstleistungsprodukt (verbraucht keinen Bestand)",
+    "createProduct": "Produkt erstellen",
+    "stockEditHint": "Der Bestand wird im Inventar-Panel aktualisiert."
   },
   "footer": {
     "legalLinks": "Rechtliche Links",

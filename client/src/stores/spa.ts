@@ -3,7 +3,7 @@ import { ref } from "vue";
 import type { Spa } from "@/interfaces";
 import { DEFAULT_SPAS } from "@/data/spas";
 import { INDEX_NOT_FOUND } from "@/data/constants";
-import { loadStoredCurrentSpaId, loadStoredSpas, saveCurrentSpaId, saveSpaList } from "@/utils/spaStorage";
+import { loadStoredCurrentSpaId, loadStoredSpas, saveCurrentSpaId, saveSpaList } from "@/infrastructure/spaStorage";
 
 export const useSpaStore = defineStore("spa", () => {
   const spas = ref<Spa[]>([]);

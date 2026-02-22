@@ -1,3 +1,4 @@
+<!-- HIDDEN_FEATURE: informes - Panel Generar informes (oculto en ConfigHubView, pendiente implementar) -->
 <template>
   <section class="rounded-2xl border border-app-border-subtle bg-app-surface shadow-sm overflow-hidden">
     <div class="p-4 sm:p-5 border-b border-app-border-subtle bg-app-bg/50">

@@ -20,7 +20,8 @@
         </RouterLink>
       </header>
 
-      <div class="mb-6">
+      <!-- HIDDEN_FEATURE: informes - Generar informes (pendiente implementar) -->
+      <div v-if="false" class="mb-6">
         <ConfigBusinessSummaryPanel />
       </div>
 

@@ -15,6 +15,7 @@ vi.mock("@/infrastructure/authStorage", () => ({
 
 vi.mock("@/infrastructure/authApi", () => ({
   authApi: {
+    getMe: vi.fn(),
     getSetupStatus: vi.fn(),
     login: vi.fn(),
     register: vi.fn(),
@@ -30,6 +31,9 @@ describe("useAuthStore", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.mocked(authStorage.loadBackendSession).mockReturnValue(null);
+    vi.mocked(authApi.getMe).mockResolvedValue({
+      user: { id: "u0", username: "guest", role: "employee", name: null, email: null },
+    });
     vi.mocked(authApi.getSetupStatus).mockResolvedValue({ hasUsers: false });
   });
 
@@ -77,6 +81,9 @@ describe("useAuthStore", () => {
     vi.mocked(authStorage.loadBackendSession).mockReturnValue({
       token: "t1",
       user: { id: "u1", username: "alice", role: "gestor" },
+    });
+    vi.mocked(authApi.getMe).mockResolvedValue({
+      user: { id: "u1", username: "alice", role: "employee", name: null, email: null },
     });
     const store = useAuthStore();
     await store.initialize();
@@ -129,6 +136,9 @@ describe("useAuthStore", () => {
     vi.mocked(authStorage.loadBackendSession).mockReturnValue({
       token: "t1",
       user: { id: "u1", username: "alice", role: "gestor", name: null, email: null },
+    });
+    vi.mocked(authApi.getMe).mockResolvedValue({
+      user: { id: "u1", username: "alice", role: "employee", name: null, email: null },
     });
     const store = useAuthStore();
     await store.initialize();

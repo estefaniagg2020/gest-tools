@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(__NEW_LINE_4fbaead934534325__ echo \"\")",
+      "Bash(__NEW_LINE_fc412d0e72893a91__ echo \"\")",
+      "Bash(__NEW_LINE_b70cb41f22fe58c1__ echo \"\")",
+      "Bash(npx prisma validate:*)",
+      "Bash(grep:*)",
+      "Bash(pnpm exec prisma generate:*)",
+      "Read(//home/estefania/proyectos/gest-tools/server/**)"
+    ]
+  }
+}

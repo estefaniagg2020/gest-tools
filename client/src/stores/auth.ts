@@ -11,6 +11,7 @@ export type UserRole = "manager" | "employee";
 export type LoginResult = { ok: true } | { ok: false; error: string };
 export type RegisterResult = { ok: true } | { ok: false; error: string };
 export type ForgotPasswordResult = { ok: true } | { ok: false; error: string };
+export type ActivateAccountResult = { ok: true } | { ok: false; error: string };
 
 const STAFF_ROLES: ReadonlySet<RoleName> = new Set(["superadmin", "admin", "employee"]);
 
@@ -175,6 +176,32 @@ export const useAuthStore = defineStore("auth", () => {
     }
   };
 
+  const activateAccount = async (
+    email: string,
+    username: string,
+    password: string,
+  ): Promise<ActivateAccountResult> => {
+    try {
+      const { user: u, token } = await authApi.activateAccount(email, username, password);
+      authStorage.saveBackendSession(token, {
+        id: u.id,
+        username: u.username,
+        role: u.role,
+        name: u.name,
+        email: u.email,
+        phone: u.phone,
+        businessId: u.businessId,
+      });
+      setUserFromBackend(u);
+      return { ok: true };
+    } catch (err) {
+      return {
+        ok: false,
+        error: err instanceof Error ? err.message : "Error al activar la cuenta",
+      };
+    }
+  };
+
   const hasAnyUser = (): boolean => hasUsersRef.value;
 
   return {
@@ -194,6 +221,7 @@ export const useAuthStore = defineStore("auth", () => {
     logout,
     register,
     forgotPassword,
+    activateAccount,
     hasAnyUser,
   };
 });

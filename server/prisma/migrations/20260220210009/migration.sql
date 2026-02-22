@@ -1,6 +1,3 @@
--- DropIndex
-DROP INDEX "Bono_serviceCategoryId_idx";
-
 -- AlterTable
 ALTER TABLE "Bono" RENAME CONSTRAINT "BonoTemplate_pkey" TO "Bono_pkey";
 

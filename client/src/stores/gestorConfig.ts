@@ -5,6 +5,8 @@ import { DEFAULT_COMPANY_NAME, DEFAULT_CONTACT_DATA } from "@/interfaces";
 import { businessConfigApi } from "@/infrastructure/businessConfigApi";
 import { DEFAULT_LAYOUT_CONFIG } from "@/interfaces";
 import { DEFAULT_MODULE_ICONS } from "@/data/moduleIconOptions";
+import { useLocaleStore } from "@/stores/locale";
+import type { LocaleCode } from "@/infrastructure/localeStorage";
 
 export const useGestorConfigStore = defineStore("gestorConfig", () => {
   const companyName = ref("");
@@ -55,9 +57,9 @@ export const useGestorConfigStore = defineStore("gestorConfig", () => {
   const whatsappPhoneNumberId = ref<string | null>(null);
   const defaultVatPercent = ref(21);
   const cartEnabled = ref(false);
-  const bonosEnabled = ref(true);
+  const bonosEnabled = ref(false);
   const serviciosEnabled = ref(true);
-  const inventarioEnabled = ref(true);
+  const inventarioEnabled = ref(false);
   const hiddenSystemServiceNames = ref<string[]>([]);
   const locale = ref<string | null>(null);
 
@@ -95,7 +97,10 @@ export const useGestorConfigStore = defineStore("gestorConfig", () => {
             address: (apiConfig.address as string) || "",
           },
           onboardingComplete: (apiConfig.onboardingComplete as boolean) ?? false,
-          businessAddress: (apiConfig.address as string) ?? "",
+          businessAddress: (apiConfig.businessAddress as string) ?? "",
+          taxId: (apiConfig.taxId as string) ?? "",
+          businessPopulation: (apiConfig.businessPopulation as string) ?? "",
+          isCanarias: (apiConfig.isCanarias as boolean) ?? false,
           startHour: (apiConfig.startHour as number) ?? startHour.value,
           endHour: (apiConfig.endHour as number) ?? endHour.value,
           pixelsPerHour: (apiConfig.pixelsPerHour as number) ?? pixelsPerHour.value,
@@ -142,6 +147,11 @@ export const useGestorConfigStore = defineStore("gestorConfig", () => {
           slug: (apiConfig.slug as string | null) ?? slug.value,
           socialLinks: apiConfig.socialLinks ?? socialLinks.value,
         });
+        // Sync locale to localeStore so i18n applies immediately on load
+        if (apiConfig.locale) {
+          const localeStore = useLocaleStore();
+          localeStore.setLocale(apiConfig.locale as LocaleCode);
+        }
       }
     } catch (err) {
       console.error("Failed to hydrate config from API:", err);
@@ -212,22 +222,17 @@ export const useGestorConfigStore = defineStore("gestorConfig", () => {
   };
 
   const setConfig = async (_userId: string, config: GestorConfig, businessId?: string | null) => {
-    applyConfigToRefs(config);
-
     if (businessId) {
-      try {
-        const payload: any = {
-          ...config,
-          professionId: config.businessType || null,
-          email: config.contactData.email,
-          phone: config.contactData.phone,
-          address: config.contactData.address || config.businessAddress,
-        };
-        await businessConfigApi.updateConfig(businessId, payload);
-      } catch (err) {
-        console.error("Failed to sync config to API:", err);
-      }
+      const payload: any = {
+        ...config,
+        professionId: config.businessType || null,
+        email: config.contactData.email,
+        phone: config.contactData.phone,
+        address: config.contactData.address,
+      };
+      await businessConfigApi.updateConfig(businessId, payload);
     }
+    applyConfigToRefs(config);
   };
 
   const getConfig = (): GestorConfig => ({

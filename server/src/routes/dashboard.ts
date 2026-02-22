@@ -60,7 +60,7 @@ export const dashboardRouter = (prisma: PrismaClient) => {
     const now = new Date();
 
     try {
-      const [
+    const [
         reservasMes,
         reservasSemana,
         appointmentsToday,
@@ -70,6 +70,7 @@ export const dashboardRouter = (prisma: PrismaClient) => {
         appointmentsMonth,
         appointmentsWeekForHours,
         clientesNuevos,
+        clientesNuevosDetalle,
         proximasCitasHoy,
         waitlistEntries,
       ] = await Promise.all([
@@ -137,6 +138,21 @@ export const dashboardRouter = (prisma: PrismaClient) => {
             businessId,
             createdAt: { gte: monthStart, lte: monthEnd },
           },
+        }),
+        prisma.client.findMany({
+          where: {
+            businessId,
+            createdAt: { gte: monthStart, lte: monthEnd },
+          },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: "desc" },
+          take: 5,
         }),
         prisma.appointment.findMany({
           where: {
@@ -267,6 +283,13 @@ export const dashboardRouter = (prisma: PrismaClient) => {
         ventasPorEmpleado,
         serviciosPopulares,
         clientesNuevos,
+        clientesNuevosDetalle: clientesNuevosDetalle.map((client) => ({
+          id: client.id,
+          name: client.name,
+          email: client.email,
+          phone: client.phone,
+          createdAt: client.createdAt.toISOString(),
+        })),
         proximasCitasHoy: proximasCitasHoy.map((a) => ({
           id: a.id,
           serviceName: a.service?.name ?? "",
