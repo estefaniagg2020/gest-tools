@@ -66,13 +66,14 @@ export const clientsRouter = (prisma: PrismaClient) => {
     try {
       const services = await prisma.businessService.findMany({
         where: { businessId },
-        select: { id: true, name: true },
+        select: { id: true, name: true, price: true },
       });
 
       const normalizedServices = services.map((s) => ({
         ...s,
         normalized: normalize(s.name),
       }));
+      const servicePriceById = new Map(normalizedServices.map((s) => [s.id, Number(s.price)]));
 
       const serviceTokens: string[] = [];
       const clientTokens: string[] = [];
@@ -180,7 +181,7 @@ export const clientsRouter = (prisma: PrismaClient) => {
           },
           select: {
             clientId: true,
-            service: { select: { price: true } },
+            serviceId: true,
           },
         }),
         prisma.appointment.findMany({
@@ -204,9 +205,10 @@ export const clientsRouter = (prisma: PrismaClient) => {
       const debtByClient = new Map<string, number>();
       for (const apt of unpaidAppointments) {
         if (!apt.clientId) continue;
+        const servicePrice = apt.serviceId ? (servicePriceById.get(apt.serviceId) ?? 0) : 0;
         debtByClient.set(
           apt.clientId,
-          (debtByClient.get(apt.clientId) ?? 0) + (apt.service?.price ?? 0),
+          (debtByClient.get(apt.clientId) ?? 0) + servicePrice,
         );
       }
 
