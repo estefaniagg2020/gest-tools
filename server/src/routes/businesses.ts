@@ -385,7 +385,11 @@ export const businessRouter = (prisma: PrismaClient) => {
     if (!businessId) return;
     try {
       const [config, business] = await Promise.all([
-        prisma.gestorConfig.findUnique({ where: { businessId } }),
+        prisma.gestorConfig.upsert({
+          where: { businessId },
+          update: {},
+          create: { businessId },
+        }),
         prisma.business.findUnique({
           where: { id: businessId },
           select: {
@@ -406,10 +410,6 @@ export const businessRouter = (prisma: PrismaClient) => {
           },
         }),
       ]);
-      if (!config) {
-        res.status(404).json({ error: "Config not found" });
-        return;
-      }
       res.json({
         ...config,
         companyName: business?.name ?? "",
