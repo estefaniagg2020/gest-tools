@@ -92,6 +92,10 @@ export function loadBackendSession(): { token: string; user: User } | null {
   }
 }
 
+export function loadBackendToken(): string | null {
+  return localStorage.getItem(KEY_TOKEN);
+}
+
 export function clearBackendSession(): void {
   localStorage.removeItem(KEY_TOKEN);
   localStorage.removeItem(KEY_BACKEND_USER);

@@ -1,6 +1,7 @@
 import { ref, reactive, computed } from "vue";
 import type { Product, Supplier } from "@/interfaces";
 import { useAuthStore } from "@/stores/auth";
+import { inventoryApi } from "@/infrastructure/inventoryApi";
 
 export function useInventoryManager() {
   const authStore = useAuthStore();
@@ -33,9 +34,7 @@ export function useInventoryManager() {
     if (!businessId.value) return;
     isLoading.value = true;
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/inventory?businessId=${businessId.value}`);
-      if (!res.ok) throw new Error("Failed to fetch products");
-      products.value = await res.json();
+      products.value = await inventoryApi.getProducts(businessId.value);
     } catch (e) {
       error.value = (e as Error).message;
     } finally {
@@ -46,10 +45,7 @@ export function useInventoryManager() {
   async function fetchSuppliers() {
       if (!businessId.value) return;
       try {
-          const res = await fetch(`${import.meta.env.VITE_API_URL}/api/inventory/suppliers?businessId=${businessId.value}`);
-          if (res.ok) {
-              suppliers.value = await res.json();
-          }
+          suppliers.value = await inventoryApi.getSuppliers(businessId.value);
       } catch (e) {
           console.error(e);
       }
@@ -106,25 +102,12 @@ export function useInventoryManager() {
      const payload = { ...form, businessId: businessId.value };
      
      try {
-         let res;
          if (isEditing.value && activeProduct.value) {
-             // Update
-             res = await fetch(`${import.meta.env.VITE_API_URL}/api/inventory/${activeProduct.value.id}`, {
-                 method: "PUT",
-                 headers: { "Content-Type": "application/json" },
-                 body: JSON.stringify(payload),
-             });
+             await inventoryApi.updateProduct(activeProduct.value.id, payload);
          } else {
-             // Create
-             res = await fetch(`${import.meta.env.VITE_API_URL}/api/inventory`, {
-                 method: "POST",
-                 headers: { "Content-Type": "application/json" },
-                 body: JSON.stringify(payload),
-             });
+             await inventoryApi.createProduct(payload);
          }
-         
-         if (!res.ok) throw new Error("Failed to save product");
-         
+
          await fetchProducts(); // Refresh list
          closeModal();
      } catch (e) {
@@ -137,10 +120,7 @@ export function useInventoryManager() {
       if(!confirm("Are you sure you want to delete this product?")) return;
       
       try {
-          const res = await fetch(`${import.meta.env.VITE_API_URL}/api/inventory/${id}`, {
-              method: "DELETE"
-          });
-          if (!res.ok) throw new Error("Failed to delete");
+          await inventoryApi.deleteProduct(id);
           await fetchProducts();
       } catch (e) {
           alert("Error deleting product");

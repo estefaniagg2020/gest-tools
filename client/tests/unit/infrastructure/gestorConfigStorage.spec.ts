@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { loadGestorConfig, saveGestorConfig } from "@/infrastructure/gestorConfigStorage";
+import {
+  loadGestorConfig,
+  resetGestorConfigStorage,
+  saveGestorConfig,
+} from "@/infrastructure/gestorConfigStorage";
 import type { GestorConfig } from "@/interfaces";
 import { DEFAULT_CONTACT_DATA } from "@/interfaces";
 
@@ -17,11 +21,11 @@ describe("gestorConfigStorage", () => {
   });
 
   beforeEach(() => {
-    localStorage.clear();
+    resetGestorConfigStorage();
   });
 
   afterEach(() => {
-    localStorage.clear();
+    resetGestorConfigStorage();
   });
 
   it("should_return_null_when_no_config_stored", () => {

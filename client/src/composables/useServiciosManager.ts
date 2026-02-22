@@ -76,8 +76,12 @@ export const useServiciosManager = () => {
   };
 
   const saveService = async () => {
+    const selectedCategory = categories.value.find(
+      (category) => category.id === form.categoryId,
+    );
     const payload = {
       name: form.name.trim(),
+      category: selectedCategory?.label ?? "general",
       categoryId: form.categoryId,
       duration: form.duration,
       price: form.price,

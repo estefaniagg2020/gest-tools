@@ -1,31 +1,24 @@
 import type { Spa } from "@/interfaces";
 
-const KEY_LIST = "spa-list";
-const KEY_CURRENT_ID = "spa-current-id";
+let memorySpaList: Spa[] | null = null;
+let memoryCurrentSpaId: string | null = null;
 
 /**
- * Adapter de persistencia para SPAs (localStorage).
+ * Adapter de persistencia para SPAs (memoria de sesión).
  * Única responsabilidad: leer y deserializar; sin lógica de negocio.
  */
 export function loadStoredSpas(): Spa[] | null {
-  const raw = localStorage.getItem(KEY_LIST);
-  if (raw === null) return null;
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed) ? parsed : null;
-  } catch {
-    return null;
-  }
+  return memorySpaList ? memorySpaList.map((spa) => ({ ...spa })) : null;
 }
 
 export function loadStoredCurrentSpaId(): string | null {
-  return localStorage.getItem(KEY_CURRENT_ID);
+  return memoryCurrentSpaId;
 }
 
 export function saveSpaList(spas: Spa[]): void {
-  localStorage.setItem(KEY_LIST, JSON.stringify(spas));
+  memorySpaList = spas.map((spa) => ({ ...spa }));
 }
 
 export function saveCurrentSpaId(id: string): void {
-  localStorage.setItem(KEY_CURRENT_ID, id);
+  memoryCurrentSpaId = id;
 }

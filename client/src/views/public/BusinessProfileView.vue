@@ -102,49 +102,35 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-
-// Define Interface locally (or import)
-interface BusinessPublic {
-    id: string;
-    name: string;
-    slug: string;
-    description?: string;
-    gestorConfig?: { logoUrl?: string };
-    contact?: { address?: string };
-    services: Array<{
-        id: string;
-        name: string;
-        duration: number;
-        price: number;
-    }>;
-}
+import { ref, onMounted } from "vue";
+import { useRoute } from "vue-router";
+import {
+  publicBusinessApi,
+  type PublicBusiness,
+} from "@/infrastructure/publicBusinessApi";
 
 const route = useRoute();
 const loading = ref(true);
 const error = ref<string | null>(null);
-const business = ref<BusinessPublic | null>(null);
+const business = ref<PublicBusiness | null>(null);
 
 const fetchBusiness = async () => {
-    loading.value = true;
-    try {
-        const slug = route.params.slug;
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/public/business/${slug}`);
-        if (!res.ok) throw new Error('No se pudo cargar el negocio');
-        business.value = await res.json();
-    } catch (e: any) {
-        error.value = e.message;
-    } finally {
-        loading.value = false;
-    }
+  loading.value = true;
+  try {
+    const slug = String(route.params.slug ?? "");
+    business.value = await publicBusinessApi.getBySlug(slug);
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : "No se pudo cargar el negocio";
+  } finally {
+    loading.value = false;
+  }
 };
 
 const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(price);
+  return new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(price);
 };
 
 onMounted(() => {
-    fetchBusiness();
+  fetchBusiness();
 });
 </script>

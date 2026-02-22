@@ -219,7 +219,6 @@
 
   const {
     isOpen,
-    period,
     loading,
     error,
     appointmentsInPeriod,
@@ -233,7 +232,6 @@
     open,
     close,
     load,
-    setPeriod,
     exportCsv,
     exportExcel,
     downloadReport,

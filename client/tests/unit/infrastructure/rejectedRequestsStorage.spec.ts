@@ -2,11 +2,9 @@ import { describe, it, expect, beforeEach } from "vitest";
 import type { RejectedRequest } from "@/interfaces";
 import { loadRejectedRequests, saveRejectedRequests } from "@/infrastructure/rejectedRequestsStorage";
 
-const STORAGE_KEY = "spa-rejected-requests";
-
 describe("rejectedRequestsStorage", () => {
   beforeEach(() => {
-    localStorage.clear();
+    saveRejectedRequests([]);
   });
 
   const createRequest = (overrides: Partial<RejectedRequest> = {}): RejectedRequest => ({
@@ -27,20 +25,10 @@ describe("rejectedRequestsStorage", () => {
       expect(loadRejectedRequests()).toEqual([]);
     });
 
-    it("should_return_parsed_array_when_valid_json_stored", () => {
+    it("should_return_saved_array_when_data_is_saved", () => {
       const requests = [createRequest()];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(requests));
+      saveRejectedRequests(requests);
       expect(loadRejectedRequests()).toEqual(requests);
-    });
-
-    it("should_return_empty_array_when_stored_value_is_not_array", () => {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({}));
-      expect(loadRejectedRequests()).toEqual([]);
-    });
-
-    it("should_return_empty_array_when_invalid_json", () => {
-      localStorage.setItem(STORAGE_KEY, "not json");
-      expect(loadRejectedRequests()).toEqual([]);
     });
   });
 

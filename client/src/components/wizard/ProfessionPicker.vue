@@ -159,14 +159,6 @@
       filteredResults.value.length === 0,
   );
 
-  const totalSelectedServices = computed(
-    () =>
-      selectedProfession.value?.categories?.reduce(
-        (sum, cat) => sum + cat.services.length,
-        0,
-      ) ?? 0,
-  );
-
   let searchTimer: ReturnType<typeof setTimeout> | null = null;
 
   const onInput = () => {

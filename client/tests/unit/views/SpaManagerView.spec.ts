@@ -2,9 +2,9 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import SpaManagerView from "@/views/SpaManagerView.vue";
 import { setActivePinia, createPinia } from "pinia";
-import * as spaStorage from "@/utils/spaStorage";
+import * as spaStorage from "@/infrastructure/spaStorage";
 
-vi.mock("@/utils/spaStorage", () => ({
+vi.mock("@/infrastructure/spaStorage", () => ({
   loadStoredSpas: vi.fn(() => null),
   loadStoredCurrentSpaId: vi.fn(() => null),
   saveSpaList: vi.fn(),
