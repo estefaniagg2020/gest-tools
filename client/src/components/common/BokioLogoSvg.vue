@@ -21,8 +21,7 @@
     </text>
     <g
       transform="translate(15, 17)"
-      :fill="iconFill"
-      :stroke="iconStroke"
+      class="fill-[#2f2a2d] stroke-[#2f2a2d] md:fill-brand-accent md:stroke-brand-accent"
     >
       <circle
         r="5.5"
@@ -118,8 +117,4 @@
     };
     return map[props.size];
   });
-
-  const iconFill = computed(() => "#2f2a2d");
-
-  const iconStroke = computed(() => "#2f2a2d");
 </script>
