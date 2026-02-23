@@ -20,7 +20,7 @@ const getPrimaryWorkspaceBusinessId = async (
   const workspace = await prisma.workspaceMember.findFirst({
     where: { userId },
     select: { businessId: true },
-    orderBy: { createdAt: "desc" },
+    orderBy: { createdAt: "asc" },
   });
   return workspace?.businessId ?? null;
 };
