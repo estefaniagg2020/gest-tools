@@ -105,6 +105,15 @@ export const requireAuth = (prisma: PrismaClient) => {
       res.status(401).json({ error: "Sesión inválida o expirada" });
       return;
     }
+    // Diagnostic: log all workspaces for this user to detect multi-business issues
+    const allWorkspaces = await prisma.workspaceMember.findMany({
+      where: { userId: user.id },
+      select: { businessId: true, createdAt: true },
+      orderBy: { createdAt: "asc" },
+    });
+    if (allWorkspaces.length > 1) {
+      console.warn(`[auth] User ${user.username} (${user.id}) has ${allWorkspaces.length} workspaces: ${allWorkspaces.map(w => `${w.businessId}@${w.createdAt.toISOString()}`).join(", ")}`);
+    }
     const businessId = await ensureBusinessIdForUser(prisma, user);
     req.user = {
       id: user.id,

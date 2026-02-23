@@ -33,6 +33,7 @@ export const employeeRouter = (prisma: PrismaClient) => {
         include: { role: { select: { name: true } } },
         orderBy: { name: "asc" },
       });
+      console.log(`[employees GET] userId=${req.user!.id} businessId=${businessId} found=${members.length} members`);
       const result = members.map(({ roleId: _roleId, role, ...rest }) => ({
         ...rest,
         role: role.name,
