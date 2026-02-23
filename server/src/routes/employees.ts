@@ -11,6 +11,12 @@ const resolveRoleId = async (prisma: PrismaClient, roleName: string): Promise<st
   return role?.id ?? null;
 };
 
+const normalizeEmail = (value: unknown): string | null => {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim().toLowerCase();
+  return trimmed.length > 0 ? trimmed : null;
+};
+
 export const employeeRouter = (prisma: PrismaClient) => {
   const router = Router();
   const auth = requireAuth(prisma);
@@ -47,6 +53,7 @@ export const employeeRouter = (prisma: PrismaClient) => {
     try {
       const body = req.body ?? {};
       const name = typeof body.name === "string" ? body.name.trim() : "";
+      const normalizedEmail = normalizeEmail(body.email);
       if (!name) {
         res.status(400).json({ error: "name es requerido" });
         return;
@@ -78,6 +85,16 @@ export const employeeRouter = (prisma: PrismaClient) => {
         res.status(409).json({ error: "Ya existe un miembro con ese nombre en este negocio" });
         return;
       }
+      if (normalizedEmail) {
+        const existingByEmailInBusiness = await prisma.workspaceMember.findFirst({
+          where: { businessId, email: { equals: normalizedEmail, mode: "insensitive" } },
+          select: { id: true },
+        });
+        if (existingByEmailInBusiness) {
+          res.status(409).json({ error: "Ya existe un usuario con ese email en esta empresa" });
+          return;
+        }
+      }
       const member = await prisma.$transaction(async (tx) => {
         let userId: string | null = null;
         if (createWithLogin) {
@@ -95,7 +112,7 @@ export const employeeRouter = (prisma: PrismaClient) => {
               salt,
               roleId: userRoleId,
               name,
-              email: typeof body.email === "string" ? body.email.trim() || null : null,
+              email: normalizedEmail,
               createdById,
             },
           });
@@ -110,7 +127,7 @@ export const employeeRouter = (prisma: PrismaClient) => {
             photoUrl: typeof body.photoUrl === "string" ? body.photoUrl.trim() || null : null,
             linkedInUrl: typeof body.linkedInUrl === "string" ? body.linkedInUrl.trim() || null : null,
             phone: (typeof (body.phone ?? body.phoneNumber) === "string" ? String(body.phone ?? body.phoneNumber).trim() : null) || null,
-            email: typeof body.email === "string" ? body.email.trim() || null : null,
+            email: normalizedEmail,
             weeklyHours: typeof body.weeklyHours === "number" ? body.weeklyHours : null,
             color: typeof body.color === "string" ? body.color.trim() || null : null,
             position: typeof body.position === "string" ? body.position.trim() || null : null,
@@ -144,6 +161,7 @@ export const employeeRouter = (prisma: PrismaClient) => {
       }
       const body = req.body ?? {};
       const name = typeof body.name === "string" ? body.name.trim() : existing.name;
+      const normalizedEmail = body.email !== undefined ? normalizeEmail(body.email) : existing.email;
       if (!name) {
         res.status(400).json({ error: "name es requerido" });
         return;
@@ -157,12 +175,26 @@ export const employeeRouter = (prisma: PrismaClient) => {
           return;
         }
       }
+      if (normalizedEmail) {
+        const conflictByEmail = await prisma.workspaceMember.findFirst({
+          where: {
+            businessId,
+            id: { not: id },
+            email: { equals: normalizedEmail, mode: "insensitive" },
+          },
+          select: { id: true },
+        });
+        if (conflictByEmail) {
+          res.status(409).json({ error: "Ya existe un usuario con ese email en esta empresa" });
+          return;
+        }
+      }
       const data: Record<string, unknown> = {
         name,
         photoUrl: body.photoUrl !== undefined ? (body.photoUrl || null) : existing.photoUrl,
         linkedInUrl: body.linkedInUrl !== undefined ? (body.linkedInUrl || null) : existing.linkedInUrl,
         phone: (body.phone ?? body.phoneNumber) !== undefined ? ((body.phone ?? body.phoneNumber) || null) : existing.phone,
-        email: body.email !== undefined ? (body.email || null) : existing.email,
+        email: normalizedEmail,
         weeklyHours: body.weeklyHours !== undefined ? (typeof body.weeklyHours === "number" ? body.weeklyHours : null) : existing.weeklyHours,
         color: body.color !== undefined ? (body.color || null) : existing.color,
         position: body.position !== undefined ? (body.position || null) : existing.position,

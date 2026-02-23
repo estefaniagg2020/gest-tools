@@ -26,6 +26,7 @@ import { salesRouter } from "./routes/sales.js";
 import { aiRouter } from "./routes/ai.js";
 import { ensureRoleTemplates } from "./services/ensureRoles.js";
 import { ensureProfessionTemplates } from "./services/ensureTemplates.js";
+import { ensureBusinessCatalogs } from "./services/professionService.js";
 
 dotenv.config();
 
@@ -63,7 +64,6 @@ const allowedOrigins = rawAllowedOrigins.length > 0
 const allowedOriginPatterns = allowedOrigins.map(originToRegExp);
 
 console.log("[cors] allowed origins:", allowedOrigins);
-console.log("process", process.env)
 
 const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
@@ -132,6 +132,7 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 Promise.all([ensureRoleTemplates(prisma), ensureProfessionTemplates(prisma)])
+  .then(() => ensureBusinessCatalogs(prisma))
   .then(() => {
     app.listen(port, () => {
       console.log(`[server]: Server is running at http://localhost:${port}`);

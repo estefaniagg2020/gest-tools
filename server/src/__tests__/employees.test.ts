@@ -81,6 +81,36 @@ describe("Employees CRUD", () => {
     expect(res.status).toBe(409);
   });
 
+  it("POST / returns 409 when email already exists in the same business", async () => {
+    prisma.workspaceMember.findFirst = vi
+      .fn()
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(fakeMember);
+    const res = await request(app).post("/").send({
+      name: "Luis",
+      email: "ana@empresa.com",
+      role: "employee",
+    });
+    expect(res.status).toBe(409);
+    expect(res.body.error).toBe("Ya existe un usuario con ese email en esta empresa");
+  });
+
+  it("POST / allows same email when it belongs to another business", async () => {
+    prisma.workspaceMember.findFirst = vi.fn().mockImplementation(({ where }: any) => {
+      if (where?.businessId === "other-biz" && where?.email?.equals === "ana@empresa.com") {
+        return Promise.resolve(fakeMember);
+      }
+      return Promise.resolve(null);
+    });
+    const res = await request(app).post("/").send({
+      name: "Luis",
+      email: "ana@empresa.com",
+      role: "employee",
+    });
+    expect(res.status).toBe(201);
+    expect(res.body.id).toBe("emp-new");
+  });
+
   it("PUT /:id updates an employee", async () => {
     const res = await request(app).put("/emp-1").send({ name: "Updated" });
     expect(res.status).toBe(200);

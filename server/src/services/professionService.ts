@@ -59,3 +59,38 @@ export async function instantiateProfessionTemplate(
 
   console.log(`[ProfessionService] Done.`);
 }
+
+/**
+ * Migration: for each business with a professionId but no template-sourced categories,
+ * instantiate the profession template. Safe to run at startup (idempotent).
+ */
+export async function ensureBusinessCatalogs(prisma: PrismaClient): Promise<void> {
+  const businesses = await prisma.business.findMany({
+    where: { professionId: { not: null } },
+    select: { id: true, name: true, professionId: true },
+  });
+
+  let migrated = 0;
+  for (const biz of businesses) {
+    if (!biz.professionId) continue;
+    const hasTemplateCat = await prisma.businessCategory.findFirst({
+      where: { businessId: biz.id, sourceCategoryId: { not: null } },
+      select: { id: true },
+    });
+    if (hasTemplateCat) continue;
+
+    console.log(`[ensureBusinessCatalogs] Migrating catalog for business "${biz.name}" (${biz.id})...`);
+    try {
+      await instantiateProfessionTemplate(prisma, biz.id, biz.professionId);
+      migrated++;
+    } catch (err) {
+      console.error(`[ensureBusinessCatalogs] Failed for business ${biz.id}:`, err);
+    }
+  }
+
+  if (migrated > 0) {
+    console.log(`[ensureBusinessCatalogs] Migrated ${migrated} business(es).`);
+  } else {
+    console.log(`[ensureBusinessCatalogs] All businesses already have their catalog.`);
+  }
+}
