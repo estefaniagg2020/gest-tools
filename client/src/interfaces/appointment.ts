@@ -1,6 +1,6 @@
 export type AppointmentStatus = "pending" | "confirmed" | "cancelled" | "completed" | "no_show";
 
-export type AppointmentPaymentStatus = "pending" | "paid";
+export type AppointmentPaymentStatus = "pending" | "paid" | "refunded" | "partial";
 
 export interface CartItem {
   id: string;
@@ -24,4 +24,5 @@ export interface Appointment {
   paymentStatus?: AppointmentPaymentStatus;
   isVIP?: boolean;
   cartItems?: CartItem[];
+  discountPercent?: number;
 }

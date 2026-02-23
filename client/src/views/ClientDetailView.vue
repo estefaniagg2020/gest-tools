@@ -26,7 +26,6 @@
         </div>
       </div>
 
-      <!-- TABS -->
       <div class="border-b border-app-border mb-6">
           <nav class="-mb-px flex space-x-8" aria-label="Tabs">
             <button
@@ -45,9 +44,6 @@
           </nav>
       </div>
 
-      <!-- TAB CONTENT -->
-      
-      <!-- HIDDEN_FEATURE: bonos - Pestaña Bonos en detalle de cliente (oculta si bonosEnabled=false) -->
       <section v-if="currentTab === 'bonos'">
         <div class="flex items-center justify-between gap-4 mb-4">
           <h2 class="text-lg font-semibold text-app-title">{{ $t('clientBonos.sectionTitle') }}</h2>
@@ -84,7 +80,6 @@
         <p v-else class="text-sm text-app-text/60 py-4">{{ $t('clientBonos.noBonosAssigned') }}</p>
       </section>
 
-      <!-- HISTORY TAB -->
       <section v-if="currentTab === 'history'">
         <h2 class="text-lg font-semibold text-app-title mb-4">Appointment History</h2>
         <ul v-if="historyEntries.length > 0" class="space-y-3">
@@ -100,9 +95,6 @@
 
     </template>
     
-    <!-- MODALS -->
-    
-    <!-- EDIT CLIENT MODAL -->
     <Modal :is-open="isModalOpen" :title="isEditing ? 'Edit Client' : 'New Client'" @close="closeModal">
       <form class="space-y-4" @submit.prevent="saveClient">
          <div>
@@ -128,7 +120,6 @@
       </form>
     </Modal>
 
-     <!-- ASSIGN BONO MODAL -->
      <Modal :is-open="isAssignBonoOpen" :title="$t('clientBonos.assignBono')" @close="closeAssignBono">
         <form class="space-y-4" @submit.prevent="assignBono">
             <div>
@@ -156,6 +147,9 @@ import BaseButton from "@/components/common/BaseButton.vue";
 import Modal from "@/components/common/Modal.vue";
 import { useClientStore } from "@/stores/client";
 import { useBonoStore } from "@/stores/bono";
+import { useAppointmentStore } from "@/stores/appointment";
+import { useServiceStore } from "@/stores/service";
+import { useTeamStore } from "@/stores/team";
 import { useClientHistory } from "@/composables/useClientHistory";
 import { useClientsManager } from "@/composables/useClientsManager";
 import { useToast } from "@/composables/useToast";
@@ -173,7 +167,6 @@ const { isModalOpen, isEditing, form, editClient, closeModal, saveClient } = use
 
 const tabs = computed(() => {
   const items = [{ id: "history", name: "Historial" }];
-  // HIDDEN_FEATURE: bonos - Añade pestaña Bonos solo si bonosEnabled=true
   if (bonosEnabled.value) {
     items.unshift({ id: "bonos", name: "Bonos & Packs" });
   }
@@ -185,7 +178,6 @@ watch(tabs, (t) => {
   if (!ids.includes(currentTab.value)) currentTab.value = ids[0];
 }, { immediate: true });
 
-// BONOS LOGIC (Kept similar to existing)
 const isAssignBonoOpen = ref(false);
 const selectedTemplateId = ref("");
 
@@ -210,7 +202,6 @@ const assignBono = async () => {
       addToast(msg, "error");
     }
 };
-// ... other bono methods (omitted for brevity, assume similar logic or import from store)
 const usePackSession = (id: string) => { bonoStore.usePackSession(id); };
 const recordLoyaltyPaid = (id: string) => { bonoStore.recordLoyaltyPaidUse(id); };
 const useLoyaltyFree = (id: string) => { bonoStore.useLoyaltyFreeSession(id); };
@@ -225,8 +216,10 @@ const handleDelete = async () => {
 }
 
 onMounted(() => {
-    // clientStore.initialize(); 
-    // bonoStore.initialize();
+    bonoStore.initialize();
+    useAppointmentStore().initialize();
+    useServiceStore().initialize();
+    useTeamStore().initialize();
 });
 
 </script>

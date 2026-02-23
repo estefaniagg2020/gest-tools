@@ -4,6 +4,22 @@ import { PrismaClient } from "@prisma/client";
 export const publicRouter = (prisma: PrismaClient) => {
   const router = Router();
 
+  router.get("/branding", async (_req, res) => {
+    try {
+      const business = await prisma.business.findFirst({
+        select: { name: true, logoUrl: true },
+        orderBy: { updatedAt: "desc" },
+      });
+      res.json({
+        companyName: business?.name ?? "",
+        logoUrl: business?.logoUrl ?? null,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Server error" });
+    }
+  });
+
   // GET /business/:slug -> Public Profile Data
   router.get("/business/:slug", async (req, res) => {
     try {
