@@ -16,13 +16,11 @@ const ensureBusinessIdForUser = async (
     workspaces: { businessId: string; createdAt: Date }[];
   },
 ): Promise<string | null> => {
-  const currentBusinessId = user.workspaces[0]?.businessId ?? null;
-  if (currentBusinessId) return currentBusinessId;
   if (user.createdById) {
     const creatorWorkspace = await prisma.workspaceMember.findFirst({
       where: { userId: user.createdById },
       select: { businessId: true },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: "asc" },
     });
     if (creatorWorkspace?.businessId) {
       const roleName = user.role.name === "admin" || user.role.name === "superadmin"
@@ -51,6 +49,8 @@ const ensureBusinessIdForUser = async (
       return creatorWorkspace.businessId;
     }
   }
+  const currentBusinessId = user.workspaces[0]?.businessId ?? null;
+  if (currentBusinessId) return currentBusinessId;
   if (!isStaffRole(user.role.name)) return null;
   const adminRole = await prisma.role.findUnique({
     where: { name: "admin" },
@@ -104,15 +104,6 @@ export const requireAuth = (prisma: PrismaClient) => {
     if (!user) {
       res.status(401).json({ error: "Sesión inválida o expirada" });
       return;
-    }
-    // Diagnostic: log all workspaces to detect multi-business issues
-    const allWorkspaces = await prisma.workspaceMember.findMany({
-      where: { userId: user.id },
-      select: { businessId: true, createdAt: true },
-      orderBy: { createdAt: "asc" },
-    });
-    if (allWorkspaces.length > 1) {
-      console.warn(`[auth] User ${user.username} (${user.id}) has ${allWorkspaces.length} workspaces: ${allWorkspaces.map(w => `${w.businessId}@${w.createdAt.toISOString()}`).join(", ")} — using oldest: ${allWorkspaces[0]?.businessId}`);
     }
     const businessId = await ensureBusinessIdForUser(prisma, user);
     req.user = {

@@ -19,6 +19,10 @@ describe("Employees CRUD", () => {
 
   beforeEach(() => {
     prisma = mockPrisma({
+      business: {
+        findUnique: vi.fn().mockResolvedValue({ companyId: "company-1" }),
+        findMany: vi.fn().mockResolvedValue([{ id: BIZ }, { id: "00000000-0000-0000-0000-000000000099" }]),
+      },
       workspaceMember: {
         findMany: vi.fn().mockResolvedValue([fakeMember]),
         findUnique: vi.fn().mockResolvedValue(fakeMember),
@@ -39,6 +43,9 @@ describe("Employees CRUD", () => {
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
     expect(res.body[0].name).toBe("Ana García");
+    expect(prisma.workspaceMember.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { businessId: { in: [BIZ, "00000000-0000-0000-0000-000000000099"] } },
+    }));
   });
 
   it("POST / creates an employee without login (wizard sync)", async () => {

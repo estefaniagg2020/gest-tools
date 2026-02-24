@@ -28,12 +28,24 @@ export const employeeRouter = (prisma: PrismaClient) => {
       return;
     }
     try {
+      const currentBusiness = await prisma.business.findUnique({
+        where: { id: businessId },
+        select: { companyId: true },
+      });
+      if (!currentBusiness) {
+        res.status(404).json({ error: "Negocio no encontrado" });
+        return;
+      }
+      const companyBusinesses = await prisma.business.findMany({
+        where: { companyId: currentBusiness.companyId },
+        select: { id: true },
+      });
+      const companyBusinessIds = companyBusinesses.map((business) => business.id);
       const members = await prisma.workspaceMember.findMany({
-        where: { businessId },
+        where: { businessId: { in: companyBusinessIds } },
         include: { role: { select: { name: true } } },
         orderBy: { name: "asc" },
       });
-      console.log(`[employees GET] userId=${req.user!.id} businessId=${businessId} found=${members.length} members`);
       const result = members.map(({ roleId: _roleId, role, ...rest }) => ({
         ...rest,
         role: role.name,

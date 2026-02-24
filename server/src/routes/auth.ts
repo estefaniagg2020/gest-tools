@@ -34,35 +34,38 @@ const attachUserToCreatorBusinessIfNeeded = async (
   prisma: PrismaClient,
   user: { id: string; username: string; roleName: string; createdById: string | null },
 ): Promise<string | null> => {
+  if (user.createdById) {
+    const creatorBusinessId = await getPrimaryWorkspaceBusinessId(
+      prisma,
+      user.createdById,
+    );
+    if (creatorBusinessId) {
+      const roleName = resolveWorkspaceRoleName(user.roleName);
+      const role = await prisma.role.findUnique({
+        where: { name: roleName },
+        select: { id: true },
+      });
+      if (!role) return null;
+      const alreadyLinked = await prisma.workspaceMember.findFirst({
+        where: { userId: user.id, businessId: creatorBusinessId },
+        select: { id: true },
+      });
+      if (!alreadyLinked) {
+        await prisma.workspaceMember.create({
+          data: {
+            userId: user.id,
+            businessId: creatorBusinessId,
+            roleId: role.id,
+            name: user.username,
+          },
+        });
+      }
+      return creatorBusinessId;
+    }
+  }
   const existingBusinessId = await getPrimaryWorkspaceBusinessId(prisma, user.id);
   if (existingBusinessId) return existingBusinessId;
-  if (!user.createdById) return null;
-  const creatorBusinessId = await getPrimaryWorkspaceBusinessId(
-    prisma,
-    user.createdById,
-  );
-  if (!creatorBusinessId) return null;
-  const roleName = resolveWorkspaceRoleName(user.roleName);
-  const role = await prisma.role.findUnique({
-    where: { name: roleName },
-    select: { id: true },
-  });
-  if (!role) return null;
-  const alreadyLinked = await prisma.workspaceMember.findFirst({
-    where: { userId: user.id, businessId: creatorBusinessId },
-    select: { id: true },
-  });
-  if (!alreadyLinked) {
-    await prisma.workspaceMember.create({
-      data: {
-        userId: user.id,
-        businessId: creatorBusinessId,
-        roleId: role.id,
-        name: user.username,
-      },
-    });
-  }
-  return creatorBusinessId;
+  return null;
 };
 
 export const authRouter = (prisma: PrismaClient) => {
@@ -174,6 +177,20 @@ export const authRouter = (prisma: PrismaClient) => {
 
     const trimmedEmail = email.trim().toLowerCase();
     const { user, businessId } = await prisma.$transaction(async (tx) => {
+      const primaryBusiness = await tx.business.findFirst({
+        orderBy: { createdAt: "asc" },
+        select: { id: true },
+      });
+      let resolvedBusinessId = primaryBusiness?.id ?? null;
+      if (!resolvedBusinessId) {
+        const company = await tx.company.create({
+          data: { name: trimmed },
+        });
+        const business = await tx.business.create({
+          data: { name: trimmed, companyId: company.id },
+        });
+        resolvedBusinessId = business.id;
+      }
       const newUser = await tx.user.create({
         data: {
           username: trimmed,
@@ -183,16 +200,10 @@ export const authRouter = (prisma: PrismaClient) => {
           email: trimmedEmail,
         },
       });
-      const company = await tx.company.create({
-        data: { name: trimmed },
-      });
-      const business = await tx.business.create({
-        data: { name: trimmed, companyId: company.id },
-      });
       await tx.workspaceMember.create({
-        data: { userId: newUser.id, businessId: business.id, roleId: adminRoleId, name: trimmed },
+        data: { userId: newUser.id, businessId: resolvedBusinessId, roleId: adminRoleId, name: trimmed },
       });
-      return { user: newUser, businessId: business.id };
+      return { user: newUser, businessId: resolvedBusinessId };
     });
 
     const token = generateSessionToken();

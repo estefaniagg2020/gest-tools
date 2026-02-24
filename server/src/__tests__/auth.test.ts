@@ -74,7 +74,7 @@ describe("Auth routes", () => {
       role: { name: "admin" },
     };
     (prisma as any).user.findFirst = vi.fn().mockResolvedValue(user);
-    (prisma as any).workspaceMember.findMany = vi.fn().mockResolvedValue([{ businessId: "biz-1" }]);
+    (prisma as any).workspaceMember.findFirst = vi.fn().mockResolvedValue({ businessId: "biz-1" });
     const res = await request(app).post("/login").send({
       username: "admin",
       password: "correct",
@@ -109,7 +109,7 @@ describe("Auth routes", () => {
     expect(res.body.error).toContain("4 caracteres");
   });
 
-  it("POST /register returns 201 when users already exist (open registration)", async () => {
+  it("POST /register returns 201 and links user to existing business when one already exists", async () => {
     const newUser = {
       id: "u2",
       username: "newuser",
@@ -118,9 +118,8 @@ describe("Auth routes", () => {
       phone: null,
       role: { name: "superadmin" },
     };
+    (prisma as any).business.findFirst = vi.fn().mockResolvedValue({ id: "b-existing" });
     (prisma as any).user.create = vi.fn().mockResolvedValue(newUser);
-    (prisma as any).company.create = vi.fn().mockResolvedValue({ id: "c1" });
-    (prisma as any).business.create = vi.fn().mockResolvedValue({ id: "b1" });
     (prisma as any).workspaceMember.create = vi.fn().mockResolvedValue({});
     const res = await request(app).post("/register").send({
       username: "newuser",
@@ -129,7 +128,35 @@ describe("Auth routes", () => {
     });
     expect(res.status).toBe(201);
     expect(res.body.user.username).toBe("newuser");
+    expect(res.body.user.businessId).toBe("b-existing");
     expect(res.body.token).toBeDefined();
+    expect(prisma.company.create).not.toHaveBeenCalled();
+    expect(prisma.business.create).not.toHaveBeenCalled();
+  });
+
+  it("POST /register creates company and business when none exists", async () => {
+    const newUser = {
+      id: "u3",
+      username: "owner",
+      name: null,
+      email: "owner@test.com",
+      phone: null,
+      role: { name: "superadmin" },
+    };
+    (prisma as any).business.findFirst = vi.fn().mockResolvedValue(null);
+    (prisma as any).company.create = vi.fn().mockResolvedValue({ id: "c-new" });
+    (prisma as any).business.create = vi.fn().mockResolvedValue({ id: "b-new" });
+    (prisma as any).user.create = vi.fn().mockResolvedValue(newUser);
+    (prisma as any).workspaceMember.create = vi.fn().mockResolvedValue({});
+    const res = await request(app).post("/register").send({
+      username: "owner",
+      password: "password",
+      email: "owner@test.com",
+    });
+    expect(res.status).toBe(201);
+    expect(res.body.user.businessId).toBe("b-new");
+    expect(prisma.company.create).toHaveBeenCalledTimes(1);
+    expect(prisma.business.create).toHaveBeenCalledTimes(1);
   });
 
   it("POST /logout returns 200", async () => {
